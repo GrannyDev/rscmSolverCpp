@@ -38,29 +38,29 @@ Solver::Solver(
     // override bounding value if optimalNbMuxes is 0
     bestCost_ = std::numeric_limits<unsigned int>::max();
 
-    paramDefs.push_back(ParamDefs::LEFT_INPUTS);
-    indexToParamMap[0] = ParamDefs::LEFT_INPUTS;
-    paramToIndexMap[ParamDefs::LEFT_INPUTS] = 0;
+    paramDefs.push_back(VariableDefs::LEFT_INPUTS);
+    indexToParamMap[0] = VariableDefs::LEFT_INPUTS;
+    paramToIndexMap[VariableDefs::LEFT_INPUTS] = 0;
 
-    paramDefs.push_back(ParamDefs::LEFT_SHIFTS);
-    indexToParamMap[1] = ParamDefs::LEFT_SHIFTS;
-    paramToIndexMap[ParamDefs::LEFT_SHIFTS] = 1;
+    paramDefs.push_back(VariableDefs::LEFT_SHIFTS);
+    indexToParamMap[1] = VariableDefs::LEFT_SHIFTS;
+    paramToIndexMap[VariableDefs::LEFT_SHIFTS] = 1;
 
-    paramDefs.push_back(ParamDefs::RIGHT_INPUTS);
-    indexToParamMap[2] = ParamDefs::RIGHT_INPUTS;
-    paramToIndexMap[ParamDefs::RIGHT_INPUTS] = 2;
+    paramDefs.push_back(VariableDefs::RIGHT_INPUTS);
+    indexToParamMap[2] = VariableDefs::RIGHT_INPUTS;
+    paramToIndexMap[VariableDefs::RIGHT_INPUTS] = 2;
 
-    paramDefs.push_back(ParamDefs::RIGHT_SHIFTS);
-    indexToParamMap[3] = ParamDefs::RIGHT_SHIFTS;
-    paramToIndexMap[ParamDefs::RIGHT_SHIFTS] = 3;
+    paramDefs.push_back(VariableDefs::RIGHT_SHIFTS);
+    indexToParamMap[3] = VariableDefs::RIGHT_SHIFTS;
+    paramToIndexMap[VariableDefs::RIGHT_SHIFTS] = 3;
 
-    paramDefs.push_back(ParamDefs::OUTPUTS_SHIFTS);
-    indexToParamMap[4] = ParamDefs::OUTPUTS_SHIFTS;
-    paramToIndexMap[ParamDefs::OUTPUTS_SHIFTS] = 4;
+    paramDefs.push_back(VariableDefs::OUTPUTS_SHIFTS);
+    indexToParamMap[4] = VariableDefs::OUTPUTS_SHIFTS;
+    paramToIndexMap[VariableDefs::OUTPUTS_SHIFTS] = 4;
 
-    paramDefs.push_back(ParamDefs::RIGHT_MULTIPLIER);
-    indexToParamMap[5] = ParamDefs::RIGHT_MULTIPLIER;
-    paramToIndexMap[ParamDefs::RIGHT_MULTIPLIER] = 5;
+    paramDefs.push_back(VariableDefs::RIGHT_MULTIPLIER);
+    indexToParamMap[5] = VariableDefs::RIGHT_MULTIPLIER;
+    paramToIndexMap[VariableDefs::RIGHT_MULTIPLIER] = 5;
 
     // Creating layers
     int precedingLayerLastAdderNb = -1;
@@ -68,7 +68,7 @@ Solver::Solver(
     for (int i = 0; i < addersPerLayer.size(); i++)
     {
         layers.emplace_back(i, precedingLayerLastAdderNb, addersPerLayer[i], paramDefs, maxShift);
-        precedingLayerLastAdderNb = layers[i].lastAdderNb;
+        precedingLayerLastAdderNb = layers[i].alpha;
     }
 
     // Computing required number of bits in a node bitset
@@ -80,7 +80,7 @@ Solver::Solver(
         for (auto const& adder : layer.adders)
         {
             nbAdders++;
-            if (layer.nbLayer == 0)
+            if (layer.layerIdx == 0)
             {
                 nbPossibleMuxes += 3;
             }
@@ -88,14 +88,14 @@ Solver::Solver(
             {
                 nbPossibleMuxes += 5;
             }
-            for (auto const& parameter : adder.parameters)
+            for (auto const& parameter : adder.variables)
             {
                 nbBitsPerNode += parameter.possibleValuesFusion.size();
             }
         }
     }
 
-    solution = Node(nbBitsPerNode, targets.size(), nbAdders, nbAdders * layers[0].adders[0].parameters.size(), nbPossibleMuxes);
+    solution = RSCM(nbBitsPerNode, targets.size(), nbAdders, nbAdders * layers[0].adders[0].variables.size(), nbPossibleMuxes);
 }
 
 void Solver::CPSolve()
@@ -170,7 +170,7 @@ void Solver::Solve()
     for (int i = 0; i < nbAvailableThreads; i++) {
         threadedNodes_.emplace_back();
         for (int j = 0; j < targets.size() + 1; j++) { // Needs one more than max depth to handle solutions node in recursion
-            threadedNodes_[i].emplace_back(nbBitsPerNode, targets.size(), nbAdders, nbAdders * layers[0].adders[0].parameters.size(), nbPossibleMuxes); // allow for now memory reallocation during dfs
+            threadedNodes_[i].emplace_back(nbBitsPerNode, targets.size(), nbAdders, nbAdders * layers[0].adders[0].variables.size(), nbPossibleMuxes); // allow for now memory reallocation during dfs
         }
     }
 
@@ -264,7 +264,7 @@ unsigned int Solver::BitLength(const int maxConstant) const
     return bitWidth;
 }
 
-unsigned int Solver::MuxCountComputer::compute(Node& node, Rcm const& scm) const
+unsigned int Solver::MuxCountComputer::compute(RSCM& node, DAG const& scm) const
 {
     // 1) Merge resource sets and update bounds
     node.rscm.set |= scm.set;
@@ -274,10 +274,10 @@ unsigned int Solver::MuxCountComputer::compute(Node& node, Rcm const& scm) const
     unsigned int totalParams = 0;
     unsigned int muxCount = 0;
 
-    // Iterate layers → adders → parameters
+    // Iterate layers → adders → variables
     for (const auto& layer : solver->layers) {
         for (const auto& adder : layer.adders) {
-            for (const auto& param : adder.parameters) {
+            for (const auto& param : adder.variables) {
                 // Count how many bits in this parameter are set
                 unsigned int bitsSet = 0;
                 for (size_t j = 0; j < param.possibleValuesFusion.size(); ++j) {
@@ -303,22 +303,22 @@ unsigned int Solver::MuxCountComputer::compute(Node& node, Rcm const& scm) const
     return muxCount;
 }
 
-unsigned int Solver::FineGrainCostComputer::compute(Node& node, Rcm const& scm) const
+unsigned int Solver::FineGrainCostComputer::compute(RSCM& node, DAG const& scm) const
 {
     unsigned int fineGrainCost = 0;
 
     // 1) Merge resource sets and update bounds
     node.rscm.set |= scm.set;
     std::transform(
-        node.rscm.maxMuxOutputValue.begin(),
-        node.rscm.maxMuxOutputValue.end(),
-        scm.maxMuxOutputValue.begin(),
-        node.rscm.maxMuxOutputValue.begin(),
+        node.rscm.maxOutputValue.begin(),
+        node.rscm.maxOutputValue.end(),
+        scm.maxOutputValue.begin(),
+        node.rscm.maxOutputValue.begin(),
         CompareTwoComplement
     );
 
-    const auto leftShiftBase  = solver->paramToIndexMap.at(ParamDefs::LEFT_SHIFTS);
-    const auto rightShiftBase = solver->paramToIndexMap.at(ParamDefs::RIGHT_SHIFTS);
+    const auto leftShiftBase  = solver->paramToIndexMap.at(VariableDefs::LEFT_SHIFTS);
+    const auto rightShiftBase = solver->paramToIndexMap.at(VariableDefs::RIGHT_SHIFTS);
     const size_t mapSize = solver->paramToIndexMap.size();
 
     size_t bitPos = 0;
@@ -326,18 +326,18 @@ unsigned int Solver::FineGrainCostComputer::compute(Node& node, Rcm const& scm) 
     unsigned int paramGlobalIdx = 0;
 
     auto updateMinShift = [&](const unsigned idx) {
-        const auto maxVal = scm.maxMuxOutputValue[idx];
+        const auto maxVal = scm.maxOutputValue[idx];
         const unsigned tz = maxVal ? __builtin_ctz(maxVal) : std::numeric_limits<unsigned>::max();
         node.minShiftSavings[idx] = std::min(node.minShiftSavings[idx], tz);
     };
 
     auto computeMuxCost = [&](const unsigned bitsCount, const unsigned idx) {
-        const int constVal = node.rscm.maxMuxOutputValue[idx] >> node.minShiftSavings[idx];
+        const int constVal = node.rscm.maxOutputValue[idx] >> node.minShiftSavings[idx];
         const unsigned nbBits = solver->BitLength(constVal);
         return 14u * bitsCount * nbBits;
     };
 
-    // Iterate layers → adders → parameters
+    // Iterate layers → adders → variables
     for (const auto& layer : solver->layers) {
         for (const auto& adder : layer.adders) {
             // Track plus-minus flag
@@ -345,7 +345,7 @@ unsigned int Solver::FineGrainCostComputer::compute(Node& node, Rcm const& scm) 
                 node.isPlusMinus[adderIdx] || node.rscm.isMinus[adderIdx] != scm.isMinus[adderIdx];
 
             unsigned paramInAdderIdx = 0;
-            for (const auto& param : adder.parameters) {
+            for (const auto& param : adder.variables) {
                 // 2) Update shift savings early
                 updateMinShift(paramGlobalIdx);
 
@@ -358,13 +358,13 @@ unsigned int Solver::FineGrainCostComputer::compute(Node& node, Rcm const& scm) 
 
                 // 4) If more than one bit, add fine-grain mux cost
                 if (bitCount > 1 &&
-                    solver->indexToParamMap.at(paramInAdderIdx) != ParamDefs::RIGHT_MULTIPLIER)
+                    solver->indexToParamMap.at(paramInAdderIdx) != VariableDefs::RIGHT_MULTIPLIER)
                 {
                     fineGrainCost += computeMuxCost(bitCount, paramGlobalIdx);
                 }
 
                 // 5) Handle RIGHT_MULTIPLIER adder cost
-                if (solver->indexToParamMap.at(paramInAdderIdx) == ParamDefs::RIGHT_MULTIPLIER) {
+                if (solver->indexToParamMap.at(paramInAdderIdx) == VariableDefs::RIGHT_MULTIPLIER) {
                     // determine coefficient
                     unsigned coeff = 67u;
                     if      (node.isPlusMinus[adderIdx])    coeff = 93u;
@@ -379,8 +379,8 @@ unsigned int Solver::FineGrainCostComputer::compute(Node& node, Rcm const& scm) 
                     );
 
                     // compute FA/HA costs
-                    const int a = node.rscm.maxMuxOutputValue[leftIdx];
-                    const int b = node.rscm.maxMuxOutputValue[rightIdx];
+                    const int a = node.rscm.maxOutputValue[leftIdx];
+                    const int b = node.rscm.maxOutputValue[rightIdx];
                     if (b != 0) {
                         unsigned wa = solver->BitLength(a) - minShift;
                         unsigned wb = solver->BitLength(b) - minShift;
@@ -426,31 +426,31 @@ unsigned int Solver::FineGrainCostComputer::compute(Node& node, Rcm const& scm) 
 
 void Solver::PrintSolution(unsigned int const cost)
 {
-    const auto paramDefsToString = ParamDefsToString();
+    const auto paramDefsToString = VarDefsToString();
     std::cout << "Solution cost: " << cost << " : ";
     unsigned int bitIndex = 0;
     for (const auto& layer : layers) {
-        std::cout << "Layer " << layer.nbLayer << " : ";
+        std::cout << "Layer " << layer.layerIdx << " : ";
         for (const auto& adder : layer.adders) {
-            std::cout << "Adder " << adder.adderNb << " : ";
-            for (int p = 0; p < adder.parameters.size(); p++) {
+            std::cout << "Adder " << adder.adderIdx << " : ";
+            for (int p = 0; p < adder.variables.size(); p++) {
                 std::cout << paramDefsToString(indexToParamMap[p]) << " : ";
-                for (const auto& v : adder.parameters[p].possibleValuesFusion) {
-                    if (solution.rscm.set.test(bitIndex + v + adder.parameters[p].zeroPoint)) {
+                for (const auto& v : adder.variables[p].possibleValuesFusion) {
+                    if (solution.rscm.set.test(bitIndex + v + adder.variables[p].zeroPoint)) {
                         std::cout << v << " ";
                     }
                 }
-                bitIndex += adder.parameters[p].possibleValuesFusion.size();
+                bitIndex += adder.variables[p].possibleValuesFusion.size();
             }
         }
     }
     std::cout << std::endl;
 }
 
-void Solver::PrettyPrinter(Node & solutionNode, const unsigned int cost)
+void Solver::PrettyPrinter(RSCM & solutionNode, const unsigned int cost)
 {
     // copy solutionNode.rscm to a new node
-    Rcm rcmCopy = solutionNode.rscm;
+    DAG rcmCopy = solutionNode.rscm;
     rcmCopy.set = boost::dynamic_bitset<>(rcmCopy.set.count());
     const unsigned int muxCost = MuxCountComputer(this).compute(solutionNode, rcmCopy);
     const unsigned int fineGrainCost = FineGrainCostComputer(this).compute(solutionNode, rcmCopy);
@@ -458,17 +458,17 @@ void Solver::PrettyPrinter(Node & solutionNode, const unsigned int cost)
     std::cout << "SOLUTION COST: " << muxCost << " muxes, "  << fineGrainCost << " fine grain" << std::endl << std::endl;
 
     std::cout << std::endl << "Parameters: " << std::endl;
-    const auto paramDefsToString = ParamDefsToString();
+    const auto paramDefsToString = VarDefsToString();
     unsigned int bitIndex = 0;
     for (const auto& layer : layers) {
-        std::cout << "Layer " << layer.nbLayer << ":" << std::endl;
+        std::cout << "Layer " << layer.layerIdx << ":" << std::endl;
         for (const auto& adder : layer.adders) {
-            std::cout << "\tAdder " << adder.adderNb << ":" << std::endl;
-            for (int p = 0; p < adder.parameters.size(); p++) {
+            std::cout << "\tAdder " << adder.adderIdx << ":" << std::endl;
+            for (int p = 0; p < adder.variables.size(); p++) {
                 std::cout << "\t\t" << paramDefsToString(indexToParamMap[p]) << " : { ";
-                for (const auto& v : adder.parameters[p].possibleValuesFusion) {
-                    if (solutionNode.rscm.set.test(bitIndex + v + adder.parameters[p].zeroPoint)) {
-                        if (indexToParamMap[p] == ParamDefs::LEFT_INPUTS || indexToParamMap[p] == ParamDefs::RIGHT_INPUTS)
+                for (const auto& v : adder.variables[p].possibleValuesFusion) {
+                    if (solutionNode.rscm.set.test(bitIndex + v + adder.variables[p].zeroPoint)) {
+                        if (indexToParamMap[p] == VariableDefs::LEFT_INPUTS || indexToParamMap[p] == VariableDefs::RIGHT_INPUTS)
                         {
                             if (v < 0)
                             {
@@ -485,7 +485,7 @@ void Solver::PrettyPrinter(Node & solutionNode, const unsigned int cost)
                                 std::cout << "Adder" << v << " ";
                             }
                         }
-                        else if (indexToParamMap[p] == ParamDefs::RIGHT_MULTIPLIER)
+                        else if (indexToParamMap[p] == VariableDefs::RIGHT_MULTIPLIER)
                         {
                             if (v == -1)
                             {
@@ -502,7 +502,7 @@ void Solver::PrettyPrinter(Node & solutionNode, const unsigned int cost)
                         }
                     }
                 }
-                bitIndex += adder.parameters[p].possibleValuesFusion.size();
+                bitIndex += adder.variables[p].possibleValuesFusion.size();
                 std::cout << "}" << std::endl;
             }
         }
@@ -514,7 +514,7 @@ void Solver::SolveConfigToMuxMapping() const
 {
     std::cout << "------------------" << std::endl;
 
-    const auto paramDefsToString = ParamDefsToString();
+    const auto paramDefsToString = VarDefsToString();
     unsigned int bitIndex = 0;
     unsigned int parameterIndex = 0;
     std::vector<std::vector<unsigned int>> muxEnconding(targets.size());
@@ -522,7 +522,7 @@ void Solver::SolveConfigToMuxMapping() const
     for (const auto& layer : layers)
     {
         for (const auto& adder : layer.adders) {
-            for (const auto & parameter : adder.parameters) {
+            for (const auto & parameter : adder.variables) {
                 unsigned int nbPossibleValues = 0;
                 // get number of possible values for this parameter
                 for (size_t v = 0; v < parameter.possibleValuesFusion.size(); v++) {
@@ -557,7 +557,7 @@ void Solver::SolveConfigToMuxMapping() const
     std::cout << "Muxes : ";
     for (const auto& mux : muxNames)
     {
-        std::cout << paramDefsToString(indexToParamMap.at(mux % layers[0].adders[0].parameters.size())) << " of adder " << mux / layers[0].adders[0].parameters.size() << " | ";
+        std::cout << paramDefsToString(indexToParamMap.at(mux % layers[0].adders[0].variables.size())) << " of adder " << mux / layers[0].adders[0].variables.size() << " | ";
     }
     std::cout << std::endl;
 
@@ -587,7 +587,7 @@ void Solver::RscmToCsv(std::string const& fileUri)
         return;
     }
 
-    const auto paramDefsToString = ParamDefsToString();
+    const auto paramDefsToString = VarDefsToString();
     csvFile << "Layer" << ",";
     csvFile << "Adder" << ",";
     for (const auto& parameter : paramDefs)
@@ -598,12 +598,12 @@ void Solver::RscmToCsv(std::string const& fileUri)
     unsigned int bitIndex = 0;
     for (const auto& layer : layers) {
         for (const auto& adder : layer.adders) {
-            csvFile << std::endl << layer.nbLayer << "," << adder.adderNb << ",";
-            for (int p = 0; p < adder.parameters.size(); p++) {
+            csvFile << std::endl << layer.layerIdx << "," << adder.adderIdx << ",";
+            for (int p = 0; p < adder.variables.size(); p++) {
                 csvFile << "{ ";
-                for (const auto& v : adder.parameters[p].possibleValuesFusion) {
-                    if (solution.rscm.set.test(bitIndex + v + adder.parameters[p].zeroPoint)) {
-                        if (indexToParamMap[p] == ParamDefs::LEFT_INPUTS || indexToParamMap[p] == ParamDefs::RIGHT_INPUTS)
+                for (const auto& v : adder.variables[p].possibleValuesFusion) {
+                    if (solution.rscm.set.test(bitIndex + v + adder.variables[p].zeroPoint)) {
+                        if (indexToParamMap[p] == VariableDefs::LEFT_INPUTS || indexToParamMap[p] == VariableDefs::RIGHT_INPUTS)
                         {
                             if (v < 0)
                             {
@@ -620,7 +620,7 @@ void Solver::RscmToCsv(std::string const& fileUri)
                                 csvFile << "Adder" << v << " ";
                             }
                         }
-                        else if (indexToParamMap[p] == ParamDefs::RIGHT_MULTIPLIER)
+                        else if (indexToParamMap[p] == VariableDefs::RIGHT_MULTIPLIER)
                         {
                             if (v == -1)
                             {
@@ -637,7 +637,7 @@ void Solver::RscmToCsv(std::string const& fileUri)
                         }
                     }
                 }
-                bitIndex += adder.parameters[p].possibleValuesFusion.size();
+                bitIndex += adder.variables[p].possibleValuesFusion.size();
                 csvFile << "}" << ",";
             }
         }

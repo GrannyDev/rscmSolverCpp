@@ -12,8 +12,8 @@
 #include <fstream>
 
 #include "Layer.h"
-#include "Node.h"
-#include "Rcm.h"
+#include "RSCM.h"
+#include "DAG.h"
 
 class Solver {
 public:
@@ -26,7 +26,7 @@ public:
         );
     void CPSolve();
     void Solve();
-    void PrettyPrinter(Node & solutionNode, unsigned int cost);
+    void PrettyPrinter(RSCM & solutionNode, unsigned int cost);
     unsigned int GetCurrentCost() const;
     void RscmToCsv(std::string const& fileUri);
     void SolveConfigToMuxMapping() const;
@@ -34,18 +34,18 @@ public:
     struct ICostComputer {
         explicit ICostComputer(Solver* solver) : solver(solver) {}
         virtual ~ICostComputer() = default;
-        virtual unsigned int compute(Node& threadNode, Rcm const& scmToAdd) const = 0;
+        virtual unsigned int compute(RSCM& threadNode, DAG const& scmToAdd) const = 0;
         Solver* solver;
     };
 
     struct FineGrainCostComputer final : ICostComputer {
         using ICostComputer::ICostComputer;
-        unsigned int compute(Node& node, Rcm const& scm) const override;
+        unsigned int compute(RSCM& node, DAG const& scm) const override;
     };
 
     struct MuxCountComputer final : ICostComputer {
         using ICostComputer::ICostComputer;
-        unsigned int compute(Node& node, Rcm const& scm) const override;
+        unsigned int compute(RSCM& node, DAG const& scm) const override;
     };
 
     std::unique_ptr<ICostComputer> fuseCostComputer;
@@ -59,13 +59,13 @@ public:
     size_t nbPossibleMuxes;
     size_t nbInputBits;
     bool forceSpaceExploration;
-    std::vector<ParamDefs> paramDefs;
+    std::vector<VariableDefs> paramDefs;
     std::vector<int> targets;
     std::vector<Layer> layers;
-    std::vector<std::pair<int, std::vector<Rcm>>> scmDesigns;
-    Node solution;
-    std::unordered_map<ParamDefs, unsigned int> paramToIndexMap;
-    std::unordered_map<unsigned int, ParamDefs> indexToParamMap;
+    std::vector<std::pair<int, std::vector<DAG>>> scmDesigns;
+    RSCM solution;
+    std::unordered_map<VariableDefs, unsigned int> paramToIndexMap;
+    std::unordered_map<unsigned int, VariableDefs> indexToParamMap;
 
 private:
     void RunSolver(int coef, std::atomic<int> & completedJobs, std::mutex & progressMutex, std::mutex & pushBackMutex);
@@ -79,7 +79,7 @@ private:
     std::mutex progressMutex_;
     std::mutex solutionMutex_;
     std::atomic<unsigned int> bestCost_;
-    std::vector<std::vector<Node>> threadedNodes_;
+    std::vector<std::vector<RSCM>> threadedNodes_;
     unsigned int nbAvailableThreads_;
     std::vector<std::vector<std::vector<unsigned int>>> threadedIndexes_;
 };

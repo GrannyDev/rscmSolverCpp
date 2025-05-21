@@ -8,19 +8,19 @@ find_package(ortools CONFIG REQUIRED)
 add_executable(rmcmSolver main.cpp
         Solver.cpp
         Solver.h
-        ParamDefs.h
-        Parameter.cpp
-        Parameter.h
+        VariableDefs.h
+        Variables.cpp
+        Variables.h
         Adder.cpp
         Adder.h
         Layer.cpp
         Layer.h
         CPModel.cpp
         CPModel.h
-        Node.cpp
-        Node.h
-        Rcm.cpp
-        Rcm.h
+        RSCM.cpp
+        RSCM.h
+        DAG.cpp
+        DAG.h
 )
 
 target_link_libraries(rmcmSolver ortools::ortools)
