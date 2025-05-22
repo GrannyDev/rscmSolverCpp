@@ -10,94 +10,91 @@
 
 #include "CPModel.h"
 
+// Constructor initializes solver parameters, layout configuration, and variable definitions
 Solver::Solver(
-    std::vector<int> const& addersPerLayer,
-    const int maxCoef,
-    const int minCoef,
-    std::vector<int> const& targets,
-    const size_t nbInputBits,
-    const bool useFineGrainCost
-    ):
-    solution(0, 0, 0, 0, 0)
+    std::vector<int> const& layout,       // Defines number of adders per layer
+    const int maxCoef,                    // Maximum coefficient allowed
+    const int minCoef,                    // Minimum coefficient allowed
+    std::vector<int> const& targets,      // Target constants to synthesize
+    const size_t nbInputBits,             // Input bit-width
+    const bool useFineGrainCost           // Flag to choose between cost models
+) : solution(0, 0, 0, 0, 0)               // Initialize empty solution node
 {
-    this->addersPerLayer = addersPerLayer;
+    this->layout = layout;
     this->maxCoef = maxCoef;
     this->minCoef = minCoef;
     this->maxAbsCoef = std::pow(2, nbInputBits);
-    this->optimalNbMuxes = optimalNbMuxes;
     this->targets = targets;
     this->nbInputBits = nbInputBits;
     this->nbAvailableThreads_ = std::thread::hardware_concurrency();
+
+    // Select cost model implementation
     if (useFineGrainCost) {
         fuseCostComputer = std::make_unique<FineGrainCostComputer>(this);
-    }
-    else {
+    } else {
         fuseCostComputer = std::make_unique<MuxCountComputer>(this);
     }
 
-    // override bounding value if optimalNbMuxes is 0
+    // Initial cost bound (infinite)
     bestCost_ = std::numeric_limits<unsigned int>::max();
 
-    paramDefs.push_back(VariableDefs::LEFT_INPUTS);
-    indexToParamMap[0] = VariableDefs::LEFT_INPUTS;
-    paramToIndexMap[VariableDefs::LEFT_INPUTS] = 0;
+    // Map internal variable types to and from indexes
+    varDefs.push_back(VariableDefs::LEFT_INPUTS);
+    idxToVarMap[0] = VariableDefs::LEFT_INPUTS;
+    varToIdxMap[VariableDefs::LEFT_INPUTS] = 0;
 
-    paramDefs.push_back(VariableDefs::LEFT_SHIFTS);
-    indexToParamMap[1] = VariableDefs::LEFT_SHIFTS;
-    paramToIndexMap[VariableDefs::LEFT_SHIFTS] = 1;
+    varDefs.push_back(VariableDefs::LEFT_SHIFTS);
+    idxToVarMap[1] = VariableDefs::LEFT_SHIFTS;
+    varToIdxMap[VariableDefs::LEFT_SHIFTS] = 1;
 
-    paramDefs.push_back(VariableDefs::RIGHT_INPUTS);
-    indexToParamMap[2] = VariableDefs::RIGHT_INPUTS;
-    paramToIndexMap[VariableDefs::RIGHT_INPUTS] = 2;
+    varDefs.push_back(VariableDefs::RIGHT_INPUTS);
+    idxToVarMap[2] = VariableDefs::RIGHT_INPUTS;
+    varToIdxMap[VariableDefs::RIGHT_INPUTS] = 2;
 
-    paramDefs.push_back(VariableDefs::RIGHT_SHIFTS);
-    indexToParamMap[3] = VariableDefs::RIGHT_SHIFTS;
-    paramToIndexMap[VariableDefs::RIGHT_SHIFTS] = 3;
+    varDefs.push_back(VariableDefs::RIGHT_SHIFTS);
+    idxToVarMap[3] = VariableDefs::RIGHT_SHIFTS;
+    varToIdxMap[VariableDefs::RIGHT_SHIFTS] = 3;
 
-    paramDefs.push_back(VariableDefs::OUTPUTS_SHIFTS);
-    indexToParamMap[4] = VariableDefs::OUTPUTS_SHIFTS;
-    paramToIndexMap[VariableDefs::OUTPUTS_SHIFTS] = 4;
+    varDefs.push_back(VariableDefs::OUTPUTS_SHIFTS);
+    idxToVarMap[4] = VariableDefs::OUTPUTS_SHIFTS;
+    varToIdxMap[VariableDefs::OUTPUTS_SHIFTS] = 4;
 
-    paramDefs.push_back(VariableDefs::RIGHT_MULTIPLIER);
-    indexToParamMap[5] = VariableDefs::RIGHT_MULTIPLIER;
-    paramToIndexMap[VariableDefs::RIGHT_MULTIPLIER] = 5;
+    varDefs.push_back(VariableDefs::RIGHT_MULTIPLIER);
+    idxToVarMap[5] = VariableDefs::RIGHT_MULTIPLIER;
+    varToIdxMap[VariableDefs::RIGHT_MULTIPLIER] = 5;
 
-    // Creating layers
+    // Build each layer with specified number of adders
     int precedingLayerLastAdderNb = -1;
     int maxShift = std::ceil(std::log2(std::abs(minCoef)));
-    for (int i = 0; i < addersPerLayer.size(); i++)
-    {
-        layers.emplace_back(i, precedingLayerLastAdderNb, addersPerLayer[i], paramDefs, maxShift);
+    for (int i = 0; i < layout.size(); i++) {
+        layers.emplace_back(i, precedingLayerLastAdderNb, layout[i], varDefs, maxShift);
         precedingLayerLastAdderNb = layers[i].alpha;
     }
 
-    // Computing required number of bits in a node bitset
-    nbBitsPerNode = 0;
+    // Calculate bit requirements for storing SCM configuration
+    nbBitsPerSCM = 0;
     nbAdders = 0;
-    nbPossibleMuxes = 0;
-    for (auto const& layer : layers)
-    {
-        for (auto const& adder : layer.adders)
-        {
+    nbPossibleVariables = 0;
+    for (auto const& layer : layers) {
+        for (auto const& adder : layer.adders) {
             nbAdders++;
-            if (layer.layerIdx == 0)
-            {
-                nbPossibleMuxes += 3;
+            if (layer.layerIdx == 0) {
+                nbPossibleVariables += 3; // initial layer uses only subset of parameters
+            } else {
+                nbPossibleVariables += 5;
             }
-            else
-            {
-                nbPossibleMuxes += 5;
-            }
-            for (auto const& parameter : adder.variables)
-            {
-                nbBitsPerNode += parameter.possibleValuesFusion.size();
+            for (auto const& parameter : adder.variables) {
+                nbBitsPerSCM += parameter.possibleValuesFusion.size();
             }
         }
     }
 
-    solution = RSCM(nbBitsPerNode, targets.size(), nbAdders, nbAdders * layers[0].adders[0].variables.size(), nbPossibleMuxes);
+    // Create an empty solution RSCM node with all required size fields
+    solution = RSCM(nbBitsPerSCM, targets.size(), nbAdders,
+        nbAdders * layers[0].adders[0].variables.size(), nbPossibleVariables);
 }
 
+// Solve each target constant using CP (constraint programming)
 void Solver::CPSolve()
 {
     std::atomic completedJobs(0);
@@ -109,15 +106,19 @@ void Solver::CPSolve()
             RunSolver(coef, completedJobs, progressMutex_, pushBackMutex_);
         });
     }
-    pool.join();
+    pool.join(); // Wait for all threads to complete
 }
 
-void Solver::RunSolver(const int coef, std::atomic<int>& completedJobs, std::mutex& progressMutex, std::mutex& pushBackMutex)
+// Internal call to CP solver for a single target coefficient
+void Solver::RunSolver(const int coef, std::atomic<int>& completedJobs,
+    std::mutex& progressMutex, std::mutex& pushBackMutex)
 {
     const CPModel cpModel(minCoef, maxCoef);
-    cpModel.SolveFor(coef, scmDesigns, pushBackMutex, layers, nbBitsPerNode, paramToIndexMap, paramDefs);
+    cpModel.SolveFor(coef, scmDesigns, pushBackMutex, layers, nbBitsPerSCM,
+                     varToIdxMap, varDefs);
     ++completedJobs;
 
+    // Progress bar output
     std::lock_guard lock(progressMutex);
     const float progress = static_cast<float>(completedJobs) / static_cast<float>(targets.size());
     std::cout << "\rProgress: " << std::setw(3) << static_cast<int>(progress * 100) << "% ["
@@ -125,12 +126,13 @@ void Solver::RunSolver(const int coef, std::atomic<int>& completedJobs, std::mut
               << "] " << completedJobs << '/' << targets.size() << std::flush;
 }
 
+// Final stage of solving: compute best combination of SCMs across all targets
 void Solver::Solve()
 {
-    // 1. Find the element with design size closest and superior to 28.
+    // 1. Select the target with the number of SCMs closest in size to number of available threads
+    // (this is usefull to balance the load across threads)
     unsigned int closestIndex = 0;
     unsigned int bestDiff = UINT_MAX;
-
     for (int i = 0; i < scmDesigns.size(); i++) {
         const int diff = static_cast<int>(scmDesigns[i].second.size()) - static_cast<int>(nbAvailableThreads_);
         if (diff >= 0 && diff < bestDiff) {
@@ -139,12 +141,12 @@ void Solver::Solve()
         }
     }
 
-    // 2. If found, swap it with the element at index 0.
+    // 2. Move best-fit target to index 0
     if (closestIndex != 0) {
         std::swap(scmDesigns[0], scmDesigns[closestIndex]);
     }
 
-    // 3. Then sort the rest (from index 1 onward) by ascending size.
+    // 3. Sort remaining SCMs by size (ascending) (a heuristic that appears to accelerate convergence)
     if (scmDesigns.size() > 1) {
         std::ranges::sort(scmDesigns.begin() + 1, scmDesigns.end(),
             [](const auto& lhs, const auto& rhs) {
@@ -152,7 +154,9 @@ void Solver::Solve()
             });
     }
 
-    // shuffle the indexes
+    // Shuffle SCMs for each target constants to accelerate convergence
+    // As the SCMs yielded after each other by the CP solver are "close" to each other
+    // Shuffling them will help the B&P to explore the search space more evenly
     threadedIndexes_.resize(scmDesigns[0].second.size());
     for (int i = 0; i < scmDesigns[0].second.size(); i++) {
         for (int j = 1; j < scmDesigns.size(); j++) {
@@ -165,25 +169,27 @@ void Solver::Solve()
         }
     }
 
-    // Allocate threaded nodes
+    // Allocate memory for each thread’s solution path
     const unsigned int nbAvailableThreads = std::thread::hardware_concurrency();
     for (int i = 0; i < nbAvailableThreads; i++) {
         threadedNodes_.emplace_back();
-        for (int j = 0; j < targets.size() + 1; j++) { // Needs one more than max depth to handle solutions node in recursion
-            threadedNodes_[i].emplace_back(nbBitsPerNode, targets.size(), nbAdders, nbAdders * layers[0].adders[0].variables.size(), nbPossibleMuxes); // allow for now memory reallocation during dfs
+        for (int j = 0; j < targets.size() + 1; j++) {
+            threadedNodes_[i].emplace_back(nbBitsPerSCM, targets.size(), nbAdders,
+                nbAdders * layers[0].adders[0].variables.size(), nbPossibleVariables);
         }
     }
 
-    std::atomic<size_t> index{0}; // index of the rscm to solve for the thread
+    // Launch branch and prune threads
+    // The first target SCMs are split across threads
+    std::atomic<size_t> index{0};
     boost::asio::thread_pool pool(nbAvailableThreads);
     for (int thread = 0; thread < nbAvailableThreads; thread++) {
         post(pool, [this, thread, &index] {
-            while (true)
-            {
+            while (true) {
                 constexpr int depth = 1;
                 const size_t i = index.fetch_add(1, std::memory_order_relaxed);
                 if (i >= scmDesigns[0].second.size()) {
-                    break; // no more rscm to solve
+                    break;
                 }
                 threadedNodes_[thread][0].rscm = scmDesigns[0].second[i];
                 threadedNodes_[thread][0].scmIndexes[0] = i;
@@ -192,31 +198,29 @@ void Solver::Solve()
             }
         });
     }
-    pool.join();
+    pool.join(); // Wait for all branches to finish
 }
 
-void Solver::ComputeBranch(const int depth, const int threadNb, const unsigned int startIndex, unsigned int currentCost) // NOLINT(*-no-recursion)
+// Recursive branch and prune search to find minimum-cost solution
+void Solver::ComputeBranch(const int depth, const int threadNb, const unsigned int startIndex, unsigned int currentCost)
 {
-    if (depth == targets.size())
-    {
-        if (currentCost < bestCost_.load(std::memory_order_relaxed))
-        {
-            std::lock_guard lock(solutionMutex_); // high performance cost, done at last possible moment
-            if (currentCost < bestCost_)
-            {
+    // If we have reached the last layer, check if the cost is lower than the best found
+    if (depth == targets.size()) {
+        if (currentCost < bestCost_.load(std::memory_order_relaxed)) {
+            std::lock_guard lock(solutionMutex_);
+            if (currentCost < bestCost_) { // update only if still the best
                 bestCost_ = currentCost;
                 solution = threadedNodes_[threadNb][depth - 1];
-                // PrintSolution(currentCost);
+                PrintSolution(currentCost);
             }
         }
         return;
     }
 
-    for (const auto& index : threadedIndexes_[startIndex][depth - 1])
-    {
+    // Recurse to next layer if cost is below current best
+    for (const auto& index : threadedIndexes_[startIndex][depth - 1]) {
         threadedNodes_[threadNb][depth] = threadedNodes_[threadNb][depth - 1];
-        currentCost = fuseCostComputer->compute(threadedNodes_[threadNb][depth], scmDesigns[depth].second[index]);
-        // const unsigned int muxCost = fst;
+        currentCost = fuseCostComputer->merge(threadedNodes_[threadNb][depth], scmDesigns[depth].second[index]);
         if (currentCost >= bestCost_.load(std::memory_order_relaxed))
         {
             continue;
@@ -264,7 +268,7 @@ unsigned int Solver::BitLength(const int maxConstant) const
     return bitWidth;
 }
 
-unsigned int Solver::MuxCountComputer::compute(RSCM& node, DAG const& scm) const
+unsigned int Solver::MuxCountComputer::merge(RSCM& node, DAG const& scm) const
 {
     // 1) Merge resource sets and update bounds
     node.rscm.set |= scm.set;
@@ -303,7 +307,7 @@ unsigned int Solver::MuxCountComputer::compute(RSCM& node, DAG const& scm) const
     return muxCount;
 }
 
-unsigned int Solver::FineGrainCostComputer::compute(RSCM& node, DAG const& scm) const
+unsigned int Solver::FineGrainCostComputer::merge(RSCM& node, DAG const& scm) const
 {
     unsigned int fineGrainCost = 0;
 
@@ -317,13 +321,9 @@ unsigned int Solver::FineGrainCostComputer::compute(RSCM& node, DAG const& scm) 
         CompareTwoComplement
     );
 
-    const auto leftShiftBase  = solver->paramToIndexMap.at(VariableDefs::LEFT_SHIFTS);
-    const auto rightShiftBase = solver->paramToIndexMap.at(VariableDefs::RIGHT_SHIFTS);
-    const size_t mapSize = solver->paramToIndexMap.size();
-
-    size_t bitPos = 0;
-    unsigned int adderIdx = 0;
-    unsigned int paramGlobalIdx = 0;
+    const auto leftShiftBase  = solver->varToIdxMap.at(VariableDefs::LEFT_SHIFTS);
+    const auto rightShiftBase = solver->varToIdxMap.at(VariableDefs::RIGHT_SHIFTS);
+    const size_t mapSize = solver->varToIdxMap.size();
 
     auto updateMinShift = [&](const unsigned idx) {
         const auto maxVal = scm.maxOutputValue[idx];
@@ -337,6 +337,10 @@ unsigned int Solver::FineGrainCostComputer::compute(RSCM& node, DAG const& scm) 
         return 14u * bitsCount * nbBits;
     };
 
+    size_t bitPos = 0;
+    unsigned int adderIdx = 0;
+    unsigned int paramGlobalIdx = 0;
+
     // Iterate layers → adders → variables
     for (const auto& layer : solver->layers) {
         for (const auto& adder : layer.adders) {
@@ -349,28 +353,28 @@ unsigned int Solver::FineGrainCostComputer::compute(RSCM& node, DAG const& scm) 
                 // 2) Update shift savings early
                 updateMinShift(paramGlobalIdx);
 
-                // 3) Count bits in one pass
+                // 3) Count the number of bits at one for this variable
                 unsigned bitCount = 0;
                 for (size_t j = 0; j < param.possibleValuesFusion.size(); ++j) {
                     if (node.rscm.set.test(bitPos + j)) ++bitCount;
                 }
                 bitPos += param.possibleValuesFusion.size();
 
-                // 4) If more than one bit, add fine-grain mux cost
+                // 4) If more than one bit and not an adder -> we have a multiplexer
                 if (bitCount > 1 &&
-                    solver->indexToParamMap.at(paramInAdderIdx) != VariableDefs::RIGHT_MULTIPLIER)
+                    solver->idxToVarMap.at(paramInAdderIdx) != VariableDefs::RIGHT_MULTIPLIER)
                 {
                     fineGrainCost += computeMuxCost(bitCount, paramGlobalIdx);
                 }
 
-                // 5) Handle RIGHT_MULTIPLIER adder cost
-                if (solver->indexToParamMap.at(paramInAdderIdx) == VariableDefs::RIGHT_MULTIPLIER) {
-                    // determine coefficient
+                // 5) Handle RIGHT_MULTIPLIER adder cost (an adder)
+                if (solver->idxToVarMap.at(paramInAdderIdx) == VariableDefs::RIGHT_MULTIPLIER) {
+                    // determine coefficient depending on the adder type
                     unsigned coeff = 67u;
                     if      (node.isPlusMinus[adderIdx])    coeff = 93u;
                     else if (node.rscm.isMinus[adderIdx])   coeff = 75u;
 
-                    // compute bit-width post-shift
+                    // compute the minimum shift savings (number of trailing zeros)
                     const auto leftIdx  = leftShiftBase  + adderIdx * mapSize;
                     const auto rightIdx = rightShiftBase + adderIdx * mapSize;
                     const unsigned minShift   = std::min(
@@ -434,7 +438,7 @@ void Solver::PrintSolution(unsigned int const cost)
         for (const auto& adder : layer.adders) {
             std::cout << "Adder " << adder.adderIdx << " : ";
             for (int p = 0; p < adder.variables.size(); p++) {
-                std::cout << paramDefsToString(indexToParamMap[p]) << " : ";
+                std::cout << paramDefsToString(idxToVarMap[p]) << " : ";
                 for (const auto& v : adder.variables[p].possibleValuesFusion) {
                     if (solution.rscm.set.test(bitIndex + v + adder.variables[p].zeroPoint)) {
                         std::cout << v << " ";
@@ -447,15 +451,9 @@ void Solver::PrintSolution(unsigned int const cost)
     std::cout << std::endl;
 }
 
-void Solver::PrettyPrinter(RSCM & solutionNode, const unsigned int cost)
+void Solver::PrettyPrinter(const RSCM& solutionNode)
 {
-    // copy solutionNode.rscm to a new node
-    DAG rcmCopy = solutionNode.rscm;
-    rcmCopy.set = boost::dynamic_bitset<>(rcmCopy.set.count());
-    const unsigned int muxCost = MuxCountComputer(this).compute(solutionNode, rcmCopy);
-    const unsigned int fineGrainCost = FineGrainCostComputer(this).compute(solutionNode, rcmCopy);
-
-    std::cout << "SOLUTION COST: " << muxCost << " muxes, "  << fineGrainCost << " fine grain" << std::endl << std::endl;
+    std::cout << "SOLUTION COST: " << solutionNode.cost << std::endl << std::endl;
 
     std::cout << std::endl << "Parameters: " << std::endl;
     const auto paramDefsToString = VarDefsToString();
@@ -465,10 +463,10 @@ void Solver::PrettyPrinter(RSCM & solutionNode, const unsigned int cost)
         for (const auto& adder : layer.adders) {
             std::cout << "\tAdder " << adder.adderIdx << ":" << std::endl;
             for (int p = 0; p < adder.variables.size(); p++) {
-                std::cout << "\t\t" << paramDefsToString(indexToParamMap[p]) << " : { ";
+                std::cout << "\t\t" << paramDefsToString(idxToVarMap[p]) << " : { ";
                 for (const auto& v : adder.variables[p].possibleValuesFusion) {
                     if (solutionNode.rscm.set.test(bitIndex + v + adder.variables[p].zeroPoint)) {
-                        if (indexToParamMap[p] == VariableDefs::LEFT_INPUTS || indexToParamMap[p] == VariableDefs::RIGHT_INPUTS)
+                        if (idxToVarMap[p] == VariableDefs::LEFT_INPUTS || idxToVarMap[p] == VariableDefs::RIGHT_INPUTS)
                         {
                             if (v < 0)
                             {
@@ -485,7 +483,7 @@ void Solver::PrettyPrinter(RSCM & solutionNode, const unsigned int cost)
                                 std::cout << "Adder" << v << " ";
                             }
                         }
-                        else if (indexToParamMap[p] == VariableDefs::RIGHT_MULTIPLIER)
+                        else if (idxToVarMap[p] == VariableDefs::RIGHT_MULTIPLIER)
                         {
                             if (v == -1)
                             {
@@ -557,7 +555,7 @@ void Solver::SolveConfigToMuxMapping() const
     std::cout << "Muxes : ";
     for (const auto& mux : muxNames)
     {
-        std::cout << paramDefsToString(indexToParamMap.at(mux % layers[0].adders[0].variables.size())) << " of adder " << mux / layers[0].adders[0].variables.size() << " | ";
+        std::cout << paramDefsToString(idxToVarMap.at(mux % layers[0].adders[0].variables.size())) << " of adder " << mux / layers[0].adders[0].variables.size() << " | ";
     }
     std::cout << std::endl;
 
@@ -576,71 +574,4 @@ void Solver::SolveConfigToMuxMapping() const
 unsigned int Solver::GetCurrentCost() const
 {
     return bestCost_.load();
-}
-
-void Solver::RscmToCsv(std::string const& fileUri)
-{
-    std::ofstream csvFile(fileUri);
-    if (!csvFile.is_open())
-    {
-        std::cerr << "Error opening file: " << fileUri << std::endl;
-        return;
-    }
-
-    const auto paramDefsToString = VarDefsToString();
-    csvFile << "Layer" << ",";
-    csvFile << "Adder" << ",";
-    for (const auto& parameter : paramDefs)
-    {
-        csvFile << paramDefsToString(parameter) << ",";
-    }
-
-    unsigned int bitIndex = 0;
-    for (const auto& layer : layers) {
-        for (const auto& adder : layer.adders) {
-            csvFile << std::endl << layer.layerIdx << "," << adder.adderIdx << ",";
-            for (int p = 0; p < adder.variables.size(); p++) {
-                csvFile << "{ ";
-                for (const auto& v : adder.variables[p].possibleValuesFusion) {
-                    if (solution.rscm.set.test(bitIndex + v + adder.variables[p].zeroPoint)) {
-                        if (indexToParamMap[p] == VariableDefs::LEFT_INPUTS || indexToParamMap[p] == VariableDefs::RIGHT_INPUTS)
-                        {
-                            if (v < 0)
-                            {
-                                if (v == -1)
-                                {
-                                    csvFile << "X" << " ";
-                                } else
-                                {
-                                    csvFile << std::abs(v+1) << "X" << " ";
-                                }
-                            }
-                            else
-                            {
-                                csvFile << "Adder" << v << " ";
-                            }
-                        }
-                        else if (indexToParamMap[p] == VariableDefs::RIGHT_MULTIPLIER)
-                        {
-                            if (v == -1)
-                            {
-                                csvFile << "-" << " ";
-                            }
-                            else
-                            {
-                                csvFile << "+" << " ";
-                            }
-                        }
-                        else
-                        {
-                            csvFile << v << " ";
-                        }
-                    }
-                }
-                bitIndex += adder.variables[p].possibleValuesFusion.size();
-                csvFile << "}" << ",";
-            }
-        }
-    }
-    csvFile << std::endl;
 }
