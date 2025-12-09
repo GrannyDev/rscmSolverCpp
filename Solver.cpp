@@ -270,18 +270,51 @@ unsigned int Solver::BitLength(const int maxConstant) const
 
 unsigned int Solver::MuxCountComputer::merge(RSCM& node, DAG const& scm) const
 {
-    // 1) Merge resource sets and update bounds
+    // 1) Merge resource sets and update bounds for fine-grained cost tracking
     node.rscm.set |= scm.set;
+    std::transform(
+        node.rscm.maxOutputValue.begin(),
+        node.rscm.maxOutputValue.end(),
+        scm.maxOutputValue.begin(),
+        node.rscm.maxOutputValue.begin(),
+        CompareTwoComplement
+    );
+
+    const auto leftShiftBase  = solver->varToIdxMap.at(VariableDefs::LEFT_SHIFTS);
+    const auto rightShiftBase = solver->varToIdxMap.at(VariableDefs::RIGHT_SHIFTS);
+    const size_t mapSize = solver->varToIdxMap.size();
+
+    auto updateMinShift = [&](const unsigned idx) {
+        const auto maxVal = scm.maxOutputValue[idx];
+        const unsigned tz = maxVal ? __builtin_ctz(std::abs(maxVal)) : std::numeric_limits<unsigned>::max();
+        node.minShiftSavings[idx] = std::min(node.minShiftSavings[idx], tz);
+    };
+
+    auto computeMuxCost = [&](const unsigned bitsCount, const unsigned idx) {
+        const int constVal = node.rscm.maxOutputValue[idx] >> node.minShiftSavings[idx];
+        const unsigned nbBits = solver->BitLength(constVal);
+        return 14u * bitsCount * nbBits;
+    };
 
     // Prepare to count
     size_t bitPos = 0;
-    unsigned int totalParams = 0;
+    unsigned int adderIdx = 0;
+    unsigned int paramGlobalIdx = 0;
     unsigned int muxCount = 0;
+    unsigned int fineGrainCost = 0;
 
     // Iterate layers → adders → variables
     for (const auto& layer : solver->layers) {
         for (const auto& adder : layer.adders) {
+            // Track plus-minus flag for fine-grained cost
+            node.isPlusMinus[adderIdx] =
+                node.isPlusMinus[adderIdx] || node.rscm.isMinus[adderIdx] != scm.isMinus[adderIdx];
+
+            unsigned paramInAdderIdx = 0;
             for (const auto& param : adder.variables) {
+                // Update shift savings for fine-grained cost
+                updateMinShift(paramGlobalIdx);
+
                 // Count how many bits in this parameter are set
                 unsigned int bitsSet = 0;
                 for (size_t j = 0; j < param.possibleValuesFusion.size(); ++j) {
@@ -295,15 +328,70 @@ unsigned int Solver::MuxCountComputer::merge(RSCM& node, DAG const& scm) const
                 if (bitsSet > 1)
                 {
                     muxCount += bitsSet - 1;
+                    
+                    // Also compute fine-grained cost for this mux
+                    if (solver->idxToVarMap.at(paramInAdderIdx) != VariableDefs::RIGHT_MULTIPLIER) {
+                        fineGrainCost += computeMuxCost(bitsSet, paramGlobalIdx);
+                    }
                 }
 
-                ++totalParams;
+                // Handle RIGHT_MULTIPLIER adder cost for fine-grained cost
+                if (solver->idxToVarMap.at(paramInAdderIdx) == VariableDefs::RIGHT_MULTIPLIER) {
+                    unsigned coeff = 67u;
+                    if      (node.isPlusMinus[adderIdx])    coeff = 93u;
+                    else if (node.rscm.isMinus[adderIdx])   coeff = 75u;
+
+                    const auto leftIdx  = leftShiftBase  + adderIdx * mapSize;
+                    const auto rightIdx = rightShiftBase + adderIdx * mapSize;
+                    const unsigned minShift = std::min(
+                        node.minShiftSavings[leftIdx],
+                        node.minShiftSavings[rightIdx]
+                    );
+
+                    const int a = node.rscm.maxOutputValue[leftIdx];
+                    const int b = node.rscm.maxOutputValue[rightIdx];
+                    if (b != 0) {
+                        unsigned wa = solver->BitLength(a) - minShift;
+                        unsigned wb = solver->BitLength(b) - minShift;
+                        unsigned int shiftA = node.minShiftSavings[leftIdx] - minShift;
+                        unsigned int shiftB = node.minShiftSavings[rightIdx] - minShift;
+                        auto [fst, snd] = std::minmax(shiftA, shiftB);
+                        const unsigned int diff = snd - fst;
+
+                        unsigned fa = 0, ha = 0;
+                        if (!node.isPlusMinus[adderIdx] && !node.rscm.isMinus[adderIdx]) {
+                            if (a != 0) {
+                                fa = std::max(wa, wb) - diff - 1;
+                                ha = 1;
+                            }
+                        } else {
+                            if (a == 0) {
+                                ha = wb - static_cast<unsigned>(__builtin_ctz(b));
+                            } else if (shiftB >= shiftA) {
+                                fa = std::max(wa, wb) - diff;
+                            } else if (node.minShiftSavings[leftIdx] >= wb) {
+                                fa = std::max(wa, wb) - diff - 1;
+                                ha = 1 + wb;
+                            } else {
+                                fa = std::max(wa, wb) - diff;
+                                ha = diff;
+                            }
+                        }
+                        fineGrainCost += static_cast<unsigned>(coeff * fa + 5.0/9.0 * coeff * ha);
+                    }
+                }
+
+                ++paramGlobalIdx;
+                ++paramInAdderIdx;
             }
+            ++adderIdx;
         }
     }
 
-    // Store result
+    // Store both costs
     node.cost = muxCount;
+    node.fineGrainedCost = fineGrainCost;
+    node.nbMuxes = muxCount;
     return muxCount;
 }
 
@@ -327,7 +415,7 @@ unsigned int Solver::FineGrainCostComputer::merge(RSCM& node, DAG const& scm) co
 
     auto updateMinShift = [&](const unsigned idx) {
         const auto maxVal = scm.maxOutputValue[idx];
-        const unsigned tz = maxVal ? __builtin_ctz(maxVal) : std::numeric_limits<unsigned>::max();
+        const unsigned tz = maxVal ? __builtin_ctz(std::abs(maxVal)) : std::numeric_limits<unsigned>::max();
         node.minShiftSavings[idx] = std::min(node.minShiftSavings[idx], tz);
     };
 
@@ -338,6 +426,7 @@ unsigned int Solver::FineGrainCostComputer::merge(RSCM& node, DAG const& scm) co
     };
 
     size_t bitPos = 0;
+    unsigned int muxCount = 0;
     unsigned int adderIdx = 0;
     unsigned int paramGlobalIdx = 0;
 
@@ -361,10 +450,13 @@ unsigned int Solver::FineGrainCostComputer::merge(RSCM& node, DAG const& scm) co
                 bitPos += param.possibleValuesFusion.size();
 
                 // 4) If more than one bit and not an adder -> we have a multiplexer
-                if (bitCount > 1 &&
-                    solver->idxToVarMap.at(paramInAdderIdx) != VariableDefs::RIGHT_MULTIPLIER)
+                if (bitCount > 1)
                 {
-                    fineGrainCost += computeMuxCost(bitCount, paramGlobalIdx);
+                    muxCount += bitCount - 1;
+                    if (solver->idxToVarMap.at(paramInAdderIdx) != VariableDefs::RIGHT_MULTIPLIER)
+                    {
+                        fineGrainCost += computeMuxCost(bitCount, paramGlobalIdx);
+                    }
                 }
 
                 // 5) Handle RIGHT_MULTIPLIER adder cost (an adder)
@@ -425,6 +517,8 @@ unsigned int Solver::FineGrainCostComputer::merge(RSCM& node, DAG const& scm) co
 
     // Store result
     node.cost = fineGrainCost;
+    node.fineGrainedCost = fineGrainCost;
+    node.nbMuxes = muxCount;
     return fineGrainCost;
 }
 
@@ -453,8 +547,9 @@ void Solver::PrintSolution(unsigned int const cost)
 
 void Solver::PrettyPrinter(const RSCM& solutionNode)
 {
-    std::cout << "SOLUTION COST: " << solutionNode.cost << std::endl << std::endl;
-
+    std::cout << "Mux COST: " << solutionNode.nbMuxes << std::endl;
+    std::cout << "FINE-GRAINED COST: " << solutionNode.fineGrainedCost << std::endl << std::endl;
+    
     std::cout << std::endl << "Parameters: " << std::endl;
     const auto paramDefsToString = VarDefsToString();
     unsigned int bitIndex = 0;
