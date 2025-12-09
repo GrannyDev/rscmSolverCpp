@@ -134,6 +134,7 @@ public:
     size_t nbAdders; ///< Number of adders in the layout.
     size_t nbPossibleVariables; ///< Number of variables in the layout.
     size_t nbInputBits; ///< Number of input bits of X.
+    bool useFineGrainCost; ///< Flag to enable fine-grained cost function instead of coarse-grained.
     std::vector<VariableDefs> varDefs; ///< Variable definitions.
     std::vector<int> targets; ///< Target values.
     std::vector<Layer> layers; ///< Layers in the layout.

@@ -63,16 +63,6 @@ public:
      * @brief The cost associated with the RSCM.
      */
     unsigned int cost;
-    
-    /**
-     * @brief The fine-grained cost (tracked separately when using MuxCountComputer).
-     */
-    unsigned int fineGrainedCost;
-
-    /**
-     * @brief The number of multiplexers in the RSCM.
-     */
-    unsigned int nbMuxes;
 };
 
 #endif //NODE_H
