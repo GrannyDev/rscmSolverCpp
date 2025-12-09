@@ -21,6 +21,8 @@ add_executable(rmcmSolver main.cpp
         RSCM.h
         DAG.cpp
         DAG.h
+        Verilog.cpp
+        Verilog.h
 )
 
 target_link_libraries(rmcmSolver ortools::ortools)

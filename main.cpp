@@ -34,6 +34,7 @@ int main() {
     std::cout << "_____________________BEST SOLUTION_____________________" << std::endl;
     problem.PrettyPrinter(problem.solution);
     problem.SolveConfigToMuxMapping();
+    problem.Verilog(problem.solution, "rscm_solution.v", true);
 
     return 0;
 }

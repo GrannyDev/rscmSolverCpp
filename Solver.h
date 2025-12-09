@@ -56,6 +56,18 @@ public:
     void PrettyPrinter(const RSCM& solutionNode);
 
     /**
+     * @brief Writes the solution in Verilog format.
+     * @param solutionNode The RSCM solution node to convert to Verilog.
+     * @param outputUri The file to write to.
+     * @param overwrite If the existing file is overwritten, will throw an error if false and the file exists
+     */
+    void Verilog(
+        const RSCM& solutionNode,
+        const std::string& outputUri,
+        bool overwrite
+    ) const;
+
+    /**
      * @brief Gets the current best cost of the solution.
      * @return The current best cost.
      */

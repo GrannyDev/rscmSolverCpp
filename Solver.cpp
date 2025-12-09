@@ -9,6 +9,7 @@
 #include <thread>
 
 #include "CPModel.h"
+#include "Verilog.h"
 
 // Constructor initializes solver parameters, layout configuration, and variable definitions
 Solver::Solver(
@@ -537,6 +538,11 @@ void Solver::PrettyPrinter(const RSCM& solutionNode)
         }
     }
     std::cout << std::endl;
+}
+
+void Solver::Verilog(const RSCM& solutionNode, const std::string& outputUri, const bool overwrite) const
+{
+    VerilogGenerator verilog(solutionNode, outputUri, layers, idxToVarMap, varToIdxMap, overwrite);
 }
 
 void Solver::SolveConfigToMuxMapping() const
