@@ -17,7 +17,7 @@ int main() {
     const auto targets = {-20, -13, -8, -6, -5, -3, -2, -1, 0, 1, 2, 4, 5, 7, 12, 19}; // target const set of the RSCM
 
     // {1,1} describes the chosen layout, i.e. 1 adder on the first layer and 1 adder on the second layer
-    Solver problem({1,1}, maxCoef, minCoef, targets, nbInputBits, true);
+    Solver problem({1,1}, maxCoef, minCoef, targets, nbInputBits, false);
 
     problem.CPSolve(); // step 1: solve the problem with the CPSolver
 

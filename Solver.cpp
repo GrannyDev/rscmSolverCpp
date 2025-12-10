@@ -232,9 +232,9 @@ void Solver::ComputeBranch(const int depth, const int threadNb, const unsigned i
     }
 }
 
-int Solver::CompareTwoComplement(int a, int b) {
-    int absA = std::abs(a);
-    int absB = std::abs(b);
+int Solver::CompareTwoComplement(const int a, const int b) {
+    const int absA = std::abs(a);
+    const int absB = std::abs(b);
 
     if (absA != absB)
         return absA > absB ? a : b;
@@ -542,7 +542,7 @@ void Solver::PrettyPrinter(const RSCM& solutionNode)
 
 void Solver::Verilog(const RSCM& solutionNode, const std::string& outputUri, const bool overwrite) const
 {
-    VerilogGenerator verilog(solutionNode, outputUri, layers, idxToVarMap, varToIdxMap, overwrite);
+    VerilogGenerator verilog(solutionNode, outputUri, layers, idxToVarMap, varToIdxMap, nbInputBits, targets, scmDesigns, overwrite);
 }
 
 void Solver::SolveConfigToMuxMapping() const

@@ -20,6 +20,9 @@ public:
      * @param layers layers in the layout
      * @param idxToVarMap maps the param idx to its VariableDefs
      * @param varToIdxMap maps the VariableDefs to its param idx
+     * @param inputBW x bitwidth
+     * @param targets target constants for testbench generation
+     * @param scmDesigns per-target SCM designs for testbench configuration
      */
     VerilogGenerator
     (
@@ -28,17 +31,52 @@ public:
         const std::vector<Layer>& layers,
         const std::unordered_map<unsigned int, VariableDefs>& idxToVarMap,
         const std::unordered_map<VariableDefs, unsigned int>& varToIdxMap,
+        unsigned int inputBW,
+        const std::vector<int>& targets,
+        const std::vector<std::pair<int, std::vector<DAG>>>& scmDesigns,
         bool overwrite = false
     );
 
 private:
-    void PrintAdderModules();
+    void PrintModules();
+    void PrintTestbench();
+    std::string GenerateMuxCode(
+        const Variables& param,
+        size_t paramBitPos,
+        unsigned int paramGlobalIdx,
+        unsigned int nbPossibleValues,
+        const std::string& muxName,
+        unsigned int bitwidth,
+        unsigned int adderIdx
+    ) const;
+    
+    // Helper methods
+    unsigned int ComputeBitWidth(int maxVal, bool is_signed, bool is_mux = false) const;
+    unsigned int GetMaxOutputValue(VariableDefs varType, unsigned int adderIdx, size_t nbVarsPerAdder) const;
+    void ProcessParameter(
+        const Variables& param,
+        size_t& bitPos,
+        unsigned int& paramGlobalIdx,
+        unsigned int paramInAdderIdx,
+        unsigned int adderIdx,
+        size_t nbVarsPerAdder,
+        std::unordered_map<unsigned int, unsigned int>& muxInputsMap,
+        std::stringstream& left_shift_mux,
+        std::stringstream& right_shift_mux,
+        std::stringstream& outputShiftMux,
+        std::stringstream& plusMinus,
+        std::stringstream& left_input,
+        std::stringstream& right_input
+    ) const;
 
     std::ofstream outputFile_;
     const RSCM& solutionNode_;
     const std::vector<Layer>& layers_;
     const std::unordered_map<unsigned int, VariableDefs>& idxToVarMap_;
     const std::unordered_map<VariableDefs, unsigned int>& varToIdxMap_;
+    const unsigned int inputBW_;
+    const std::vector<int>& targets_;
+    const std::vector<std::pair<int, std::vector<DAG>>>& scmDesigns_;
 };
 
 
