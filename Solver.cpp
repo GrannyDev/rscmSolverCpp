@@ -296,7 +296,8 @@ unsigned int Solver::MuxCountComputer::merge(RSCM& node, DAG const& scm) const
                 // If more than one bit, we need (bitsSet - 1) multiplexers
                 if (bitsSet > 1)
                 {
-                    muxCount += bitsSet - 1;
+                    // compute the number of bits to select instead
+                    muxCount += std::ceil(std::log2(bitsSet));
                 }
 
                 ++totalParams;

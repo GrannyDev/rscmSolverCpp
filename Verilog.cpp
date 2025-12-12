@@ -4,6 +4,7 @@
 
 #include "Verilog.h"
 
+#include <bitset>
 #include <filesystem>
 #include <iostream>
 #include <ranges>
@@ -32,7 +33,7 @@ VerilogGenerator::VerilogGenerator
 
     // Generate modules and testbench
     PrintModules();
-    PrintTestbench();
+    // PrintTestbench();
 }
 
 unsigned int VerilogGenerator::ComputeBitWidth(const int maxVal, const bool is_signed, const bool is_mux) const
@@ -54,6 +55,18 @@ unsigned int VerilogGenerator::GetMaxOutputValue(
     return solutionNode_.rscm.maxOutputValue[baseIdx];
 }
 
+std::string VerilogGenerator::PrintWireBitWidth(const unsigned int bw)
+{
+    if (bw == 1) return " ";
+    return " [" + std::to_string(bw - 1) + ":0] ";
+}
+
+std::string VerilogGenerator::PrintBinaryMuxCode(const unsigned int nbSelectBits, const unsigned int selecValue) const
+{
+    const unsigned int bw = ComputeBitWidth(static_cast<int>(nbSelectBits - 1), false, true);
+    return std::to_string(bw) + "'b" + std::bitset<32>(selecValue).to_string().substr(32 - bw);
+}
+
 std::string VerilogGenerator::GenerateMuxCode(
     const Variables& param,
     const size_t paramBitPos,
@@ -70,10 +83,8 @@ std::string VerilogGenerator::GenerateMuxCode(
     
     // Determine wire name based on context
     std::string interWireName;
-    std::string outputWireName;
     if (isAdder) {
         interWireName = "OUTPUT";
-        outputWireName = "ADDER_" + std::to_string(adderIdx) + "_OUTPUT";
     } else if (isInput) {
         interWireName = muxName + "_ADDER_" + std::to_string(adderIdx);
     } else if (muxName == "OUTPUT") {
@@ -84,10 +95,17 @@ std::string VerilogGenerator::GenerateMuxCode(
         interWireName = muxName + "_SHIFTED";
     }
 
+    unsigned int nbMuxInputs = 0;
+    for (const int v : param.possibleValuesFusion) {
+        if (solutionNode_.rscm.set.test(paramBitPos + v + param.zeroPoint)) {
+            nbMuxInputs++; // having the number of inputs before printing the case is needed for the binary conversion...
+        }
+    }
+
     // Declare wire (except for inputs which are ports, and output port)
-    const bool isOutputPort = (muxName == "OUTPUT");
-    if (!isInput && !isOutputPort) {
-        muxCode << "\twire [" << (bitwidth - 1) << ":0] " << interWireName << ";\n";
+    if (!isInput) {
+        if (nbMuxInputs > 1) muxCode << "\treg" << PrintWireBitWidth(bitwidth) << interWireName << ";\n";
+        else if (muxName != "OUTPUT") muxCode << "\twire" << PrintWireBitWidth(bitwidth) << interWireName << ";\n";
     }
 
     // Lambda to generate assignment statement
@@ -105,7 +123,7 @@ std::string VerilogGenerator::GenerateMuxCode(
                     muxCode << prefix << interWireName << " = X << " << std::abs(v + 1) << ";\n";
                 }
             } else {
-                muxCode << prefix << interWireName << " = ADDER_" << v << "_OUTPUT;\n";
+                muxCode << prefix << interWireName << " = ADDER_" << v << "_SHIFTED_OUTPUT;\n";
             }
         } else if (muxName == "OUTPUT") {
             // Output shift multiplexer - shift the OUTPUT wire
@@ -129,6 +147,7 @@ std::string VerilogGenerator::GenerateMuxCode(
     if (nbPossibleValues == 1) {
         for (const int v : param.possibleValuesFusion) {
             if (solutionNode_.rscm.set.test(paramBitPos + v + param.zeroPoint)) {
+                if (muxName == "OUTPUT") interWireName = "ADDER_" + std::to_string(adderIdx) + "_SHIFTED_OUTPUT";
                 generateAssignment(v, "\tassign ");
                 return muxCode.str();
             }
@@ -136,18 +155,34 @@ std::string VerilogGenerator::GenerateMuxCode(
     }
 
     // Multiple values case - use case statement
-    muxCode << "\talways @ *\n\t\tbegin\n\t\t\tcase (MUX_INPUT_" << paramGlobalIdx << ")\n";
+    muxCode << "\talways @ * begin\n\t\tcase (MUX_INPUT_" << paramGlobalIdx << ")\n";
     
     unsigned int currentSelBit = 0;
+
+    unsigned int firstV = 0;
     for (const int v : param.possibleValuesFusion) {
         if (solutionNode_.rscm.set.test(paramBitPos + v + param.zeroPoint)) {
-            muxCode << "\t\t\t\t" << currentSelBit << ": ";
+            if (currentSelBit == 0) firstV = v;
+            muxCode << "\t\t\t" << PrintBinaryMuxCode(nbMuxInputs, currentSelBit) << ": ";
             generateAssignment(v);
             ++currentSelBit;
         }
     }
-    
-    muxCode << "\t\t\tendcase\n\t\tend\n";
+
+    // if nbMuxInputs not a power of two, need to add a default case
+    if (nbMuxInputs == 0 || (nbMuxInputs & nbMuxInputs - 1) != 0)
+    {
+        // make the zero case the default case
+        muxCode << "\t\t\tdefault: ";
+        generateAssignment(static_cast<int>(firstV));
+    }
+
+    muxCode << "\t\tendcase\n\tend\n";
+
+    if (nbMuxInputs > 1 && muxName == "OUTPUT")
+    {
+        muxCode << "\tassign ADDER_" << adderIdx << "_SHIFTED_OUTPUT = " << interWireName << ";\n";
+    }
     return muxCode.str();
 }
 
@@ -272,16 +307,16 @@ void VerilogGenerator::PrintModules()
             }
 
             outputFile_ << "module ADDER_" << adderIdx << " (\n"
-                       << "\tinput [" << (leftInputBW - 1) << ":0] LEFT_INPUT_ADDER_" << adderIdx << ",\n"
-                       << "\tinput [" << (rightInputBW - 1) << ":0] RIGHT_INPUT_ADDER_" << adderIdx << ",\n";
+                       << "\tinput" << PrintWireBitWidth(leftInputBW) << "LEFT_INPUT_ADDER_" << adderIdx << ",\n"
+                       << "\tinput" << PrintWireBitWidth(rightInputBW) << "RIGHT_INPUT_ADDER_" << adderIdx << ",\n";
 
             // Write mux select inputs
             for (const auto& [paramIdx, muxInputCount] : muxInputsMap) {
                 const auto muxSelBits = ComputeBitWidth(static_cast<int>(muxInputCount) - 1, false, true);
-                outputFile_ << "\tinput [" << (muxSelBits - 1) << ":0] MUX_INPUT_" << paramIdx << ",\n";
+                outputFile_ << "\tinput" << PrintWireBitWidth(muxSelBits) << "MUX_INPUT_" << paramIdx << ",\n";
             }
 
-            outputFile_ << "\toutput [" << (outputBW - 1) << ":0] ADDER_" << adderIdx << "_OUTPUT\n);\n";
+            outputFile_ << "\toutput" << PrintWireBitWidth(outputBW) << "ADDER_" << adderIdx << "_SHIFTED_OUTPUT\n);\n";
 
             // Write module body with comments
             struct MuxOutput { const char* comment; const std::stringstream* stream; };
@@ -312,42 +347,42 @@ void VerilogGenerator::PrintModules()
 
     // Build top module header with MUX inputs from collected maps
     rscmTopModule << "module RSCM (\n"
-                  << "\tinput [" << (inputBW_ - 1) << ":0] X,\n";
+                  << "\tinput" << PrintWireBitWidth(inputBW_) <<" X,\n";
     
     // Add all MUX_INPUT ports (including input routing muxes)
     for (const auto& [paramIdx, muxInputCount] : allMuxInputs) {
         const auto muxSelBits = ComputeBitWidth(static_cast<int>(muxInputCount) - 1, false, true);
-        rscmTopModule << "\tinput [" << (muxSelBits - 1) << ":0] MUX_INPUT_" << paramIdx << ",\n";
+        rscmTopModule << "\tinput" << PrintWireBitWidth(muxSelBits) << "MUX_INPUT_" << paramIdx << ",\n";
     }
     
-    rscmTopModule << "\toutput [" << (rscmOutputBW - 1) << ":0] OUTPUT\n"
+    rscmTopModule << "\toutput" << PrintWireBitWidth(rscmOutputBW) << "OUTPUT\n"
                   << ");\n\n";
 
-    // Declare output wires for each adder
-    for (unsigned int i = 0; i < adderInputs.size(); ++i) {
-        const auto outputBW = ComputeBitWidth(GetMaxOutputValue(VariableDefs::OUTPUTS_SHIFTS, i, nbVarsPerAdder), true);
-        rscmTopModule << "\twire [" << (outputBW - 1) << ":0] ADDER_" << i << "_OUTPUT;\n";
-    }
-    rscmTopModule << "\n";
 
     // Instantiate each adder with its routing
     unsigned int adderCounter = 0;
     for (const auto& [leftInputStream, rightInputStream] : adderInputs)
     {
+        const auto outputBW = ComputeBitWidth(GetMaxOutputValue(VariableDefs::OUTPUTS_SHIFTS, adderCounter, nbVarsPerAdder), true);
+        rscmTopModule << "\twire" << PrintWireBitWidth(outputBW) << "ADDER_" << adderCounter << "_SHIFTED_OUTPUT;\n";
         // Determine if inputs need wire declarations (for muxed inputs in top module)
         const bool leftHasMux = leftInputStream.str().find("always") != std::string::npos;
         const bool rightHasMux = rightInputStream.str().find("always") != std::string::npos;
         
-        if (leftHasMux || rightHasMux) {
-            rscmTopModule << "\t// Adder " << adderCounter << " Input Wires\n";
-            if (leftHasMux) {
-                const auto leftBW = ComputeBitWidth(GetMaxOutputValue(VariableDefs::LEFT_INPUTS, adderCounter, nbVarsPerAdder), true);
-                rscmTopModule << "\twire [" << (leftBW - 1) << ":0] LEFT_INPUT_ADDER_" << adderCounter << ";\n";
-            }
-            if (rightHasMux) {
-                const auto rightBW = ComputeBitWidth(GetMaxOutputValue(VariableDefs::RIGHT_INPUTS, adderCounter, nbVarsPerAdder), true);
-                rscmTopModule << "\twire [" << (rightBW - 1) << ":0] RIGHT_INPUT_ADDER_" << adderCounter << ";\n";
-            }
+
+        if (leftHasMux) {
+            const auto leftBW = ComputeBitWidth(GetMaxOutputValue(VariableDefs::LEFT_INPUTS, adderCounter, nbVarsPerAdder), true);
+            rscmTopModule << "\treg" << PrintWireBitWidth(leftBW) << "LEFT_INPUT_ADDER_" << adderCounter << ";\n";
+        } else
+        {
+            rscmTopModule << "\twire" << PrintWireBitWidth(inputBW_) << "LEFT_INPUT_ADDER_" << adderCounter << " ;\n";
+        }
+        if (rightHasMux) {
+            const auto rightBW = ComputeBitWidth(GetMaxOutputValue(VariableDefs::RIGHT_INPUTS, adderCounter, nbVarsPerAdder), true);
+            rscmTopModule << "\treg" << PrintWireBitWidth(rightBW) << "RIGHT_INPUT_ADDER_" << adderCounter << ";\n";
+        } else
+        {
+            rscmTopModule << "\twire" << PrintWireBitWidth(inputBW_) << "RIGHT_INPUT_ADDER_" << adderCounter << " ;\n";
         }
         
         rscmTopModule << "\t// Adder " << adderCounter << " Input Routing\n";
@@ -363,14 +398,14 @@ void VerilogGenerator::PrintModules()
             rscmTopModule << "\t\t.MUX_INPUT_" << paramIdx << "(MUX_INPUT_" << paramIdx << "),\n";
         }
         
-        rscmTopModule << "\t\t.ADDER_" << adderCounter << "_OUTPUT(ADDER_" << adderCounter << "_OUTPUT)\n";
+        rscmTopModule << "\t\t.ADDER_" << adderCounter << "_SHIFTED_OUTPUT(ADDER_" << adderCounter << "_SHIFTED_OUTPUT)\n";
         rscmTopModule << "\t);\n\n";
         ++adderCounter;
     }
 
     // Connect final output
     rscmTopModule << "\t// Final Output\n";
-    rscmTopModule << "\tassign OUTPUT = ADDER_" << (adderInputs.size() - 1) << "_OUTPUT;\n\n";
+    rscmTopModule << "\tassign OUTPUT = ADDER_" << (adderInputs.size() - 1) << "_SHIFTED_OUTPUT;\n\n";
     rscmTopModule << "endmodule\n";
     outputFile_ << rscmTopModule.str();
 }
@@ -443,7 +478,7 @@ void VerilogGenerator::PrintTestbench()
     const auto outputBW = ComputeBitWidth(
         GetMaxOutputValue(VariableDefs::OUTPUTS_SHIFTS, static_cast<unsigned int>(layers_.back().adders.size()) - 1,
                          layers_[0].adders[0].variables.size()), true);
-    outputFile_ << "\twire [" << (outputBW - 1) << ":0] OUTPUT;\n\n";
+    outputFile_ << "\twire" << PrintWireBitWidth(outputBW) << "OUTPUT;\n\n";
     
     // Instantiate DUT
     outputFile_ << "\t// Instantiate RSCM module\n";

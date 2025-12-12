@@ -69,6 +69,9 @@ private:
         std::stringstream& right_input
     ) const;
 
+    static std::string PrintWireBitWidth(unsigned int bw);
+    std::string PrintBinaryMuxCode(unsigned int nbSelectBits, unsigned int selecValue) const;
+
     std::ofstream outputFile_;
     const RSCM& solutionNode_;
     const std::vector<Layer>& layers_;
