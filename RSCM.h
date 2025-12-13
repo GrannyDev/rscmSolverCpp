@@ -60,6 +60,11 @@ public:
     std::vector<unsigned int> minShiftSavings;
 
     /**
+     * @brief A vector representig the bitwidth of each variable output.
+     */
+    std::vector<unsigned int> variableBitWidths;
+
+    /**
      * @brief The cost associated with the RSCM.
      */
     unsigned int cost;

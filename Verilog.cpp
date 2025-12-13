@@ -34,25 +34,36 @@ VerilogGenerator::VerilogGenerator
     // Generate modules and testbench
     PrintModules();
     // PrintTestbench();
+
+    // print the bitwidth of each parameters of each adder
+    unsigned int adderIdx = 0;
+    for (const auto& layer : layers_) {
+        for (const auto& adder : layer.adders) {
+            std::cout << "Adder " << adderIdx << " parameters bitwidths: " << std::endl;
+            for (size_t p = 0; p < adder.variables.size(); p++)
+            {
+                const auto varType = idxToVarMap_.at(p);
+                const auto bw = GetParamBitWidth(varType, static_cast<unsigned int>(adderIdx), layer.adders[0].variables.size());
+                std::cout << "\t" << VarDefsToString()(varType) << ": " << bw << " bits" << std::endl;
+            }
+            ++adderIdx;
+        }
+    }
+
 }
 
-unsigned int VerilogGenerator::ComputeBitWidth(const int maxVal, const bool is_signed, const bool is_mux) const
+unsigned int VerilogGenerator::ComputeBitWidth(const int value)
 {
-    unsigned int bw;
-    if (!is_signed) bw = static_cast<unsigned int>(std::ceil(std::log2(maxVal + 1)));
-    else bw = static_cast<unsigned int>(std::ceil(std::log2(std::max(std::abs(maxVal + 1), std::abs(maxVal))))) + 1;
-
-    if (!is_mux) bw += inputBW_;
-    return bw;
+    return static_cast<unsigned int>(std::ceil(std::log2(value + 1)));
 }
 
-unsigned int VerilogGenerator::GetMaxOutputValue(
+unsigned int VerilogGenerator::GetParamBitWidth(
     const VariableDefs varType,
     const unsigned int adderIdx,
     const size_t nbVarsPerAdder) const
 {
     const auto baseIdx = varToIdxMap_.at(varType) + adderIdx * nbVarsPerAdder;
-    return solutionNode_.rscm.maxOutputValue[baseIdx];
+    return solutionNode_.variableBitWidths[baseIdx];
 }
 
 std::string VerilogGenerator::PrintWireBitWidth(const unsigned int bw)
@@ -61,9 +72,9 @@ std::string VerilogGenerator::PrintWireBitWidth(const unsigned int bw)
     return " [" + std::to_string(bw - 1) + ":0] ";
 }
 
-std::string VerilogGenerator::PrintBinaryMuxCode(const unsigned int nbSelectBits, const unsigned int selecValue) const
+std::string VerilogGenerator::PrintBinaryMuxCode(const unsigned int nbSelectBits, const unsigned int selecValue)
 {
-    const unsigned int bw = ComputeBitWidth(static_cast<int>(nbSelectBits - 1), false, true);
+    const unsigned int bw = ComputeBitWidth(static_cast<int>(nbSelectBits - 1));
     return std::to_string(bw) + "'b" + std::bitset<32>(selecValue).to_string().substr(32 - bw);
 }
 
@@ -74,25 +85,60 @@ std::string VerilogGenerator::GenerateMuxCode(
     const unsigned int nbPossibleValues,
     const std::string& muxName,
     const unsigned int bitwidth,
-    const unsigned int adderIdx
+    const unsigned int adderIdx,
+    const unsigned int inputBitWidth,
+    const size_t nbVarsPerAdder
     ) const
 {
     std::stringstream muxCode;
     const bool isAdder = muxName == "RIGHT_MULTIPLIER";
     const bool isInput = muxName == "LEFT_INPUT" || muxName == "RIGHT_INPUT";
+    const bool isShifter = !isAdder && !isInput;
+    
+    // For shifters, find max shift amount
+    unsigned int maxShift = 0;
+    if (isShifter && inputBitWidth > 0) {
+        for (const int v : param.possibleValuesFusion) {
+            if (solutionNode_.rscm.set.test(paramBitPos + v + param.zeroPoint)) {
+                if (muxName == "OUTPUT") {
+                    // Output shift uses power of 2, but only count if v > 0
+                    if (v > 0) {
+                        maxShift = std::max(maxShift, static_cast<unsigned int>(1 << v));
+                    }
+                } else {
+                    // Input shift uses direct value
+                    maxShift = std::max(maxShift, static_cast<unsigned int>(v));
+                }
+            }
+        }
+    }
+    
+    // Only use unsliced/sliced pattern if maxShift > 0
+    const bool needsSlicing = isShifter && inputBitWidth > 0 && maxShift > 0;
     
     // Determine wire name based on context
     std::string interWireName;
+    std::string slicedWireName;
     if (isAdder) {
         interWireName = "OUTPUT";
     } else if (isInput) {
         interWireName = muxName + "_ADDER_" + std::to_string(adderIdx);
     } else if (muxName == "OUTPUT") {
         // Output shift multiplexer
-        interWireName = "ADDER_" + std::to_string(adderIdx) + "_OUTPUT";
+        if (needsSlicing) {
+            interWireName = "ADDER_" + std::to_string(adderIdx) + "_OUTPUT_UNSLICED";
+            slicedWireName = "ADDER_" + std::to_string(adderIdx) + "_SHIFTED_OUTPUT";
+        } else {
+            interWireName = "ADDER_" + std::to_string(adderIdx) + "_SHIFTED_OUTPUT";
+        }
     } else {
         // Shift multiplexers - muxName already contains full name like LEFT_INPUT_ADDER_X
-        interWireName = muxName + "_SHIFTED";
+        if (needsSlicing) {
+            interWireName = muxName + "_SHIFTED_UNSLICED";
+            slicedWireName = muxName + "_SHIFTED";
+        } else {
+            interWireName = muxName + "_SHIFTED";
+        }
     }
 
     unsigned int nbMuxInputs = 0;
@@ -103,9 +149,55 @@ std::string VerilogGenerator::GenerateMuxCode(
     }
 
     // Declare wire (except for inputs which are ports, and output port)
+    // For shifters, use the precomputed bitwidth
+    // For adders, use max operand size + 1 for carry-out
+    unsigned int declaredBitWidth = bitwidth;
+    bool needsAdderSlicing = false;
+    if (needsSlicing) {
+        // For shifters with slicing, use precomputed bitwidth as the UNSLICED size
+        declaredBitWidth = bitwidth;
+    } else if (isAdder && inputBitWidth > 0) {
+        // For adders, get the max of left and right shifted input sizes, then add 1 for carry
+        const auto leftShiftedBW = GetParamBitWidth(VariableDefs::LEFT_SHIFTS, adderIdx, nbVarsPerAdder);
+        const auto rightShiftedBW = GetParamBitWidth(VariableDefs::RIGHT_SHIFTS, adderIdx, nbVarsPerAdder);
+        declaredBitWidth = std::max(leftShiftedBW, rightShiftedBW) + 1;
+        // Always need slicing for adders to separate carry
+        needsAdderSlicing = true;
+    }
+    
     if (!isInput) {
-        if (nbMuxInputs > 1) muxCode << "\treg" << PrintWireBitWidth(bitwidth) << interWireName << ";\n";
-        else if (muxName != "OUTPUT") muxCode << "\twire" << PrintWireBitWidth(bitwidth) << interWireName << ";\n";
+        // For adders with slicing and multiple values, declare OUTPUT_CARRY, OUTPUT, OUTPUT_UNSLICED, and OUTPUT_SLICED
+        // Otherwise, normal declaration logic
+        if (nbMuxInputs > 1) {
+            if (needsAdderSlicing && isAdder) {
+                const auto maxOperandBW = inputBitWidth;  // max of left and right operands
+                muxCode << "\treg OUTPUT_CARRY;\n";
+                muxCode << "\treg" << PrintWireBitWidth(maxOperandBW) << "OUTPUT;\n";
+                muxCode << "\treg" << PrintWireBitWidth(declaredBitWidth) << "OUTPUT_UNSLICED;\n";
+                muxCode << "\treg" << PrintWireBitWidth(bitwidth) << "OUTPUT_SLICED;\n";
+            } else {
+                muxCode << "\treg" << PrintWireBitWidth(declaredBitWidth) << interWireName << ";\n";
+            }
+        } else if (muxName != "OUTPUT" || (isAdder && needsAdderSlicing)) {
+            // Skip declaration for adders with slicing (will be declared separately)
+            if (!(isAdder && needsAdderSlicing)) {
+                muxCode << "\twire" << PrintWireBitWidth(declaredBitWidth) << interWireName << ";\n";
+            }
+        }
+    }
+    
+    // For shifters, declare the sliced output wire
+    if (needsSlicing && !slicedWireName.empty()) {
+        muxCode << "\twire" << PrintWireBitWidth(bitwidth) << slicedWireName << ";\n";
+    }
+    
+    // For adders with slicing (single value case), declare OUTPUT_CARRY, OUTPUT, UNSLICED and SLICED wires
+    if (needsAdderSlicing && isAdder && nbMuxInputs <= 1) {
+        const auto maxOperandBW = inputBitWidth;  // max of left and right operands
+        muxCode << "\twire OUTPUT_CARRY;\n";
+        muxCode << "\twire" << PrintWireBitWidth(maxOperandBW) << "OUTPUT;\n";
+        muxCode << "\twire" << PrintWireBitWidth(declaredBitWidth) << "OUTPUT_UNSLICED;\n";
+        muxCode << "\twire" << PrintWireBitWidth(bitwidth) << "OUTPUT_SLICED;\n";
     }
 
     // Lambda to generate assignment statement
@@ -114,7 +206,11 @@ std::string VerilogGenerator::GenerateMuxCode(
             const char op = v == -1 ? '-' : '+';
             const std::string leftWire = "LEFT_INPUT_ADDER_" + std::to_string(adderIdx) + "_SHIFTED";
             const std::string rightWire = "RIGHT_INPUT_ADDER_" + std::to_string(adderIdx) + "_SHIFTED";
-            muxCode << prefix << interWireName << " = " << leftWire << " " << op << " " << rightWire << ";\n";
+            if (needsAdderSlicing) {
+                muxCode << prefix << "{OUTPUT_CARRY, OUTPUT} = " << leftWire << " " << op << " " << rightWire << ";\n";
+            } else {
+                muxCode << prefix << interWireName << " = " << leftWire << " " << op << " " << rightWire << ";\n";
+            }
         } else if (isInput) {
             if (v < 0) {
                 if (v == -1) {
@@ -126,11 +222,11 @@ std::string VerilogGenerator::GenerateMuxCode(
                 muxCode << prefix << interWireName << " = ADDER_" << v << "_SHIFTED_OUTPUT;\n";
             }
         } else if (muxName == "OUTPUT") {
-            // Output shift multiplexer - shift the OUTPUT wire
+            // Output shift multiplexer - shift the OUTPUT_SLICED wire (or OUTPUT if no slicing)
             if (v == 0) {
-                muxCode << prefix << interWireName << " = OUTPUT;\n";
+                muxCode << prefix << interWireName << " = OUTPUT_SLICED;\n";
             } else {
-                muxCode << prefix << interWireName << " = OUTPUT << " << (1 << v) << ";\n";
+                muxCode << prefix << interWireName << " = OUTPUT_SLICED << " << (1 << v) << ";\n";
             }
         } else {
             // Shift multiplexers (LEFT/RIGHT_INPUT shifts)
@@ -147,8 +243,17 @@ std::string VerilogGenerator::GenerateMuxCode(
     if (nbPossibleValues == 1) {
         for (const int v : param.possibleValuesFusion) {
             if (solutionNode_.rscm.set.test(paramBitPos + v + param.zeroPoint)) {
-                if (muxName == "OUTPUT") interWireName = "ADDER_" + std::to_string(adderIdx) + "_SHIFTED_OUTPUT";
                 generateAssignment(v, "\tassign ");
+                // Add slicing assignment for shifters
+                if (needsSlicing && !slicedWireName.empty()) {
+                    muxCode << "\tassign " << slicedWireName << " = " << interWireName 
+                            << "[" << (bitwidth - 1) << ":0];\n";
+                }
+                // For adders with slicing, concatenate carry and output, then slice
+                if (needsAdderSlicing && isAdder) {
+                    muxCode << "\tassign OUTPUT_UNSLICED = {OUTPUT_CARRY, OUTPUT};\n";
+                    muxCode << "\tassign OUTPUT_SLICED = OUTPUT_UNSLICED[" << (bitwidth - 1) << ":0];\n";
+                }
                 return muxCode.str();
             }
         }
@@ -178,11 +283,20 @@ std::string VerilogGenerator::GenerateMuxCode(
     }
 
     muxCode << "\t\tendcase\n\tend\n";
-
-    if (nbMuxInputs > 1 && muxName == "OUTPUT")
+    
+    // Add slicing assignment for shifters
+    if (needsSlicing && !slicedWireName.empty())
     {
-        muxCode << "\tassign ADDER_" << adderIdx << "_SHIFTED_OUTPUT = " << interWireName << ";\n";
+        muxCode << "\tassign " << slicedWireName << " = " << interWireName 
+                << "[" << (bitwidth - 1) << ":0];\n";
     }
+    
+    // For adders with slicing, concatenate carry and output, then slice
+    if (needsAdderSlicing && isAdder) {
+        muxCode << "\tassign OUTPUT_UNSLICED = {OUTPUT_CARRY, OUTPUT};\n";
+        muxCode << "\tassign OUTPUT_SLICED = OUTPUT_UNSLICED[" << (bitwidth - 1) << ":0];\n";
+    }
+    
     return muxCode.str();
 }
 
@@ -199,7 +313,10 @@ void VerilogGenerator::ProcessParameter(
     std::stringstream& outputShiftMux,
     std::stringstream& plusMinus,
     std::stringstream& left_input,
-    std::stringstream& right_input
+    std::stringstream& right_input,
+    const unsigned int leftInputPortBW,
+    const unsigned int rightInputPortBW,
+    const unsigned int adderOutputBW
 ) const
 {
     const size_t paramBitPos = bitPos;
@@ -224,28 +341,43 @@ void VerilogGenerator::ProcessParameter(
 
     // Generate code based on variable type
     const VariableDefs varType = idxToVarMap_.at(paramInAdderIdx);
-    const unsigned int bitWidth = ComputeBitWidth(
-        GetMaxOutputValue(varType, adderIdx, nbVarsPerAdder), true
-    );
+    const unsigned int bitWidth = GetParamBitWidth(varType, adderIdx, nbVarsPerAdder);
 
     struct MuxConfig {
         VariableDefs type;
         std::string name;
         std::stringstream* stream;
+        bool needsInputBW;
     };
 
     const std::array<MuxConfig, 6> muxConfigs = {{
-        {VariableDefs::LEFT_SHIFTS, "LEFT_INPUT_ADDER_" + std::to_string(adderIdx), &left_shift_mux},
-        {VariableDefs::RIGHT_SHIFTS, "RIGHT_INPUT_ADDER_" + std::to_string(adderIdx), &right_shift_mux},
-        {VariableDefs::OUTPUTS_SHIFTS, "OUTPUT", &outputShiftMux},
-        {VariableDefs::RIGHT_MULTIPLIER, "RIGHT_MULTIPLIER", &plusMinus},
-        {VariableDefs::LEFT_INPUTS, "LEFT_INPUT", &left_input},
-        {VariableDefs::RIGHT_INPUTS, "RIGHT_INPUT", &right_input}
+        {VariableDefs::LEFT_SHIFTS, "LEFT_INPUT_ADDER_" + std::to_string(adderIdx), &left_shift_mux, true},
+        {VariableDefs::RIGHT_SHIFTS, "RIGHT_INPUT_ADDER_" + std::to_string(adderIdx), &right_shift_mux, true},
+        {VariableDefs::OUTPUTS_SHIFTS, "OUTPUT", &outputShiftMux, true},
+        {VariableDefs::RIGHT_MULTIPLIER, "RIGHT_MULTIPLIER", &plusMinus, true},
+        {VariableDefs::LEFT_INPUTS, "LEFT_INPUT", &left_input, false},
+        {VariableDefs::RIGHT_INPUTS, "RIGHT_INPUT", &right_input, false}
     }};
 
-    for (const auto& [type, name, stream] : muxConfigs) {
+    for (const auto& [type, name, stream, needsInputBW] : muxConfigs) {
         if (varType == type) {
-            *stream << GenerateMuxCode(param, paramBitPos, paramGlobalIdx, bitsSet, name, bitWidth, adderIdx);
+            unsigned int inputBW = 0;
+            if (needsInputBW) {
+                // Get the input bitwidth for shifters - use actual port sizes
+                if (type == VariableDefs::LEFT_SHIFTS) {
+                    inputBW = leftInputPortBW;
+                } else if (type == VariableDefs::RIGHT_SHIFTS) {
+                    inputBW = rightInputPortBW;
+                } else if (type == VariableDefs::OUTPUTS_SHIFTS) {
+                    inputBW = adderOutputBW;
+                } else if (type == VariableDefs::RIGHT_MULTIPLIER) {
+                    // For adder, pass the max of left and right shifted sizes
+                    const auto leftShiftedBW = GetParamBitWidth(VariableDefs::LEFT_SHIFTS, adderIdx, nbVarsPerAdder);
+                    const auto rightShiftedBW = GetParamBitWidth(VariableDefs::RIGHT_SHIFTS, adderIdx, nbVarsPerAdder);
+                    inputBW = std::max(leftShiftedBW, rightShiftedBW);
+                }
+            }
+            *stream << GenerateMuxCode(param, paramBitPos, paramGlobalIdx, bitsSet, name, bitWidth, adderIdx, inputBW, nbVarsPerAdder);
         }
     }
 
@@ -264,6 +396,7 @@ void VerilogGenerator::PrintModules()
     std::vector<std::pair<std::stringstream, std::stringstream>> adderInputs;
     std::vector<std::unordered_map<unsigned int, unsigned int>> adderMuxMaps;
     std::unordered_map<unsigned int, unsigned int> allMuxInputs;
+    std::vector<unsigned int> adderOutputSizes; // Track each adder's output size
 
     for (const auto& layer : layers_) {
         for (const auto& adder : layer.adders) {
@@ -271,6 +404,37 @@ void VerilogGenerator::PrintModules()
             std::stringstream left_shift_mux, right_shift_mux, outputShiftMux, plusMinus, left_input, right_input;
             unsigned int paramInAdderIdx = 0;
 
+            // Process all parameters
+            // Calculate module port sizes first
+            // For layer 0, inputs are from X
+            // For other layers, we need to determine from the routing parameters
+            auto leftInputBW = inputBW_;
+            auto rightInputBW = inputBW_;
+            auto outputBW = GetParamBitWidth(VariableDefs::OUTPUTS_SHIFTS, adderIdx, nbVarsPerAdder);
+            rscmOutputBW = outputBW; // store for top module
+            adderOutputSizes.push_back(outputBW); // Track this adder's output size
+
+            if (layerIdx == 0)
+            {
+                leftInputBW = inputBW_;
+                rightInputBW = inputBW_;
+            }
+            else
+            {
+                // For non-layer-0, use conservative estimates
+                // These will be recalculated after routing code generation
+                leftInputBW = inputBW_;
+                rightInputBW = inputBW_;
+                // Check if any previous adder outputs might be used
+                for (size_t i = 0; i < adderOutputSizes.size(); ++i) {
+                    leftInputBW = std::max(leftInputBW, adderOutputSizes[i]);
+                    rightInputBW = std::max(rightInputBW, adderOutputSizes[i]);
+                }
+            }
+            
+            // Get adder output size (input to output shifter)
+            const auto adderOutputBW = GetParamBitWidth(VariableDefs::RIGHT_MULTIPLIER, adderIdx, nbVarsPerAdder);
+            
             // Process all parameters
             for (const auto& param : adder.variables) {
                 // Track bits set for all mux inputs (including input routing)
@@ -287,32 +451,100 @@ void VerilogGenerator::PrintModules()
                 
                 ProcessParameter(param, bitPos, paramGlobalIdx, paramInAdderIdx, adderIdx,
                                nbVarsPerAdder, muxInputsMap, left_shift_mux, right_shift_mux,
-                               outputShiftMux, plusMinus, left_input, right_input);
+                               outputShiftMux, plusMinus, left_input, right_input,
+                               leftInputBW, rightInputBW, adderOutputBW);
                 ++paramInAdderIdx;
             }
             adderInputs.emplace_back(std::move(left_input), std::move(right_input));
             adderMuxMaps.push_back(muxInputsMap);
 
-            // Write module header
-            auto leftInputBW = ComputeBitWidth(GetMaxOutputValue(VariableDefs::LEFT_INPUTS, adderIdx, nbVarsPerAdder), true);
-            auto rightInputBW = ComputeBitWidth(GetMaxOutputValue(VariableDefs::RIGHT_INPUTS, adderIdx, nbVarsPerAdder), true);
-            const auto outputBW = ComputeBitWidth(GetMaxOutputValue(VariableDefs::OUTPUTS_SHIFTS, adderIdx, nbVarsPerAdder), true);
-            rscmOutputBW = outputBW; // store for top module
-
-            // inputs of layer 0 adders are always -1, needs to be handled
-            if (layerIdx == 0)
-            {
+            // Calculate actual port sizes from routing code
+            // For layer 0, inputs are always from X
+            if (layerIdx == 0) {
                 leftInputBW = inputBW_;
                 rightInputBW = inputBW_;
+            } else {
+                // Calculate based on routing code
+                const bool leftHasMux = adderInputs.back().first.str().find("always") != std::string::npos;
+                const bool rightHasMux = adderInputs.back().second.str().find("always") != std::string::npos;
+
+                if (leftHasMux) {
+                    leftInputBW = inputBW_;
+                    const std::string& leftCode = adderInputs.back().first.str();
+                    for (int shift = 0; shift <= 5; ++shift) {
+                        if (leftCode.find("X << " + std::to_string(shift)) != std::string::npos) {
+                            leftInputBW = std::max(leftInputBW, inputBW_ + static_cast<unsigned int>(shift));
+                        }
+                    }
+                    for (size_t i = 0; i < adderOutputSizes.size(); ++i) {
+                        if (leftCode.find("ADDER_" + std::to_string(i) + "_SHIFTED_OUTPUT") != std::string::npos) {
+                            leftInputBW = std::max(leftInputBW, adderOutputSizes[i]);
+                        }
+                    }
+                } else {
+                    // Direct routing - determine from source
+                    const std::string& leftCode = adderInputs.back().first.str();
+                    // Check if routing from X - need to check ADDER_ after '=' to avoid matching target wire
+                    size_t eqPos = leftCode.find('=');
+                    size_t adderPosAfterEq = (eqPos != std::string::npos) ? leftCode.find("ADDER_", eqPos) : std::string::npos;
+                    if (leftCode.find("= X") != std::string::npos && adderPosAfterEq == std::string::npos) {
+                        leftInputBW = inputBW_;
+                    } else {
+                        // Find ADDER_ after the '=' sign
+                        if (adderPosAfterEq != std::string::npos) {
+                            for (size_t i = 0; i < adderOutputSizes.size(); ++i) {
+                                if (leftCode.find("ADDER_" + std::to_string(i), eqPos) != std::string::npos) {
+                                    leftInputBW = adderOutputSizes[i];
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                if (rightHasMux) {
+                    rightInputBW = inputBW_;
+                    const std::string& rightCode = adderInputs.back().second.str();
+                    for (int shift = 0; shift <= 5; ++shift) {
+                        if (rightCode.find("X << " + std::to_string(shift)) != std::string::npos) {
+                            rightInputBW = std::max(rightInputBW, inputBW_ + static_cast<unsigned int>(shift));
+                        }
+                    }
+                    for (size_t i = 0; i < adderOutputSizes.size(); ++i) {
+                        if (rightCode.find("ADDER_" + std::to_string(i) + "_SHIFTED_OUTPUT") != std::string::npos) {
+                            rightInputBW = std::max(rightInputBW, adderOutputSizes[i]);
+                        }
+                    }
+                } else {
+                    // Direct routing - determine from source
+                    const std::string& rightCode = adderInputs.back().second.str();
+                    // Check if routing from X - need to check ADDER_ after '=' to avoid matching target wire
+                    size_t eqPos = rightCode.find('=');
+                    size_t adderPosAfterEq = (eqPos != std::string::npos) ? rightCode.find("ADDER_", eqPos) : std::string::npos;
+                    if (rightCode.find("= X") != std::string::npos && adderPosAfterEq == std::string::npos) {
+                        rightInputBW = inputBW_;
+                    } else {
+                        // Find ADDER_ after the '=' sign
+                        if (adderPosAfterEq != std::string::npos) {
+                            for (size_t i = 0; i < adderOutputSizes.size(); ++i) {
+                                if (rightCode.find("ADDER_" + std::to_string(i), eqPos) != std::string::npos) {
+                                    rightInputBW = adderOutputSizes[i];
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
+            // Write module header
             outputFile_ << "module ADDER_" << adderIdx << " (\n"
                        << "\tinput" << PrintWireBitWidth(leftInputBW) << "LEFT_INPUT_ADDER_" << adderIdx << ",\n"
                        << "\tinput" << PrintWireBitWidth(rightInputBW) << "RIGHT_INPUT_ADDER_" << adderIdx << ",\n";
 
             // Write mux select inputs
             for (const auto& [paramIdx, muxInputCount] : muxInputsMap) {
-                const auto muxSelBits = ComputeBitWidth(static_cast<int>(muxInputCount) - 1, false, true);
+                const auto muxSelBits = ComputeBitWidth(static_cast<int>(muxInputCount) - 1);
                 outputFile_ << "\tinput" << PrintWireBitWidth(muxSelBits) << "MUX_INPUT_" << paramIdx << ",\n";
             }
 
@@ -335,8 +567,13 @@ void VerilogGenerator::PrintModules()
             
             // Assign module output if no output shift mux (otherwise it's already assigned)
             if (outputShiftMux.str().empty() && !plusMinus.str().empty()) {
-                outputFile_ << "\t// Assign output\n";\
-                outputFile_ << "\tassign ADDER_" << adderIdx << "_OUTPUT = OUTPUT;\n\n";
+                outputFile_ << "\t// Assign output\n";
+                // Check if OUTPUT_UNSLICED was generated (adder needed slicing)
+                if (plusMinus.str().find("OUTPUT_UNSLICED") != std::string::npos) {
+                    outputFile_ << "\tassign ADDER_" << adderIdx << "_SHIFTED_OUTPUT = OUTPUT_SLICED;\n\n";
+                } else {
+                    outputFile_ << "\tassign ADDER_" << adderIdx << "_SHIFTED_OUTPUT = OUTPUT;\n\n";
+                }
             }
 
             outputFile_ << "endmodule\n\n";
@@ -351,7 +588,7 @@ void VerilogGenerator::PrintModules()
     
     // Add all MUX_INPUT ports (including input routing muxes)
     for (const auto& [paramIdx, muxInputCount] : allMuxInputs) {
-        const auto muxSelBits = ComputeBitWidth(static_cast<int>(muxInputCount) - 1, false, true);
+        const auto muxSelBits = ComputeBitWidth(static_cast<int>(muxInputCount) - 1);
         rscmTopModule << "\tinput" << PrintWireBitWidth(muxSelBits) << "MUX_INPUT_" << paramIdx << ",\n";
     }
     
@@ -363,26 +600,120 @@ void VerilogGenerator::PrintModules()
     unsigned int adderCounter = 0;
     for (const auto& [leftInputStream, rightInputStream] : adderInputs)
     {
-        const auto outputBW = ComputeBitWidth(GetMaxOutputValue(VariableDefs::OUTPUTS_SHIFTS, adderCounter, nbVarsPerAdder), true);
+        const auto outputBW = GetParamBitWidth(VariableDefs::OUTPUTS_SHIFTS, adderCounter, nbVarsPerAdder);
         rscmTopModule << "\twire" << PrintWireBitWidth(outputBW) << "ADDER_" << adderCounter << "_SHIFTED_OUTPUT;\n";
         // Determine if inputs need wire declarations (for muxed inputs in top module)
         const bool leftHasMux = leftInputStream.str().find("always") != std::string::npos;
         const bool rightHasMux = rightInputStream.str().find("always") != std::string::npos;
         
+        // Determine actual bitwidth for routing wires by checking what's being routed
+        auto getRoutingBitWidth = [&](const std::string& streamStr) -> unsigned int {
+            // Check if routing from X (input), possibly with shift
+            if (streamStr.find("= X") != std::string::npos && streamStr.find("ADDER_") == std::string::npos) {
+                // Check for shift
+                size_t shiftPos = streamStr.find("<< ");
+                if (shiftPos != std::string::npos) {
+                    // Extract shift amount
+                    size_t numStart = shiftPos + 3;
+                    size_t numEnd = streamStr.find(';', numStart);
+                    if (numEnd != std::string::npos) {
+                        std::string shiftStr = streamStr.substr(numStart, numEnd - numStart);
+                        // Remove any whitespace
+                        shiftStr.erase(std::remove_if(shiftStr.begin(), shiftStr.end(), ::isspace), shiftStr.end());
+                        int shiftAmount = std::stoi(shiftStr);
+                        return inputBW_ + shiftAmount;
+                    }
+                }
+                return inputBW_;
+            }
+            // Check if routing from another adder's output
+            size_t adderPos = streamStr.find("ADDER_");
+            // Skip if this is the LEFT_INPUT_ADDER or RIGHT_INPUT_ADDER (the target, not source)
+            if (adderPos != std::string::npos) {
+                // Check if this is INPUT_ADDER (target wire), not source
+                if (adderPos >= 6) {
+                    std::string before = streamStr.substr(adderPos - 6, 6);
+                    if (before == "INPUT_") {
+                        // This is the target wire, find the source after the '='
+                        size_t eqPos = streamStr.find('=', adderPos);
+                        if (eqPos != std::string::npos) {
+                            adderPos = streamStr.find("ADDER_", eqPos);
+                        }
+                    }
+                }
+            }
+            if (adderPos != std::string::npos) {
+                // Extract adder index number
+                size_t numStart = adderPos + 6; // length of "ADDER_"
+                size_t numEnd = streamStr.find('_', numStart);
+                if (numEnd != std::string::npos) {
+                    int sourceAdderIdx = std::stoi(streamStr.substr(numStart, numEnd - numStart));
+                    if (sourceAdderIdx >= 0 && sourceAdderIdx < static_cast<int>(adderOutputSizes.size())) {
+                        return adderOutputSizes[sourceAdderIdx];
+                    }
+                }
+            }
+            // Default fallback
+            return inputBW_;
+        };
 
         if (leftHasMux) {
-            const auto leftBW = ComputeBitWidth(GetMaxOutputValue(VariableDefs::LEFT_INPUTS, adderCounter, nbVarsPerAdder), true);
-            rscmTopModule << "\treg" << PrintWireBitWidth(leftBW) << "LEFT_INPUT_ADDER_" << adderCounter << ";\n";
+            // Calculate actual bitwidth needed from mux routing code
+            unsigned int maxLeftBW = inputBW_;
+            const std::string& leftCode = leftInputStream.str();
+            
+            // Check for shifts from X
+            for (int shift = 0; shift <= 5; ++shift) {
+                std::string shiftPattern = "X << " + std::to_string(shift);
+                if (leftCode.find(shiftPattern) != std::string::npos) {
+                    maxLeftBW = std::max(maxLeftBW, inputBW_ + static_cast<unsigned int>(shift));
+                }
+            }
+            // Check for plain X
+            if (leftCode.find("= X;") != std::string::npos) {
+                maxLeftBW = std::max(maxLeftBW, inputBW_);
+            }
+            // Check for routing from previous adders
+            for (size_t i = 0; i < adderOutputSizes.size(); ++i) {
+                std::string adderPattern = "ADDER_" + std::to_string(i) + "_SHIFTED_OUTPUT";
+                if (leftCode.find(adderPattern) != std::string::npos) {
+                    maxLeftBW = std::max(maxLeftBW, adderOutputSizes[i]);
+                }
+            }
+            rscmTopModule << "\treg" << PrintWireBitWidth(maxLeftBW) << "LEFT_INPUT_ADDER_" << adderCounter << ";\n";
         } else
         {
-            rscmTopModule << "\twire" << PrintWireBitWidth(inputBW_) << "LEFT_INPUT_ADDER_" << adderCounter << " ;\n";
+            const auto leftRoutingBW = getRoutingBitWidth(leftInputStream.str());
+            rscmTopModule << "\twire" << PrintWireBitWidth(leftRoutingBW) << "LEFT_INPUT_ADDER_" << adderCounter << " ;\n";
         }
         if (rightHasMux) {
-            const auto rightBW = ComputeBitWidth(GetMaxOutputValue(VariableDefs::RIGHT_INPUTS, adderCounter, nbVarsPerAdder), true);
-            rscmTopModule << "\treg" << PrintWireBitWidth(rightBW) << "RIGHT_INPUT_ADDER_" << adderCounter << ";\n";
+            // Calculate actual bitwidth needed from mux routing code
+            unsigned int maxRightBW = inputBW_;
+            const std::string& rightCode = rightInputStream.str();
+            
+            // Check for shifts from X
+            for (int shift = 0; shift <= 5; ++shift) {
+                std::string shiftPattern = "X << " + std::to_string(shift);
+                if (rightCode.find(shiftPattern) != std::string::npos) {
+                    maxRightBW = std::max(maxRightBW, inputBW_ + static_cast<unsigned int>(shift));
+                }
+            }
+            // Check for plain X
+            if (rightCode.find("= X;") != std::string::npos) {
+                maxRightBW = std::max(maxRightBW, inputBW_);
+            }
+            // Check for routing from previous adders
+            for (size_t i = 0; i < adderOutputSizes.size(); ++i) {
+                std::string adderPattern = "ADDER_" + std::to_string(i) + "_SHIFTED_OUTPUT";
+                if (rightCode.find(adderPattern) != std::string::npos) {
+                    maxRightBW = std::max(maxRightBW, adderOutputSizes[i]);
+                }
+            }
+            rscmTopModule << "\treg" << PrintWireBitWidth(maxRightBW) << "RIGHT_INPUT_ADDER_" << adderCounter << ";\n";
         } else
         {
-            rscmTopModule << "\twire" << PrintWireBitWidth(inputBW_) << "RIGHT_INPUT_ADDER_" << adderCounter << " ;\n";
+            const auto rightRoutingBW = getRoutingBitWidth(rightInputStream.str());
+            rscmTopModule << "\twire" << PrintWireBitWidth(rightRoutingBW) << "RIGHT_INPUT_ADDER_" << adderCounter << " ;\n";
         }
         
         rscmTopModule << "\t// Adder " << adderCounter << " Input Routing\n";
@@ -471,13 +802,13 @@ void VerilogGenerator::PrintTestbench()
     
     // Declare MUX_INPUT signals
     for (const auto& [paramIdx, muxInputCount] : allMuxInputs) {
-        const auto muxSelBits = ComputeBitWidth(static_cast<int>(muxInputCount) - 1, false, true);
+        const auto muxSelBits = ComputeBitWidth(static_cast<int>(muxInputCount) - 1);
         outputFile_ << "\treg [" << (muxSelBits - 1) << ":0] MUX_INPUT_" << paramIdx << ";\n";
     }
     
-    const auto outputBW = ComputeBitWidth(
-        GetMaxOutputValue(VariableDefs::OUTPUTS_SHIFTS, static_cast<unsigned int>(layers_.back().adders.size()) - 1,
-                         layers_[0].adders[0].variables.size()), true);
+    const auto outputBW =
+        GetParamBitWidth(VariableDefs::OUTPUTS_SHIFTS, static_cast<unsigned int>(layers_.back().adders.size()) - 1,
+                         layers_[0].adders[0].variables.size());
     outputFile_ << "\twire" << PrintWireBitWidth(outputBW) << "OUTPUT;\n\n";
     
     // Instantiate DUT

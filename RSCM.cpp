@@ -11,6 +11,7 @@ RSCM::RSCM(const size_t nbBitsToAlloc, const size_t nbTargets, const size_t nbAd
     scmIndexes.resize(nbTargets);
     isPlusMinus.resize(nbAdders, false);
     minShiftSavings.resize(nbVariables, std::numeric_limits<unsigned int>::max());
+    variableBitWidths.resize(nbVariables);
     cost = 0;
 }
 
@@ -23,11 +24,8 @@ void RSCM::InitializeMinShiftSavings(const std::vector<Layer>& layers)
         {
             for ([[maybe_unused]] const auto& _: adder.variables) // Iterate through each variable of the adder.
             {
-                // Compute the minimum number of trailing zeros for the variable output.
-                // This gives the number of bits that can be saved by shifting the output.
-                minShiftSavings[totalVariables] = static_cast<unsigned>(
-                    rscm.maxOutputValue[totalVariables] ? __builtin_ctz(rscm.maxOutputValue[totalVariables]) : 0
-                );
+                // Use coefficient's trailing zeros for shift savings
+                minShiftSavings[totalVariables] = rscm.coefficientTrailingZeros[totalVariables];
                 totalVariables++;
             }
         }

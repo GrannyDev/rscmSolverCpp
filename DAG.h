@@ -34,6 +34,16 @@ public:
     std::vector<int> maxOutputValue;
 
     /**
+     * @brief A vector storing parameters minimum output values.
+     */
+    std::vector<int> minOutputValue;
+
+    /**
+     * @brief A vector storing the number of trailing zeros in the coefficient (before multiplication by input).
+     */
+    std::vector<unsigned int> coefficientTrailingZeros;
+
+    /**
      * @brief A vector of boolean flags indicating whether the corresponding adder is negative.
      */
     std::vector<bool> isMinus;

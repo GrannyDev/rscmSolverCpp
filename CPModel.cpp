@@ -4,13 +4,15 @@
 
 #include "CPModel.h"
 
-CPModel::CPModel(const int minCoef, const int maxCoef)
+CPModel::CPModel(const int minCoef, const int maxCoef, const int minInputValue, const int maxInputValue)
 {
     minCoef_ = minCoef;
     maxCoef_ = maxCoef;
+    minInputValue_ = minInputValue;
+    maxInputValue_ = maxInputValue;
 }
 
-void CPModel::SolveFor (
+void CPModel::SolveFor(
     int target,
     std::vector<std::pair<int, std::vector<DAG>>> & scmDesigns,
     std::mutex& pushBackMutex,
@@ -153,7 +155,7 @@ void CPModel::SolveFor (
                         // std::cout << "mr " << currentBit + a.variables[varToIndexMap.at(VariableDefs::RIGHT_MULTIPLIER)].zeroPoint + static_cast<int>(SolutionIntegerValue(r, variables["mr" + std::to_string(a.adderIdx)])) << " " << static_cast<int>(SolutionIntegerValue(r, variables["mr" + std::to_string(a.adderIdx)])) << std::endl;
                         scm.set.set(currentBit + a.variables[varToIndexMap.at(VariableDefs::RIGHT_MULTIPLIER)].zeroPoint + static_cast<int>(SolutionIntegerValue(r, variables["mr" + std::to_string(a.adderIdx)])));
                         currentBit += a.variables[varToIndexMap.at(VariableDefs::RIGHT_MULTIPLIER)].possibleValuesFusion.size();
-                        scm.maxOutputValue.push_back(static_cast<int>(SolutionIntegerValue(r, variables["ybeforewo" + std::to_string(a.adderIdx)])));
+                        addOutputValues(scm, static_cast<int>(SolutionIntegerValue(r, variables["ybeforewo" + std::to_string(a.adderIdx)])));
                     } else if (p == VariableDefs::LEFT_SHIFTS)
                     {
                         // std::cout << "wl " << currentBit + a.variables[varToIndexMap.at(VariableDefs::LEFT_SHIFTS)].zeroPoint + static_cast<int>(std::log2(SolutionIntegerValue(r, variables["wl" + std::to_string(a.adderIdx)]))) << " " << static_cast<int>(std::log2(SolutionIntegerValue(r, variables["wl" + std::to_string(a.adderIdx)]))) << std::endl;
@@ -161,11 +163,10 @@ void CPModel::SolveFor (
                         currentBit += a.variables[varToIndexMap.at(VariableDefs::LEFT_SHIFTS)].possibleValuesFusion.size();
                         if (l.layerIdx > 0)
                         {
-                            scm.maxOutputValue.push_back(SolutionIntegerValue(r, variables["liTIMESwl" + std::to_string(a.adderIdx)]));
-
+                            addOutputValues(scm, static_cast<int>(SolutionIntegerValue(r, variables["liTIMESwl" + std::to_string(a.adderIdx)])));
                         } else
                         {
-                            scm.maxOutputValue.push_back(SolutionIntegerValue(r, variables["wl" + std::to_string(a.adderIdx)]));
+                            addOutputValues(scm, static_cast<int>(SolutionIntegerValue(r, variables["wl" + std::to_string(a.adderIdx)])));
                         }
                     } else if (p == VariableDefs::RIGHT_SHIFTS)
                     {
@@ -174,11 +175,10 @@ void CPModel::SolveFor (
                         currentBit += a.variables[varToIndexMap.at(VariableDefs::RIGHT_SHIFTS)].possibleValuesFusion.size();
                         if (l.layerIdx > 0)
                         {
-                            scm.maxOutputValue.push_back(SolutionIntegerValue(r, variables["riTIMESwr" + std::to_string(a.adderIdx)]));
-
+                            addOutputValues(scm, static_cast<int>(SolutionIntegerValue(r, variables["riTIMESwr" + std::to_string(a.adderIdx)])));
                         } else
                         {
-                            scm.maxOutputValue.push_back(SolutionIntegerValue(r, variables["wr" + std::to_string(a.adderIdx)]));
+                            addOutputValues(scm, static_cast<int>(SolutionIntegerValue(r, variables["wr" + std::to_string(a.adderIdx)])));
                         }
                     } else if (p == VariableDefs::RIGHT_INPUTS)
                     {
@@ -186,12 +186,12 @@ void CPModel::SolveFor (
                         {
                             // std::cout << "ria " << a.variables[varToIndexMap.at(VariableDefs::RIGHT_INPUTS)].zeroPoint + SolutionIntegerValue(r, variables["ria" + std::to_string(a.adderIdx)]) << " " << SolutionIntegerValue(r, variables["ria" + std::to_string(a.adderIdx)]) << std::endl;
                             scm.set.set(currentBit + a.variables[varToIndexMap.at(VariableDefs::RIGHT_INPUTS)].zeroPoint + SolutionIntegerValue(r, variables["ria" + std::to_string(a.adderIdx)]));
-                            scm.maxOutputValue.push_back(SolutionIntegerValue(r, variables["ri" + std::to_string(a.adderIdx)]));
+                            addOutputValues(scm, static_cast<int>(SolutionIntegerValue(r, variables["ri" + std::to_string(a.adderIdx)])));
                         } else
                         {
                             // std::cout << "ri " << currentBit + a.variables[varToIndexMap.at(VariableDefs::RIGHT_INPUTS)].zeroPoint - 1 << " " << -1 << std::endl;
                             scm.set.set(currentBit);
-                            scm.maxOutputValue.push_back(-1);
+                            addOutputValues(scm, -1);
                         }
                         currentBit += a.variables[varToIndexMap.at(VariableDefs::RIGHT_INPUTS)].possibleValuesFusion.size();
                     } else if (p == VariableDefs::LEFT_INPUTS)
@@ -200,12 +200,12 @@ void CPModel::SolveFor (
                         {
                             // std::cout << "lia " << a.variables[varToIndexMap.at(VariableDefs::LEFT_INPUTS)].zeroPoint + SolutionIntegerValue(r, variables["lia" + std::to_string(a.adderIdx)]) << " " << SolutionIntegerValue(r, variables["lia" + std::to_string(a.adderIdx)]) << std::endl;
                             scm.set.set(currentBit + a.variables[varToIndexMap.at(VariableDefs::LEFT_INPUTS)].zeroPoint + SolutionIntegerValue(r, variables["lia" + std::to_string(a.adderIdx)]));
-                            scm.maxOutputValue.push_back(SolutionIntegerValue(r, variables["li" + std::to_string(a.adderIdx)]));
+                            addOutputValues(scm, static_cast<int>(SolutionIntegerValue(r, variables["li" + std::to_string(a.adderIdx)])));
                         } else
                         {
                             // std::cout << "li " << currentBit + a.variables[varToIndexMap.at(VariableDefs::LEFT_INPUTS)].zeroPoint - 1 << " " << -1 << std::endl;
                             scm.set.set(currentBit);
-                            scm.maxOutputValue.push_back(-1);
+                            addOutputValues(scm, -1);
                         }
                         currentBit += a.variables[varToIndexMap.at(VariableDefs::LEFT_INPUTS)].possibleValuesFusion.size();
                     } else if (p == VariableDefs::OUTPUTS_SHIFTS)
@@ -213,7 +213,7 @@ void CPModel::SolveFor (
                         // std::cout << "wo " << currentBit + a.variables[varToIndexMap.at(VariableDefs::OUTPUTS_SHIFTS)].zeroPoint + static_cast<int>(std::log2(SolutionIntegerValue(r, variables["wo" + std::to_string(a.adderIdx)]))) << " " << static_cast<int>(std::log2(SolutionIntegerValue(r, variables["wo" + std::to_string(a.adderIdx)]))) << std::endl;
                         scm.set.set(currentBit + a.variables[varToIndexMap.at(VariableDefs::OUTPUTS_SHIFTS)].zeroPoint + static_cast<int>(std::log2(SolutionIntegerValue(r, variables["wo" + std::to_string(a.adderIdx)]))));
                         currentBit += a.variables[varToIndexMap.at(VariableDefs::OUTPUTS_SHIFTS)].possibleValuesFusion.size();
-                        scm.maxOutputValue.push_back(SolutionIntegerValue(r, variables["y" + std::to_string(a.adderIdx)]));
+                        addOutputValues(scm, static_cast<int>(SolutionIntegerValue(r, variables["y" + std::to_string(a.adderIdx)])));
                     }
                 }
             }

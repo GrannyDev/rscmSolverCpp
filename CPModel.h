@@ -29,8 +29,10 @@ public:
      * @brief Constructs a CPModel object with the min and max intermediate coefficient values.
      * @param minCoef The minimum coefficient value.
      * @param maxCoef The maximum coefficient value.
+     * @param minInputValue The minimum input value for the SCM.
+     * @param maxInputValue The maximum input value for the SCM.
      */
-    CPModel(int minCoef, int maxCoef);
+    CPModel(int minCoef, int maxCoef, int minInputValue, int maxInputValue);
 
     /**
      * @brief Solves the model for a given target.
@@ -57,6 +59,23 @@ public:
 private:
     int minCoef_; ///< The minimum coefficient value.
     int maxCoef_; ///< The maximum coefficient value.
+    int minInputValue_; ///< The minimum input value for the SCM.
+    int maxInputValue_; ///< The maximum input value for the SCM.
+
+    /**
+     * @brief Helper method to add output values to DAG.
+     * @param scm The DAG to add values to.
+     * @param multiplierAtStage The multiplier value at the current stage.
+     */
+    inline void addOutputValues(DAG& scm, int multiplierAtStage) const {
+        const int val1 = multiplierAtStage * maxInputValue_;
+        const int val2 = multiplierAtStage * minInputValue_;
+        scm.maxOutputValue.push_back(std::max(val1, val2));
+        scm.minOutputValue.push_back(std::min(val1, val2));
+        // Store coefficient's trailing zeros for accurate shift savings
+        const unsigned int coeffTZ = multiplierAtStage ? __builtin_ctz(static_cast<unsigned>(std::abs(multiplierAtStage))) : std::numeric_limits<unsigned int>::max();
+        scm.coefficientTrailingZeros.push_back(coeffTZ);
+    }
 };
 
 #endif //CPMODEL_H

@@ -65,7 +65,7 @@ public:
         const RSCM& solutionNode,
         const std::string& outputUri,
         bool overwrite
-    ) const;
+    );
 
     /**
      * @brief Gets the current best cost of the solution.
@@ -181,14 +181,6 @@ private:
     void PrintSolution(unsigned int cost);
 
     /**
-     * @brief Compares two integers in two's complement representation.
-     * @param a The first integer.
-     * @param b The second integer.
-     * @return Comparison result.
-     */
-    static int CompareTwoComplement(int a, int b);
-
-    /**
      * @brief Checks if a number is a power of two.
      * @param x The number to check.
      * @return True if the number is a power of two, false otherwise.
@@ -200,7 +192,7 @@ private:
      * @param maxConstant The constant to compute the bit length for.
      * @return The bit length.
      */
-    unsigned int BitLength(int maxConstant) const;
+    static unsigned int BitLength(int maxConstant) ;
 
     std::mutex pushBackMutex_; ///< Mutex for thread-safe operations.
     std::mutex progressMutex_; ///< Mutex for progress updates.

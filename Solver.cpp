@@ -115,7 +115,12 @@ void Solver::CPSolve()
 void Solver::RunSolver(const int coef, std::atomic<int>& completedJobs,
     std::mutex& progressMutex, std::mutex& pushBackMutex)
 {
-    const CPModel cpModel(minCoef, maxCoef);
+    const CPModel cpModel(
+        minCoef,
+        maxCoef,
+        static_cast<int>(-1 * std::pow(2, nbInputBits - 1)),
+        static_cast<int>(std::pow(2, nbInputBits - 1) - 1)
+    );
     cpModel.SolveFor(coef, scmDesigns, pushBackMutex, layers, nbBitsPerSCM,
                      varToIdxMap, varDefs);
     ++completedJobs;
@@ -232,42 +237,13 @@ void Solver::ComputeBranch(const int depth, const int threadNb, const unsigned i
     }
 }
 
-int Solver::CompareTwoComplement(const int a, const int b) {
-    const int absA = std::abs(a);
-    const int absB = std::abs(b);
-
-    if (absA != absB)
-        return absA > absB ? a : b;
-    // When abs values are equal, check if the number is a power of two.
-    // If so, the positive number requires one more bit.
-    // (Note: 0 is a special case, but typically both representations are equivalent.)
-    if (IsPowerOfTwo(absA))
-        return a >= 0 ? a : b;
-    // Otherwise, they need the same number of bits.
-    return a;
-    // or b—they're equivalent in bit width.
-}
-
 bool Solver::IsPowerOfTwo(const int x) {
     return x > 0 && (x & x - 1) == 0;
 }
 
-unsigned int Solver::BitLength(const int maxConstant) const
+unsigned int Solver::BitLength(const int value)
 {
-    if (maxConstant == 0)
-    {
-        return 0;
-    }
-
-    const bool isNegative = maxConstant < 0;
-    auto bitWidth = static_cast<unsigned int>(std::ceil(std::log2(std::abs(maxConstant) * maxAbsCoef)));
-
-    if (IsPowerOfTwo(maxConstant) && isNegative)
-    {
-        bitWidth += 1;
-    }
-
-    return bitWidth;
+    return static_cast<unsigned int>(std::ceil(std::log2(std::max(std::abs(value + 1), std::abs(value))))) + 1;
 }
 
 unsigned int Solver::MuxCountComputer::merge(RSCM& node, DAG const& scm) const
@@ -321,22 +297,34 @@ unsigned int Solver::FineGrainCostComputer::merge(RSCM& node, DAG const& scm) co
         node.rscm.maxOutputValue.end(),
         scm.maxOutputValue.begin(),
         node.rscm.maxOutputValue.begin(),
-        CompareTwoComplement
-    );
+        [](const int a, const int b) { return std::max(a, b); }
+    ); // max output values
+    std::transform(
+        node.rscm.minOutputValue.begin(),
+        node.rscm.minOutputValue.end(),
+        scm.minOutputValue.begin(),
+        node.rscm.minOutputValue.begin(),
+        [](const int a, const int b) { return std::min(a, b); }
+    ); // min output values
+
+    // update bitwidths
+    for (size_t i = 0; i < node.variableBitWidths.size(); ++i) {
+        node.variableBitWidths[i] = std::max(BitLength(node.rscm.maxOutputValue[i]), BitLength(node.rscm.minOutputValue[i]));
+    }
 
     const auto leftShiftBase  = solver->varToIdxMap.at(VariableDefs::LEFT_SHIFTS);
     const auto rightShiftBase = solver->varToIdxMap.at(VariableDefs::RIGHT_SHIFTS);
     const size_t mapSize = solver->varToIdxMap.size();
 
     auto updateMinShift = [&](const unsigned idx) {
-        const auto maxVal = scm.maxOutputValue[idx];
-        const unsigned tz = maxVal ? __builtin_ctz(maxVal) : std::numeric_limits<unsigned>::max();
-        node.minShiftSavings[idx] = std::min(node.minShiftSavings[idx], tz);
+        // Use coefficient's trailing zeros, not the multiplied values'
+        // This is correct because any input in the range could have 0 trailing zeros
+        const unsigned coeffTZ = scm.coefficientTrailingZeros[idx];
+        node.minShiftSavings[idx] = std::min(node.minShiftSavings[idx], coeffTZ);
     };
 
     auto computeMuxCost = [&](const unsigned bitsCount, const unsigned idx) {
-        const int constVal = node.rscm.maxOutputValue[idx] >> node.minShiftSavings[idx];
-        const unsigned nbBits = solver->BitLength(constVal);
+        const unsigned int nbBits = node.variableBitWidths[idx] - node.minShiftSavings[idx];
         return 14u * bitsCount * nbBits;
     };
 
@@ -385,11 +373,9 @@ unsigned int Solver::FineGrainCostComputer::merge(RSCM& node, DAG const& scm) co
                     );
 
                     // compute FA/HA costs
-                    const int a = node.rscm.maxOutputValue[leftIdx];
-                    const int b = node.rscm.maxOutputValue[rightIdx];
-                    if (b != 0) {
-                        unsigned wa = solver->BitLength(a) - minShift;
-                        unsigned wb = solver->BitLength(b) - minShift;
+                    if (node.rscm.minOutputValue[rightIdx] != 0 && node.rscm.maxOutputValue[rightIdx] != 0) {
+                        unsigned wa = node.variableBitWidths[leftIdx] - minShift;
+                        unsigned wb = node.variableBitWidths[rightIdx] - minShift;
                         unsigned int shiftA = node.minShiftSavings[leftIdx] - minShift;
                         unsigned int shiftB = node.minShiftSavings[rightIdx] - minShift;
                         auto [fst, snd] = std::minmax(shiftA, shiftB);
@@ -397,13 +383,13 @@ unsigned int Solver::FineGrainCostComputer::merge(RSCM& node, DAG const& scm) co
 
                         unsigned fa = 0, ha = 0;
                         if (!node.isPlusMinus[adderIdx] && !node.rscm.isMinus[adderIdx]) {
-                            if (a != 0) {
+                            if (node.rscm.minOutputValue[leftIdx] != 0 && node.rscm.maxOutputValue[leftIdx] != 0) {
                                 fa = std::max(wa, wb) - diff - 1;
                                 ha = 1;
                             }
                         } else {
-                            if (a == 0) {
-                                ha = wb - static_cast<unsigned>(__builtin_ctz(b));
+                            if (node.rscm.minOutputValue[leftIdx] == 0 && node.rscm.maxOutputValue[leftIdx] == 0) { // left (a) is zero
+                                ha = wb - node.minShiftSavings[rightIdx];
                             } else if (shiftB >= shiftA) {
                                 fa = std::max(wa, wb) - diff;
                             } else if (node.minShiftSavings[leftIdx] >= wb) {
@@ -541,9 +527,26 @@ void Solver::PrettyPrinter(const RSCM& solutionNode)
     std::cout << std::endl;
 }
 
-void Solver::Verilog(const RSCM& solutionNode, const std::string& outputUri, const bool overwrite) const
+void Solver::Verilog(const RSCM& solutionNode, const std::string& outputUri, const bool overwrite)
 {
-    VerilogGenerator verilog(solutionNode, outputUri, layers, idxToVarMap, varToIdxMap, nbInputBits, targets, scmDesigns, overwrite);
+    if (!useFineGrainCost)
+    {
+        // more complicated, we have to replay the whole merging process to compute the fine-grained cost
+        RSCM replayNode(nbBitsPerSCM, targets.size(), nbAdders,
+            nbAdders * layers[0].adders[0].variables.size(), nbPossibleVariables);
+        // Start by copying the first SCM directly (not merging), like the native execution does
+        replayNode.rscm = scmDesigns[0].second[solutionNode.scmIndexes[0]];
+        replayNode.InitializeMinShiftSavings(layers);
+        const FineGrainCostComputer fineGrainCostComputer(this);
+        // Now merge the remaining SCMs starting from depth 1
+        for (int depth = 1; depth < targets.size(); depth++)
+        {
+            fineGrainCostComputer.merge(replayNode, scmDesigns[depth].second[solutionNode.scmIndexes[depth]]);
+        }
+        VerilogGenerator verilog(replayNode, outputUri, layers, idxToVarMap, varToIdxMap, nbInputBits, targets, scmDesigns, overwrite);
+    } else {
+        VerilogGenerator verilog(solutionNode, outputUri, layers, idxToVarMap, varToIdxMap, nbInputBits, targets, scmDesigns, overwrite);
+    }
 }
 
 void Solver::SolveConfigToMuxMapping() const

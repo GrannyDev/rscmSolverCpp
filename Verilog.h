@@ -47,12 +47,14 @@ private:
         unsigned int nbPossibleValues,
         const std::string& muxName,
         unsigned int bitwidth,
-        unsigned int adderIdx
+        unsigned int adderIdx,
+        unsigned int inputBitWidth,
+        size_t nbVarsPerAdder
     ) const;
     
     // Helper methods
-    unsigned int ComputeBitWidth(int maxVal, bool is_signed, bool is_mux = false) const;
-    unsigned int GetMaxOutputValue(VariableDefs varType, unsigned int adderIdx, size_t nbVarsPerAdder) const;
+    static unsigned int ComputeBitWidth(int maxVal) ;
+    unsigned int GetParamBitWidth(VariableDefs varType, unsigned int adderIdx, size_t nbVarsPerAdder) const;
     void ProcessParameter(
         const Variables& param,
         size_t& bitPos,
@@ -66,11 +68,14 @@ private:
         std::stringstream& outputShiftMux,
         std::stringstream& plusMinus,
         std::stringstream& left_input,
-        std::stringstream& right_input
+        std::stringstream& right_input,
+        unsigned int leftInputPortBW,
+        unsigned int rightInputPortBW,
+        unsigned int adderOutputBW
     ) const;
 
     static std::string PrintWireBitWidth(unsigned int bw);
-    std::string PrintBinaryMuxCode(unsigned int nbSelectBits, unsigned int selecValue) const;
+    static std::string PrintBinaryMuxCode(unsigned int nbSelectBits, unsigned int selecValue) ;
 
     std::ofstream outputFile_;
     const RSCM& solutionNode_;
