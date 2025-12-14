@@ -38,44 +38,42 @@ public:
     );
 
 private:
-    void PrintModules();
-    void PrintTestbench();
-    std::string GenerateMuxCode(
+    void HandleModules();
+    void HandleTopModule();
+    std::stringstream HandleAdder(unsigned int layerIndex, unsigned int adderIdx, unsigned int nbAdder);
+    std::vector<std::pair<std::string, unsigned int>> HandleParam(
         const Variables& param,
-        size_t paramBitPos,
+        unsigned int paramIdx,
         unsigned int paramGlobalIdx,
-        unsigned int nbPossibleValues,
-        const std::string& muxName,
-        unsigned int bitwidth,
+        unsigned int bitPos,
+        unsigned int inputBw,
         unsigned int adderIdx,
-        unsigned int inputBitWidth,
-        size_t nbVarsPerAdder
-    ) const;
-    
-    // Helper methods
-    static unsigned int ComputeBitWidth(int maxVal) ;
-    unsigned int GetParamBitWidth(VariableDefs varType, unsigned int adderIdx, size_t nbVarsPerAdder) const;
-    void ProcessParameter(
+        const VariableDefs& previousParamType,
+        std::stringstream& inStream
+    );
+    std::stringstream& HandleMultiplexer(
+        std::stringstream& muxStream,
+        VariableDefs paramName,
         const Variables& param,
-        size_t& bitPos,
-        unsigned int& paramGlobalIdx,
-        unsigned int paramInAdderIdx,
+        const std::string& inputWire,
+        const std::string& outputWire,
+        unsigned int bitPos,
+        unsigned int nbMuxInputs,
         unsigned int adderIdx,
-        size_t nbVarsPerAdder,
-        std::unordered_map<unsigned int, unsigned int>& muxInputsMap,
-        std::stringstream& left_shift_mux,
-        std::stringstream& right_shift_mux,
-        std::stringstream& outputShiftMux,
-        std::stringstream& plusMinus,
-        std::stringstream& left_input,
-        std::stringstream& right_input,
-        unsigned int leftInputPortBW,
-        unsigned int rightInputPortBW,
-        unsigned int adderOutputBW
+        unsigned int outputBW
+    );
+
+    std::stringstream HandleAdderRouting(
+        unsigned int layerIndex,
+        unsigned int adderIdx,
+        unsigned int nbAdder,
+        unsigned int& bitPos
     ) const;
 
     static std::string PrintWireBitWidth(unsigned int bw);
-    static std::string PrintBinaryMuxCode(unsigned int nbSelectBits, unsigned int selecValue) ;
+    static std::string PrintBinaryMuxCode(unsigned int nbSelectBits, unsigned int selecValue);
+    static unsigned int ComputeBitWidth(int value);
+    unsigned int GetParamBitWidth(VariableDefs varType, unsigned int adderIdx) const;
 
     std::ofstream outputFile_;
     const RSCM& solutionNode_;
@@ -85,6 +83,8 @@ private:
     const unsigned int inputBW_;
     const std::vector<int>& targets_;
     const std::vector<std::pair<int, std::vector<DAG>>>& scmDesigns_;
+    const VarDefsToString varDefsTostring_;
+    unsigned int muxCounter_ = 0;
 };
 
 

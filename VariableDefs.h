@@ -47,17 +47,17 @@ public:
         switch (variable)
         {
         case VariableDefs::RIGHT_MULTIPLIER:
-            return "MULTIPLIER";
+            return "ADD_SUB";
         case VariableDefs::LEFT_SHIFTS:
-            return "LEFT SHIFTS";
+            return "LEFT_SHIFTS";
         case VariableDefs::RIGHT_SHIFTS:
-            return "RIGHT SHIFTS";
+            return "RIGHT_SHIFTS";
         case VariableDefs::OUTPUTS_SHIFTS:
-            return "OUTPUTS SHIFTS";
+            return "OUTPUTS_SHIFTS";
         case VariableDefs::LEFT_INPUTS:
-            return "LEFT INPUTS";
+            return "LEFT_INPUTS";
         case VariableDefs::RIGHT_INPUTS:
-            return "RIGHT INPUTS";
+            return "RIGHT_INPUTS";
         default:
             return "";
         }

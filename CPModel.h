@@ -67,7 +67,7 @@ private:
      * @param scm The DAG to add values to.
      * @param multiplierAtStage The multiplier value at the current stage.
      */
-    inline void addOutputValues(DAG& scm, int multiplierAtStage) const {
+    void addOutputValues(DAG& scm, const int multiplierAtStage) const {
         const int val1 = multiplierAtStage * maxInputValue_;
         const int val2 = multiplierAtStage * minInputValue_;
         scm.maxOutputValue.push_back(std::max(val1, val2));

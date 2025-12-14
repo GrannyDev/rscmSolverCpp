@@ -191,7 +191,7 @@ void CPModel::SolveFor(
                         {
                             // std::cout << "ri " << currentBit + a.variables[varToIndexMap.at(VariableDefs::RIGHT_INPUTS)].zeroPoint - 1 << " " << -1 << std::endl;
                             scm.set.set(currentBit);
-                            addOutputValues(scm, -1);
+                            addOutputValues(scm, 1);
                         }
                         currentBit += a.variables[varToIndexMap.at(VariableDefs::RIGHT_INPUTS)].possibleValuesFusion.size();
                     } else if (p == VariableDefs::LEFT_INPUTS)
@@ -205,7 +205,7 @@ void CPModel::SolveFor(
                         {
                             // std::cout << "li " << currentBit + a.variables[varToIndexMap.at(VariableDefs::LEFT_INPUTS)].zeroPoint - 1 << " " << -1 << std::endl;
                             scm.set.set(currentBit);
-                            addOutputValues(scm, -1);
+                            addOutputValues(scm, 1);
                         }
                         currentBit += a.variables[varToIndexMap.at(VariableDefs::LEFT_INPUTS)].possibleValuesFusion.size();
                     } else if (p == VariableDefs::OUTPUTS_SHIFTS)
