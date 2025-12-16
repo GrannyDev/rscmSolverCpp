@@ -67,6 +67,12 @@ public:
         bool overwrite
     );
 
+    void DumpJSON(
+        const RSCM& solutionNode,
+        const std::string& outputUri,
+        bool overwrite
+    );
+
     /**
      * @brief Gets the current best cost of the solution.
      * @return The current best cost.

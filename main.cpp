@@ -35,6 +35,7 @@ int main() {
     problem.PrettyPrinter(problem.solution);
     problem.SolveConfigToMuxMapping();
     problem.Verilog(problem.solution, "rscm_solution.v", true);
+    problem.DumpJSON(problem.solution, "dump.json", true);
 
     return 0;
 }

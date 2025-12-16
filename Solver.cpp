@@ -9,6 +9,7 @@
 #include <thread>
 
 #include "CPModel.h"
+#include "JSONDumper.h"
 #include "Verilog.h"
 
 // Constructor initializes solver parameters, layout configuration, and variable definitions
@@ -546,6 +547,29 @@ void Solver::Verilog(const RSCM& solutionNode, const std::string& outputUri, con
         VerilogGenerator verilog(replayNode, outputUri, layers, idxToVarMap, varToIdxMap, nbInputBits, targets, scmDesigns, overwrite);
     } else {
         VerilogGenerator verilog(solutionNode, outputUri, layers, idxToVarMap, varToIdxMap, nbInputBits, targets, scmDesigns, overwrite);
+    }
+}
+
+void Solver::DumpJSON(const RSCM& solutionNode, const std::string& outputUri, const bool overwrite)
+{
+    if (!useFineGrainCost)
+    {
+        // more complicated, we have to replay the whole merging process to compute the fine-grained cost
+        RSCM replayNode(nbBitsPerSCM, targets.size(), nbAdders,
+            nbAdders * layers[0].adders[0].variables.size(), nbPossibleVariables);
+        // Start by copying the first SCM directly (not merging), like the native execution does
+        replayNode.rscm = scmDesigns[0].second[solutionNode.scmIndexes[0]];
+        replayNode.scmIndexes = solutionNode.scmIndexes;
+        replayNode.InitializeMinShiftSavings(layers);
+        const FineGrainCostComputer fineGrainCostComputer(this);
+        // Now merge the remaining SCMs starting from depth 1
+        for (int depth = 1; depth < targets.size(); depth++)
+        {
+            fineGrainCostComputer.merge(replayNode, scmDesigns[depth].second[solutionNode.scmIndexes[depth]]);
+        }
+        JSONDumper JSONDumper(replayNode, outputUri, layers, idxToVarMap, varToIdxMap, nbInputBits, targets, scmDesigns, overwrite);
+    } else {
+        JSONDumper JSONDumper(solutionNode, outputUri, layers, idxToVarMap, varToIdxMap, nbInputBits, targets, scmDesigns, overwrite);
     }
 }
 
