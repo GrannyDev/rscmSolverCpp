@@ -3,7 +3,7 @@ project(rmcmSolver)
 
 set(CMAKE_CXX_STANDARD 26)
 
-include_directories(/home/smith/Compiled/or-tools/include/)
+find_package(ortools CONFIG REQUIRED)
 
 add_executable(rmcmSolver main.cpp
         Solver.cpp
@@ -25,9 +25,6 @@ add_executable(rmcmSolver main.cpp
         Verilog.h
         JSONDumper.cpp
         JSONDumper.h
-        JSONDumper.cpp
-        JSONDumper.h
 )
 
-target_link_libraries(rmcmSolver /home/smith/Compiled/or-tools/lib/libortools.so)
-
+target_link_libraries(rmcmSolver ortools::ortools)
