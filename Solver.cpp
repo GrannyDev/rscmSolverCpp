@@ -5,7 +5,9 @@
 #include "Solver.h"
 
 #include <cmath>
+#include <algorithm>
 #include <random>
+#include <ranges>
 #include <thread>
 
 #include "CPModel.h"
@@ -36,6 +38,21 @@ Solver::Solver(
         fuseCostComputer = std::make_unique<FineGrainCostComputer>(this);
     } else {
         fuseCostComputer = std::make_unique<MuxCountComputer>(this);
+    }
+
+    // Normalize targets constants
+    normShift_ = std::numeric_limits<unsigned int>::max();
+    for (const auto& t : targets) {
+        if (t != 0) {
+            const auto tz = static_cast<unsigned int>(__builtin_ctz(static_cast<unsigned int>(std::abs(t))));
+            normShift_ = tz > normShift_ ? normShift_ : tz;
+        }
+    }
+    if (normShift_ > 0) {
+        std::cout << "Normalizing targets by right-shifting " << normShift_ << " bits." << std::endl;
+        for (auto& t : this->targets) {
+            t = t >> normShift_;
+        }
     }
 
     // Initial cost bound (infinite)
@@ -207,6 +224,17 @@ void Solver::Solve()
         });
     }
     pool.join(); // Wait for all branches to finish
+
+    // Reshift solution SCMs to original scale
+    if (normShift_ > 0) {
+        for (auto& t : this->targets) {
+            t = t << normShift_;
+        }
+        for (auto& fst : this->scmDesigns | std::views::keys) {
+            fst = fst << normShift_;
+        }
+        ApplyNormalizationShift(solution, true);
+    }
 }
 
 // Recursive branch and prune search to find minimum-cost solution
@@ -245,6 +273,65 @@ bool Solver::IsPowerOfTwo(const int x) {
 unsigned int Solver::BitLength(const int value)
 {
     return static_cast<unsigned int>(std::ceil(std::log2(std::max(std::abs(value + 1), std::abs(value))))) + 1;
+}
+
+void Solver::ApplyNormalizationShift(RSCM& node, const bool logShifts) const
+{
+    if (normShift_ == 0) return;
+
+    size_t bitPos = 0;
+    unsigned int adderIdx = 0;
+
+    for (const auto& layer : layers) {
+        for (const auto& adder : layer.adders) {
+            unsigned int paramIdx = 0;
+            for (const auto& param : adder.variables) {
+                if (adderIdx == nbAdders - 1 && idxToVarMap.at(paramIdx) == VariableDefs::OUTPUTS_SHIFTS) {
+                    const size_t baseBit = bitPos + param.zeroPoint;
+                    std::vector<int> selectedValues;
+
+                    // Collect selected shifts first to avoid clobbering when we rewrite bits
+                    for (const int v : param.possibleValuesFusion) {
+                        const size_t bitIndex = baseBit + static_cast<size_t>(v);
+                        if (node.rscm.set.test(bitIndex)) {
+                            selectedValues.push_back(v);
+                        }
+                        node.rscm.set.reset(bitIndex);
+                    }
+
+                    const int maxShift = *std::max_element(
+                        param.possibleValuesFusion.begin(),
+                        param.possibleValuesFusion.end()
+                    );
+
+                    for (const int v : selectedValues) {
+                        const int shiftedValue = v + static_cast<int>(normShift_);
+                        if (shiftedValue > maxShift) continue; // out of domain, skip
+
+                        const size_t newBitIndex = baseBit + static_cast<size_t>(shiftedValue);
+                        node.rscm.set.set(newBitIndex);
+                        if (logShifts) {
+                            std::cout << v << " shifted to " << shiftedValue << std::endl;
+                        }
+                    }
+
+                    const size_t globalParamIdx =
+                        varToIdxMap.at(VariableDefs::OUTPUTS_SHIFTS) + adderIdx * adder.variables.size();
+                    const int scale = 1 << normShift_;
+                    node.rscm.maxOutputValue[globalParamIdx] *= scale;
+                    node.rscm.minOutputValue[globalParamIdx] *= scale;
+                    node.variableBitWidths[globalParamIdx] = std::max(
+                        BitLength(node.rscm.maxOutputValue[globalParamIdx]),
+                        BitLength(node.rscm.minOutputValue[globalParamIdx])
+                    );
+                    return;
+                }
+                bitPos += param.possibleValuesFusion.size();
+                ++paramIdx;
+            }
+            ++adderIdx;
+        }
+    }
 }
 
 unsigned int Solver::MuxCountComputer::merge(RSCM& node, DAG const& scm) const
@@ -544,6 +631,7 @@ void Solver::Verilog(const RSCM& solutionNode, const std::string& outputUri, con
         {
             fineGrainCostComputer.merge(replayNode, scmDesigns[depth].second[solutionNode.scmIndexes[depth]]);
         }
+        ApplyNormalizationShift(replayNode);
         VerilogGenerator verilog(replayNode, outputUri, layers, idxToVarMap, varToIdxMap, nbInputBits, targets, scmDesigns, overwrite);
     } else {
         VerilogGenerator verilog(solutionNode, outputUri, layers, idxToVarMap, varToIdxMap, nbInputBits, targets, scmDesigns, overwrite);
@@ -567,6 +655,7 @@ void Solver::DumpJSON(const RSCM& solutionNode, const std::string& outputUri, co
         {
             fineGrainCostComputer.merge(replayNode, scmDesigns[depth].second[solutionNode.scmIndexes[depth]]);
         }
+        ApplyNormalizationShift(replayNode);
         JSONDumper JSONDumper(replayNode, outputUri, layers, idxToVarMap, varToIdxMap, nbInputBits, targets, scmDesigns, overwrite);
     } else {
         JSONDumper JSONDumper(solutionNode, outputUri, layers, idxToVarMap, varToIdxMap, nbInputBits, targets, scmDesigns, overwrite);

@@ -200,12 +200,20 @@ private:
      */
     static unsigned int BitLength(int maxConstant) ;
 
+    /**
+     * @brief Apply the normalization shift to the output shifts of the last adder in the given node.
+     * @param node The RSCM node to update.
+     * @param logShifts Whether to print the applied shift changes.
+     */
+    void ApplyNormalizationShift(RSCM& node, bool logShifts = false) const;
+
     std::mutex pushBackMutex_; ///< Mutex for thread-safe operations.
     std::mutex progressMutex_; ///< Mutex for progress updates.
     std::mutex solutionMutex_; ///< Mutex for solution updates.
     std::atomic<unsigned int> bestCost_; ///< Atomic variable when updating the best cost.
     std::vector<std::vector<RSCM>> threadedNodes_; ///< Threaded nodes for parallel merging.
     unsigned int nbAvailableThreads_; ///< Number of available threads.
+    unsigned int normShift_; ///< Normalization shift for the SCMs.
     std::vector<std::vector<std::vector<unsigned int>>> threadedIndexes_; ///< Threaded indexes for parallel computation.
     /// contains the shuffled indexes of the SCMs for each target constant
 };

@@ -36,36 +36,6 @@ VerilogGenerator::VerilogGenerator
     HandleModules();
     HandleTopModule();
     // PrintTestbench();
-
-    // print the bitwidth of each parameters of each adder
-    unsigned int adderIdx = 0;
-    for (const auto& layer : layers_) {
-        for (const auto& adder : layer.adders) {
-            std::cout << "Adder " << adderIdx << " parameters bitwidths: " << std::endl;
-            for (size_t p = 0; p < adder.variables.size(); p++)
-            {
-                const auto varType = idxToVarMap_.at(p);
-                const auto bw = solutionNode_.variableBitWidths[adderIdx * adder.variables.size() + p];
-                std::cout << "\t" << varDefsTostring_(varType) << ": " << bw << " bits" << std::endl;
-            }
-            ++adderIdx;
-        }
-    }
-
-    // print the min shit savings per parameter
-    adderIdx = 0;
-    for (const auto& layer : layers_) {
-        for (const auto& adder : layer.adders) {
-            std::cout << "Adder " << adderIdx << " bit shift savings: " << std::endl;
-            for (size_t p = 0; p < adder.variables.size(); p++)
-            {
-                const auto varType = idxToVarMap_.at(p);
-                const auto bw = solutionNode_.minShiftSavings[adderIdx * adder.variables.size() + p];
-                std::cout << "\t" << varDefsTostring_(varType) << ": " << bw << " bits" << std::endl;
-            }
-            ++adderIdx;
-        }
-    }
 }
 
 void VerilogGenerator::HandleModules()
