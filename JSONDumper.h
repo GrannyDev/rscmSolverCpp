@@ -5,6 +5,8 @@
 #ifndef RMCMSOLVER_JSONDUMPER_H
 #define RMCMSOLVER_JSONDUMPER_H
 #include <fstream>
+#include <unordered_map>
+#include <optional>
 
 #include "RSCM.h"
 
@@ -32,6 +34,7 @@ class JSONDumper {
         unsigned int inputBW,
         const std::vector<int>& targets,
         const std::vector<std::pair<int, std::vector<DAG>>>& scmDesigns,
+        const std::unordered_map<std::string, std::optional<unsigned int>>& costs,
         bool overwrite = false
     );
 
@@ -46,6 +49,7 @@ private:
     const unsigned int inputBW_;
     const std::vector<int>& targets_;
     const std::vector<std::pair<int, std::vector<DAG>>>& scmDesigns_;
+    const std::unordered_map<std::string, std::optional<unsigned int>>& costs_;
     const VarDefsToString varDefsTostring_;
 
     // Helper methods

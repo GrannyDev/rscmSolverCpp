@@ -8,7 +8,10 @@
 #include <algorithm>
 #include <random>
 #include <ranges>
+#include <stdexcept>
 #include <thread>
+#include <optional>
+#include <unordered_map>
 
 #include "CPModel.h"
 #include "JSONDumper.h"
@@ -21,7 +24,7 @@ Solver::Solver(
     const int minCoef,                    // Minimum coefficient allowed
     std::vector<int> const& targets,      // Target constants to synthesize
     const size_t nbInputBits,             // Input bit-width
-    const bool useFineGrainCost           // Flag to choose between cost models
+    const CostModel costModel             // Cost model selection
 ) : solution(0, 0, 0, 0, 0)               // Initialize empty solution node
 {
     this->layout = layout;
@@ -31,13 +34,30 @@ Solver::Solver(
     this->targets = targets;
     this->nbInputBits = nbInputBits;
     this->nbAvailableThreads_ = std::thread::hardware_concurrency();
-    this->useFineGrainCost = useFineGrainCost;
+    this->costModel_ = costModel;
 
     // Select cost model implementation
-    if (useFineGrainCost) {
-        fuseCostComputer = std::make_unique<FineGrainCostComputer>(this);
-    } else {
+    switch (costModel_) {
+    case CostModel::AreaCost:
+        fuseCostComputer = std::make_unique<AreaCostComputer>(this);
+        break;
+    case CostModel::MuxCount:
         fuseCostComputer = std::make_unique<MuxCountComputer>(this);
+        break;
+    case CostModel::MuxBits:
+        fuseCostComputer = std::make_unique<MuxBitsComputer>(this);
+        break;
+    case CostModel::LutsCost:
+        fuseCostComputer = std::make_unique<LutsCostComputer>(this);
+        break;
+    case CostModel::FPGADelay:
+        fuseCostComputer = std::make_unique<FPGADelayComputer>(this);
+        break;
+    case CostModel::ASICDelay:
+        fuseCostComputer = std::make_unique<ASICDelayComputer>(this);
+        break;
+    default:
+        throw std::invalid_argument("Unknown cost model");
     }
 
     // Normalize targets constants
@@ -334,6 +354,79 @@ void Solver::ApplyNormalizationShift(RSCM& node, const bool logShifts) const
     }
 }
 
+std::optional<unsigned int> Solver::EvaluateCost(const RSCM& solutionNode, const CostModel model) const
+{
+    auto* solverPtr = const_cast<Solver*>(this);
+    try {
+        switch (model) {
+        case CostModel::AreaCost: {
+            // Recompute fine-grain cost by replaying merges
+            RSCM replayNode(nbBitsPerSCM, targets.size(), nbAdders,
+                nbAdders * layers[0].adders[0].variables.size(), nbPossibleVariables);
+            replayNode.rscm = scmDesigns[0].second[solutionNode.scmIndexes[0]];
+            replayNode.InitializeMinShiftSavings(layers);
+            const AreaCostComputer areaCostComputer(solverPtr);
+            for (int depth = 1; depth < targets.size(); depth++) {
+                areaCostComputer.merge(replayNode, scmDesigns[depth].second[solutionNode.scmIndexes[depth]]);
+            }
+            ApplyNormalizationShift(replayNode);
+            return replayNode.cost;
+        }
+        case CostModel::MuxCount: {
+            DAG emptySCM(nbBitsPerSCM, nbAdders, nbPossibleVariables);
+            emptySCM.set.reset();
+            RSCM replayNode = solutionNode;
+            const MuxCountComputer muxCostComputer(solverPtr);
+            return muxCostComputer.merge(replayNode, emptySCM);
+        }
+        case CostModel::MuxBits: {
+            DAG emptySCM(nbBitsPerSCM, nbAdders, nbPossibleVariables);
+            emptySCM.set.reset();
+            RSCM replayNode = solutionNode;
+            const MuxBitsComputer muxBitsComputer(solverPtr);
+            return muxBitsComputer.merge(replayNode, emptySCM);
+        }
+        case CostModel::LutsCost: {
+            RSCM replayNode = solutionNode;
+            const LutsCostComputer lutsCostComputer(solverPtr);
+            return lutsCostComputer.merge(replayNode, scmDesigns[0].second[solutionNode.scmIndexes[0]]);
+        }
+        case CostModel::FPGADelay: {
+            RSCM replayNode = solutionNode;
+            const FPGADelayComputer fpgaDelayComputer(solverPtr);
+            return fpgaDelayComputer.merge(replayNode, scmDesigns[0].second[solutionNode.scmIndexes[0]]);
+        }
+        case CostModel::ASICDelay: {
+            RSCM replayNode = solutionNode;
+            const ASICDelayComputer asicDelayComputer(solverPtr);
+            return asicDelayComputer.merge(replayNode, scmDesigns[0].second[solutionNode.scmIndexes[0]]);
+        }
+        default:
+            return std::nullopt;
+        }
+    } catch (const std::logic_error&) {
+        return std::nullopt;
+    }
+}
+
+std::unordered_map<std::string, std::optional<unsigned int>> Solver::GetAllCosts(const RSCM& solutionNode) const
+{
+    const std::vector<std::pair<CostModel, std::string>> models = {
+        {CostModel::AreaCost,   "area_cost"},
+        {CostModel::MuxCount,   "mux_count"},
+        {CostModel::MuxBits,    "mux_bits"},
+        {CostModel::LutsCost,   "luts"},
+        {CostModel::FPGADelay,  "fpga_delay"},
+        {CostModel::ASICDelay,  "asic_delay"},
+    };
+
+    std::unordered_map<std::string, std::optional<unsigned int>> costs;
+    for (const auto& [model, name] : models) {
+        costs[name] = EvaluateCost(solutionNode, model);
+    }
+    return costs;
+}
+
 unsigned int Solver::MuxCountComputer::merge(RSCM& node, DAG const& scm) const
 {
     // 1) Merge resource sets and update bounds
@@ -360,8 +453,8 @@ unsigned int Solver::MuxCountComputer::merge(RSCM& node, DAG const& scm) const
                 // If more than one bit, we need (bitsSet - 1) multiplexers
                 if (bitsSet > 1)
                 {
-                    // compute the number of bits to select instead
-                    muxCount += std::ceil(std::log2(bitsSet));
+                    // compute the number of number of multiplexers needed
+                    muxCount += bitsSet - 1;
                 }
 
                 ++totalParams;
@@ -374,7 +467,62 @@ unsigned int Solver::MuxCountComputer::merge(RSCM& node, DAG const& scm) const
     return muxCount;
 }
 
-unsigned int Solver::FineGrainCostComputer::merge(RSCM& node, DAG const& scm) const
+unsigned int Solver::MuxBitsComputer::merge(RSCM& node, DAG const& scm) const
+{
+    // 1) Merge resource sets and update bounds
+    node.rscm.set |= scm.set;
+
+    // Prepare to count
+    size_t bitPos = 0;
+    unsigned int totalParams = 0;
+    unsigned int bitCount = 0;
+
+    // Iterate layers → adders → variables
+    for (const auto& layer : solver->layers) {
+        for (const auto& adder : layer.adders) {
+            for (const auto& param : adder.variables) {
+                // Count how many bits in this parameter are set
+                unsigned int bitsSet = 0;
+                for (size_t j = 0; j < param.possibleValuesFusion.size(); ++j) {
+                    if (node.rscm.set.test(bitPos + j)) {
+                        ++bitsSet;
+                    }
+                }
+                bitPos += param.possibleValuesFusion.size();
+
+                // If more than one bit, we need (bitsSet - 1) multiplexers
+                if (bitsSet > 1)
+                {
+                    // compute the number of bits to select instead
+                    bitCount += std::ceil(std::log2(bitsSet));
+                }
+
+                ++totalParams;
+            }
+        }
+    }
+
+    // Store result
+    node.cost = bitCount;
+    return bitCount;
+}
+
+unsigned int Solver::LutsCostComputer::merge(RSCM& /*node*/, DAG const& /*scm*/) const
+{
+    throw std::logic_error("LutsCostComputer::merge not implemented");
+}
+
+unsigned int Solver::FPGADelayComputer::merge(RSCM& /*node*/, DAG const& /*scm*/) const
+{
+    throw std::logic_error("FPGADelayComputer::merge not implemented");
+}
+
+unsigned int Solver::ASICDelayComputer::merge(RSCM& /*node*/, DAG const& /*scm*/) const
+{
+    throw std::logic_error("ASICDelayComputer::merge not implemented");
+}
+
+unsigned int Solver::AreaCostComputer::merge(RSCM& node, DAG const& scm) const
 {
     unsigned int fineGrainCost = 0;
 
@@ -529,38 +677,19 @@ void Solver::PrintSolution(unsigned int const cost)
 
 void Solver::PrettyPrinter(const RSCM& solutionNode)
 {
-    unsigned int nbMuxes;
-    unsigned int fineGrainedCost;
-    // Need to compute the cost of the cost function that was not used during the solving
-    if (useFineGrainCost)
-    {
-        // compute mux cost by creating an empty DAG scm to merge to the solutionNode
-        DAG emptySCM(nbBitsPerSCM, nbAdders, nbPossibleVariables);
-        emptySCM.set.reset();
-        const MuxCountComputer muxCostComputer(this);
-        RSCM replayNode = solutionNode; // copy the solution node to avoid modifying it
-        nbMuxes = muxCostComputer.merge(replayNode, emptySCM);
-        fineGrainedCost = solutionNode.cost;
-    } else
-    {
-        // more complicated, we have to replay the whole merging process to compute the fine-grained cost
-        RSCM replayNode(nbBitsPerSCM, targets.size(), nbAdders,
-            nbAdders * layers[0].adders[0].variables.size(), nbPossibleVariables);
-        // Start by copying the first SCM directly (not merging), like the native execution does
-        replayNode.rscm = scmDesigns[0].second[solutionNode.scmIndexes[0]];
-        replayNode.InitializeMinShiftSavings(layers);
-        const FineGrainCostComputer fineGrainCostComputer(this);
-        // Now merge the remaining SCMs starting from depth 1
-        for (int depth = 1; depth < targets.size(); depth++)
-        {
-            fineGrainCostComputer.merge(replayNode, scmDesigns[depth].second[solutionNode.scmIndexes[depth]]);
-        }
-        fineGrainedCost = replayNode.cost;
-        nbMuxes = solutionNode.cost;
-    }
+    const auto costs = GetAllCosts(solutionNode);
 
-    std::cout << "Mux COST: " << nbMuxes << std::endl;
-    std::cout << "FINE-GRAINED COST: " << fineGrainedCost << std::endl << std::endl;
+    std::cout << "Costs:\n";
+    for (const auto& [name, value] : costs) {
+        std::cout << " - " << name << ": ";
+        if (value.has_value()) {
+            std::cout << *value;
+        } else {
+            std::cout << "not implemented";
+        }
+        std::cout << std::endl;
+    }
+    std::cout << std::endl;
     
     std::cout << std::endl << "Parameters: " << std::endl;
     const auto paramDefsToString = VarDefsToString();
@@ -617,7 +746,7 @@ void Solver::PrettyPrinter(const RSCM& solutionNode)
 
 void Solver::Verilog(const RSCM& solutionNode, const std::string& outputUri, const bool overwrite)
 {
-    if (!useFineGrainCost)
+    if (costModel_ != CostModel::AreaCost)
     {
         // more complicated, we have to replay the whole merging process to compute the fine-grained cost
         RSCM replayNode(nbBitsPerSCM, targets.size(), nbAdders,
@@ -625,7 +754,7 @@ void Solver::Verilog(const RSCM& solutionNode, const std::string& outputUri, con
         // Start by copying the first SCM directly (not merging), like the native execution does
         replayNode.rscm = scmDesigns[0].second[solutionNode.scmIndexes[0]];
         replayNode.InitializeMinShiftSavings(layers);
-        const FineGrainCostComputer fineGrainCostComputer(this);
+        const AreaCostComputer fineGrainCostComputer(this);
         // Now merge the remaining SCMs starting from depth 1
         for (int depth = 1; depth < targets.size(); depth++)
         {
@@ -640,7 +769,9 @@ void Solver::Verilog(const RSCM& solutionNode, const std::string& outputUri, con
 
 void Solver::DumpJSON(const RSCM& solutionNode, const std::string& outputUri, const bool overwrite)
 {
-    if (!useFineGrainCost)
+    const auto costs = GetAllCosts(solutionNode);
+
+    if (costModel_ != CostModel::AreaCost)
     {
         // more complicated, we have to replay the whole merging process to compute the fine-grained cost
         RSCM replayNode(nbBitsPerSCM, targets.size(), nbAdders,
@@ -649,16 +780,16 @@ void Solver::DumpJSON(const RSCM& solutionNode, const std::string& outputUri, co
         replayNode.rscm = scmDesigns[0].second[solutionNode.scmIndexes[0]];
         replayNode.scmIndexes = solutionNode.scmIndexes;
         replayNode.InitializeMinShiftSavings(layers);
-        const FineGrainCostComputer fineGrainCostComputer(this);
+        const AreaCostComputer fineGrainCostComputer(this);
         // Now merge the remaining SCMs starting from depth 1
         for (int depth = 1; depth < targets.size(); depth++)
         {
             fineGrainCostComputer.merge(replayNode, scmDesigns[depth].second[solutionNode.scmIndexes[depth]]);
         }
         ApplyNormalizationShift(replayNode);
-        JSONDumper JSONDumper(replayNode, outputUri, layers, idxToVarMap, varToIdxMap, nbInputBits, targets, scmDesigns, overwrite);
+        JSONDumper JSONDumper(replayNode, outputUri, layers, idxToVarMap, varToIdxMap, nbInputBits, targets, scmDesigns, costs, overwrite);
     } else {
-        JSONDumper JSONDumper(solutionNode, outputUri, layers, idxToVarMap, varToIdxMap, nbInputBits, targets, scmDesigns, overwrite);
+        JSONDumper JSONDumper(solutionNode, outputUri, layers, idxToVarMap, varToIdxMap, nbInputBits, targets, scmDesigns, costs, overwrite);
     }
 }
 

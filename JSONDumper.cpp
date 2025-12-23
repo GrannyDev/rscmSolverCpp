@@ -14,9 +14,10 @@ JSONDumper::JSONDumper(
     const unsigned int inputBW,
     const std::vector<int>& targets,
     const std::vector<std::pair<int, std::vector<DAG>>>& scmDesigns,
+    const std::unordered_map<std::string, std::optional<unsigned int>>& costs,
     const bool overwrite
 )
-    : solutionNode_(solutionNode), layers_(layers), idxToVarMap_(idxToVarMap), varToIdxMap_(varToIdxMap), inputBW_(inputBW), targets_(targets), scmDesigns_(scmDesigns), varDefsTostring_(VarDefsToString())
+    : solutionNode_(solutionNode), layers_(layers), idxToVarMap_(idxToVarMap), varToIdxMap_(varToIdxMap), inputBW_(inputBW), targets_(targets), scmDesigns_(scmDesigns), costs_(costs), varDefsTostring_(VarDefsToString())
 {
     // check if output already exists
     if (std::filesystem::exists(outputUri) && !overwrite)
@@ -275,6 +276,25 @@ void JSONDumper::Dump() {
         outputFile_ << muxNbToMuxBw[i];
     }
     outputFile_ << "],\n";
+
+    outputFile_ << std::string(nbTabs, '\t') << "\"costs\": {\n";
+    nbTabs++;
+    size_t costIdx = 0;
+    for (const auto& [name, value] : costs_) {
+        outputFile_ << std::string(nbTabs, '\t') << "\"" << name << "\": ";
+        if (value.has_value()) {
+            outputFile_ << *value;
+        } else {
+            outputFile_ << "\"not implemented\"";
+        }
+        if (costIdx < costs_.size() - 1) {
+            outputFile_ << ",";
+        }
+        outputFile_ << "\n";
+        ++costIdx;
+    }
+    nbTabs--;
+    outputFile_ << std::string(nbTabs, '\t') << "},\n";
     outputFile_ << std::string(nbTabs, '\t') << "\"constants\": [";
     for (int i = 0; i < targets_.size(); i++) {
         if (i > 0) outputFile_ << ", ";

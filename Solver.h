@@ -6,6 +6,8 @@
 #define PROBLEM_H
 
 #include <unordered_set>
+#include <unordered_map>
+#include <optional>
 #include <vector>
 #include <boost/dynamic_bitset.hpp>
 #include <boost/asio/thread_pool.hpp>
@@ -23,20 +25,33 @@
 class Solver {
 public:
     /**
+     * @enum CostModel
+     * @brief Enumerates available cost computation strategies.
+     */
+    enum class CostModel {
+        AreaCost,
+        MuxCount,
+        MuxBits,
+        LutsCost,
+        FPGADelay,
+        ASICDelay
+    };
+
+    /**
      * @brief Constructor for the Solver class.
      * @param layout Vector specifying where the adders and layers are: {2,1} means 2 adders in layer 1 and 1 in layer 2.
      * @param maxCoef Maximum (intermediate) coefficient value.
      * @param minCoef Minimum (intermediate) coefficient value.
      * @param targets The set of target constants.
      * @param nbInputBits Number of bits encoding the input (X).
-     * @param useFineGrainCost Flag to enable fine-grained cost function instead of coarse-grained.
+     * @param costModel Cost model to use during solving.
      */
     Solver(
         std::vector<int> const& layout,
         int maxCoef, int minCoef,
         std::vector<int> const& targets,
         size_t nbInputBits,
-        bool useFineGrainCost = false
+        CostModel costModel = CostModel::MuxCount
     );
 
     /**
@@ -112,10 +127,10 @@ public:
     };
 
     /**
-     * @struct FineGrainCostComputer
+     * @struct AreaCostComputer
      * @brief Computes costs with fine-grain granularity.
      */
-    struct FineGrainCostComputer final : ICostComputer {
+    struct AreaCostComputer final : ICostComputer {
         using ICostComputer::ICostComputer;
 
         /**
@@ -143,6 +158,26 @@ public:
         unsigned int merge(RSCM& node, DAG const& scm) const override;
     };
 
+    struct MuxBitsComputer final : ICostComputer {
+        using ICostComputer::ICostComputer;
+        unsigned int merge(RSCM& node, DAG const& scm) const override;
+    };
+
+    struct LutsCostComputer final : ICostComputer {
+        using ICostComputer::ICostComputer;
+        unsigned int merge(RSCM& node, DAG const& scm) const override;
+    };
+
+    struct FPGADelayComputer final : ICostComputer {
+        using ICostComputer::ICostComputer;
+        unsigned int merge(RSCM& node, DAG const& scm) const override;
+    };
+
+    struct ASICDelayComputer final : ICostComputer {
+        using ICostComputer::ICostComputer;
+        unsigned int merge(RSCM& node, DAG const& scm) const override;
+    };
+
     std::unique_ptr<ICostComputer> fuseCostComputer; ///< Pointer to the cost computation strategy.
     std::vector<int> layout; ///< Layout for the RSCM.
     int maxCoef; ///< Maximum (intermediate) coefficient value.
@@ -152,7 +187,7 @@ public:
     size_t nbAdders; ///< Number of adders in the layout.
     size_t nbPossibleVariables; ///< Number of variables in the layout.
     size_t nbInputBits; ///< Number of input bits of X.
-    bool useFineGrainCost; ///< Flag to enable fine-grained cost function instead of coarse-grained.
+    CostModel costModel_; ///< Selected cost model.
     std::vector<VariableDefs> varDefs; ///< Variable definitions.
     std::vector<int> targets; ///< Target values.
     std::vector<Layer> layers; ///< Layers in the layout.
@@ -206,6 +241,21 @@ private:
      * @param logShifts Whether to print the applied shift changes.
      */
     void ApplyNormalizationShift(RSCM& node, bool logShifts = false) const;
+
+    /**
+     * @brief Compute cost for a given model using replay nodes when needed.
+     * @param solutionNode Node to evaluate.
+     * @param model Cost model to use.
+     * @return Optional cost (empty if not implemented).
+     */
+    std::optional<unsigned int> EvaluateCost(const RSCM& solutionNode, CostModel model) const;
+
+    /**
+     * @brief Compute all costs for implemented models.
+     * @param solutionNode Node to evaluate.
+     * @return Map of model name to optional cost.
+     */
+    std::unordered_map<std::string, std::optional<unsigned int>> GetAllCosts(const RSCM& solutionNode) const;
 
     std::mutex pushBackMutex_; ///< Mutex for thread-safe operations.
     std::mutex progressMutex_; ///< Mutex for progress updates.
