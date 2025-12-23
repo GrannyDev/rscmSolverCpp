@@ -58,6 +58,7 @@ public:
      * @brief Step 1: Find all possible SCMs for the given target constants.
      */
     void CPSolve();
+    void CPSolve(std::optional<unsigned int> heuristic);
 
     /**
      * @brief Step 2: DFS Branch & Prune to find the best RSCM.
@@ -203,8 +204,9 @@ private:
      * @param completedJobs Atomic counter for completed jobs.
      * @param progressMutex Mutex for progress updates.
      * @param pushBackMutex Mutex for thread-safe push into the SCMi set.
+     * @param heuristic Optional limit on number of SCMs to enumerate.
      */
-    void RunSolver(int coef, std::atomic<int> & completedJobs, std::mutex & progressMutex, std::mutex & pushBackMutex);
+    void RunSolver(int coef, std::atomic<int> & completedJobs, std::mutex & progressMutex, std::mutex & pushBackMutex, std::optional<unsigned int> heuristic = std::nullopt);
 
     /**
      * @brief Computes a branch of the merge tree.

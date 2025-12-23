@@ -7,6 +7,7 @@
 
 #include <mutex>
 #include <vector>
+#include <optional>
 #include <boost/dynamic_bitset/dynamic_bitset.hpp>
 
 #include "ortools/sat/cp_model.h"
@@ -53,7 +54,8 @@ public:
         std::vector<Layer> const& layers,
         size_t nbBitsPerDAG,
         std::unordered_map<VariableDefs, unsigned int> const& varToIndexMap,
-        std::vector<VariableDefs> const& varDefs
+        std::vector<VariableDefs> const& varDefs,
+        std::optional<unsigned int> maxSolutions = std::nullopt
     ) const;
 
 private:

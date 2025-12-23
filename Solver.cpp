@@ -137,13 +137,18 @@ Solver::Solver(
 // Solve each target constant using CP (constraint programming)
 void Solver::CPSolve()
 {
+    CPSolve(std::nullopt);
+}
+
+void Solver::CPSolve(std::optional<unsigned int> heuristic)
+{
     std::atomic completedJobs(0);
     boost::asio::thread_pool pool(std::thread::hardware_concurrency());
 
     for (auto const& t : targets) {
         auto coef = static_cast<short>(t);
-        post(pool, [this, coef, &completedJobs] {
-            RunSolver(coef, completedJobs, progressMutex_, pushBackMutex_);
+        post(pool, [this, coef, &completedJobs, heuristic] {
+            RunSolver(coef, completedJobs, progressMutex_, pushBackMutex_, heuristic);
         });
     }
     pool.join(); // Wait for all threads to complete
@@ -151,7 +156,7 @@ void Solver::CPSolve()
 
 // Internal call to CP solver for a single target coefficient
 void Solver::RunSolver(const int coef, std::atomic<int>& completedJobs,
-    std::mutex& progressMutex, std::mutex& pushBackMutex)
+    std::mutex& progressMutex, std::mutex& pushBackMutex, const std::optional<unsigned int> heuristic)
 {
     const CPModel cpModel(
         minCoef,
@@ -160,7 +165,7 @@ void Solver::RunSolver(const int coef, std::atomic<int>& completedJobs,
         static_cast<int>(std::pow(2, nbInputBits - 1) - 1)
     );
     cpModel.SolveFor(coef, scmDesigns, pushBackMutex, layers, nbBitsPerSCM,
-                     varToIdxMap, varDefs);
+                     varToIdxMap, varDefs, heuristic);
     ++completedJobs;
 
     // Progress bar output

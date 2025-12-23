@@ -19,7 +19,8 @@ void CPModel::SolveFor(
     std::vector<Layer> const& layers,
     size_t nbBitsPerDAG,
     std::unordered_map<VariableDefs, unsigned int> const& varToIndexMap,
-    std::vector<VariableDefs> const& varDefs
+    std::vector<VariableDefs> const& varDefs,
+    std::optional<unsigned int> maxSolutions
 ) const
 {
     // Initialize the constraint programming model and variable mappings
@@ -139,6 +140,7 @@ void CPModel::SolveFor(
     // Creating the DAG from each CP solution by gathering the assignment of each variable for each adder in each layer
     operations_research::sat::Model model;
     std::vector<DAG> DAGVector;
+    size_t solutionCount = 0;
     model.Add(operations_research::sat::NewFeasibleSolutionObserver([&](const operations_research::sat::CpSolverResponse& r) {
         DAG scm(nbBitsPerDAG, nbAdders, nbAdders * layers[0].adders[0].variables.size());
 
@@ -224,6 +226,18 @@ void CPModel::SolveFor(
     operations_research::sat::SatParameters parameters;
     parameters.set_enumerate_all_solutions(true);
     model.Add(NewSatParameters(parameters));
+
+    if (maxSolutions.has_value())
+    {
+        int num_solutions = 0;
+        model.Add(operations_research::sat::NewFeasibleSolutionObserver([&](const operations_research::sat::CpSolverResponse&) {
+          num_solutions++;
+          if (num_solutions >= *maxSolutions) {
+            StopSearch(&model);
+          }
+        }));
+    }
+
     SolveCpModel(cpModel.Build(), &model);
     if (!DAGVector.empty())
     {
