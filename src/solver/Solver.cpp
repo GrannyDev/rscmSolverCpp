@@ -12,6 +12,7 @@
 #include <thread>
 #include <optional>
 #include <unordered_map>
+#include <chrono>
 
 #include "../cp/CPModel.h"
 #include "../writers/JSONDumper.h"
@@ -169,6 +170,11 @@ void Solver::CPSolve(std::optional<unsigned int> heuristic)
     pool.join(); // Wait for all threads to complete
 }
 
+void Solver::SetBranchTimeoutSeconds(const std::optional<unsigned int> seconds)
+{
+    bbTimeoutSeconds_ = seconds.has_value() && seconds.value() > 0 ? seconds : std::optional<unsigned int>{};
+}
+
 // Internal call to CP solver for a single target coefficient
 void Solver::RunSolver(const int coef, std::atomic<int>& completedJobs,
     std::mutex& progressMutex, std::mutex& pushBackMutex, const std::optional<unsigned int> heuristic)
@@ -194,6 +200,13 @@ void Solver::RunSolver(const int coef, std::atomic<int>& completedJobs,
 // Final stage of solving: compute best combination of SCMs across all targets
 void Solver::Solve()
 {
+    timeoutTriggered_.store(false, std::memory_order_relaxed);
+    if (bbTimeoutSeconds_.has_value()) {
+        bbDeadline_ = std::chrono::steady_clock::now() + std::chrono::seconds(*bbTimeoutSeconds_);
+    } else {
+        bbDeadline_.reset();
+    }
+
     // 1. Select the target with the number of SCMs closest in size to number of available threads
     // (this is usefull to balance the load across threads)
     unsigned int closestIndex = 0;
@@ -251,6 +264,7 @@ void Solver::Solve()
     for (int thread = 0; thread < nbAvailableThreads; thread++) {
         post(pool, [this, thread, &index] {
             while (true) {
+                if (timeoutTriggered_.load(std::memory_order_relaxed)) break;
                 constexpr int depth = 1;
                 const size_t i = index.fetch_add(1, std::memory_order_relaxed);
                 if (i >= scmDesigns[0].second.size()) {
@@ -276,6 +290,10 @@ void Solver::Solve()
         ApplyNormalizationShift(solution);
     }
 
+    if (timeoutTriggered_.load(std::memory_order_relaxed)) {
+        std::cout << "Branch-and-bound terminated due to timeout; best-so-far solution is not guaranteed optimal." << std::endl;
+    }
+
     // Compute all cost models once for the final solution
     solutionCosts_ = GetAllCosts(solution);
 }
@@ -295,6 +313,12 @@ void Solver::ComputeBranch(const int depth, const int threadNb, const unsigned i
         }
         return;
     }
+
+    if (timeoutTriggered_.load(std::memory_order_relaxed) ||
+        (bbDeadline_.has_value() && std::chrono::steady_clock::now() >= *bbDeadline_)) {
+        timeoutTriggered_.store(true, std::memory_order_relaxed);
+        return;
+        }
 
     // Recurse to next layer if cost is below current best
     for (const auto& index : threadedIndexes_[startIndex][depth - 1]) {

@@ -34,11 +34,12 @@ int main(int argc, char* argv[]) {
         return std::nullopt;
     };
 
-    size_t beta = 6; // maximum bit-width allowed for the constants (and intermediate values)
+    size_t beta = 9; // maximum bit-width allowed for the constants (and intermediate values)
     size_t nbInputBits = 8; // number of bits of the input (to compute the fine-grained cost function)
     std::vector<int> targets = {-20, -13, -8, -6, -5, -3, -2, -1, 0, 1, 2, 4, 5, 7, 12, 19}; // target const set of the RSCM
     std::vector<int> layout = {1, 1}; // {1,1} describes the chosen layout, i.e. 1 adder on the first layer and 1 adder on the second layer
     std::optional<unsigned int> heuristic;
+    std::optional<unsigned int> timeoutSeconds;
     size_t lutWidth = 6;
     bool doJsonDump = true;
     std::string jsonPath = "dump.json";
@@ -59,6 +60,7 @@ int main(int argc, char* argv[]) {
                 "  --heuristic=<uint>       Limit CP solutions per target\n"
                 "  --cost=<model>           Cost model: area|mux_count|mux_bits|luts|fpga_delay|asic_delay\n"
                 "  --lut-width=<uint>       Set LUT width for LUT-based cost models, default 6\n"
+                "  --timeout=<uint>         Branch-and-bound timeout in seconds (CP phase not affected)\n"
                 "  --json=<path>            Enable JSON dump to path (default dump.json)\n"
                 "  --no-json                Disable JSON dump\n"
                 "  --snapshot-out=<path>    Write a snapshot to recompute costs later\n"
@@ -77,6 +79,8 @@ int main(int argc, char* argv[]) {
                 layout = parseList(arg.substr(9));
             } else if (arg.rfind("--heuristic=", 0) == 0) {
                 heuristic = static_cast<unsigned int>(std::stoul(arg.substr(12)));
+            } else if (arg.rfind("--timeout=", 0) == 0) {
+                timeoutSeconds = static_cast<unsigned int>(std::stoul(arg.substr(10)));
             } else if (arg.rfind("--lut-width=", 0) == 0) {
                 lutWidth = std::stoul(arg.substr(12));
             } else if (arg == "--no-json") {
@@ -149,6 +153,7 @@ int main(int argc, char* argv[]) {
     std::cout << std::endl;
 
     // step 2: solve the problem with the DFS B&P
+    problem.SetBranchTimeoutSeconds(timeoutSeconds);
     problem.Solve();
 
     std::cout << "_____________________BEST SOLUTION_____________________" << std::endl;

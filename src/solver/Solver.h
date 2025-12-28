@@ -9,6 +9,8 @@
 #include <unordered_map>
 #include <optional>
 #include <vector>
+#include <chrono>
+#include <atomic>
 #include <boost/dynamic_bitset.hpp>
 #include <boost/asio/thread_pool.hpp>
 #include <boost/asio/post.hpp>
@@ -120,8 +122,13 @@ public:
     std::vector<std::pair<int, std::vector<DAG>>> scmDesigns; ///< SCM designs for each target.
     RSCM solution; ///< The solution RSCM.
     std::unordered_map<std::string, std::optional<unsigned int>> solutionCosts_; ///< Cached costs for the best solution.
+    std::optional<unsigned int> bbTimeoutSeconds_; ///< Optional timeout duration in seconds for branch-and-bound.
+    std::optional<std::chrono::steady_clock::time_point> bbDeadline_; ///< Optional timeout deadline for branch-and-bound.
+    std::atomic<bool> timeoutTriggered_{false}; ///< Indicates whether the branch-and-bound timed out.
     std::unordered_map<VariableDefs, unsigned int> varToIdxMap; ///< Map from variables to indices.
     std::unordered_map<unsigned int, VariableDefs> idxToVarMap; ///< Map from indices to variables.
+
+    void SetBranchTimeoutSeconds(std::optional<unsigned int> seconds);
 
 private:
     /**
