@@ -19,6 +19,7 @@
 #include "RSCM.h"
 #include "CostModel.h"
 #include "ICostComputer.h"
+#include "../writers/SnapshotIO.h"
 
 /**
  * @class Solver
@@ -79,6 +80,14 @@ public:
         const std::string& outputUri,
         bool overwrite
     ) const;
+
+    void DumpSnapshot(
+        const RSCM& solutionNode,
+        const std::string& outputUri,
+        bool overwrite
+    ) const;
+
+    std::unordered_map<std::string, std::optional<unsigned int>> ComputeAllCosts(const RSCM& solutionNode) const;
 
     /**
      * @brief Gets the current best cost of the solution.

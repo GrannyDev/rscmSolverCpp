@@ -10,6 +10,7 @@
 #include <optional>
 
 #include "solver/Solver.h"
+#include "writers/SnapshotIO.h"
 
 int main(int argc, char* argv[]) {
     auto parseList = [](const std::string& s) {
@@ -41,6 +42,8 @@ int main(int argc, char* argv[]) {
     size_t lutWidth = 6;
     bool doJsonDump = true;
     std::string jsonPath = "dump.json";
+    std::optional<std::string> snapshotOut;
+    std::optional<std::string> snapshotIn;
     auto costModel = CostModel::MuxBits;
 
     for (int i = 1; i < argc; ++i) {
@@ -58,14 +61,16 @@ int main(int argc, char* argv[]) {
                 "  --lut-width=<uint>       Set LUT width for LUT-based cost models, default 6\n"
                 "  --json=<path>            Enable JSON dump to path (default dump.json)\n"
                 "  --no-json                Disable JSON dump\n"
+                "  --snapshot-out=<path>    Write a snapshot to recompute costs later\n"
+                "  --recompute-snapshot=<path>  Recompute all costs from a snapshot file\n"
                 "  -h, --help               Show this help\n";
             return 0;
         }
         try {
             if (arg.rfind("--beta=", 0) == 0) {
-                beta = static_cast<size_t>(std::stoul(arg.substr(7)));
+                beta = std::stoul(arg.substr(7));
             } else if (arg.rfind("--nb-input-bits=", 0) == 0) {
-                nbInputBits = static_cast<size_t>(std::stoul(arg.substr(16)));
+                nbInputBits = std::stoul(arg.substr(16));
             } else if (arg.rfind("--targets=", 0) == 0) {
                 targets = parseList(arg.substr(10));
             } else if (arg.rfind("--layout=", 0) == 0) {
@@ -73,7 +78,7 @@ int main(int argc, char* argv[]) {
             } else if (arg.rfind("--heuristic=", 0) == 0) {
                 heuristic = static_cast<unsigned int>(std::stoul(arg.substr(12)));
             } else if (arg.rfind("--lut-width=", 0) == 0) {
-                lutWidth = static_cast<size_t>(std::stoul(arg.substr(12)));
+                lutWidth = std::stoul(arg.substr(12));
             } else if (arg == "--no-json") {
                 doJsonDump = false;
             } else if (arg.rfind("--json=", 0) == 0) {
@@ -86,6 +91,10 @@ int main(int argc, char* argv[]) {
                 } else {
                     std::cerr << "Unknown cost model: " << arg.substr(7) << std::endl;
                 }
+            } else if (arg.rfind("--snapshot-out=", 0) == 0) {
+                snapshotOut = arg.substr(15);
+            } else if (arg.rfind("--recompute-snapshot=", 0) == 0) {
+                snapshotIn = arg.substr(22);
             } else {
                 std::cerr << "Ignoring unknown argument: " << arg << std::endl;
             }
@@ -97,6 +106,37 @@ int main(int argc, char* argv[]) {
     const auto maxCoef = static_cast<int>(std::pow(2, beta - 1) - 1);
     const auto minCoef = static_cast<int>(-1 * std::pow(2, beta - 1));
 
+    if (snapshotIn.has_value()) {
+        const auto snap = ReadSnapshot(*snapshotIn);
+        if (!snap.has_value()) {
+            std::cerr << "Failed to read snapshot: " << *snapshotIn << std::endl;
+            return 1;
+        }
+        const auto& s = *snap;
+        Solver problem(s.layout, s.maxCoef, s.minCoef, s.targets, s.nbInputBits, costModel, s.lutWidth);
+        problem.scmDesigns.clear();
+        for (size_t i = 0; i < s.targets.size(); ++i) {
+            problem.scmDesigns.emplace_back(s.targets[i], std::vector{ s.selectedScms[i] });
+        }
+        problem.solution = RSCM(s.nbBitsPerSCM, s.targets.size(), s.nbAdders, s.nbVariables, s.nbMuxes);
+        problem.solution.scmIndexes = std::vector<unsigned int>(s.targets.size(), 0); // only one SCM per target in snapshot
+        problem.solution.rscm.set = s.rscmSet;
+        problem.solution.rscm.maxOutputValue = s.rscmMaxOutput;
+        problem.solution.rscm.minOutputValue = s.rscmMinOutput;
+        problem.solution.rscm.coefficientTrailingZeros = s.rscmCoeffTZ;
+        problem.solution.rscm.isMinus = s.rscmIsMinus;
+        problem.solution.minShiftSavings = s.minShiftSavings;
+        problem.solution.variableBitWidths = s.variableBitWidths;
+        problem.solution.isPlusMinus = s.isPlusMinus;
+        problem.solution.InitializeMinShiftSavings(problem.layers);
+        problem.solutionCosts_ = problem.ComputeAllCosts(problem.solution);
+        std::cout << "_____________________RECOMPUTED COSTS_____________________" << std::endl;
+        problem.PrettyPrinter(problem.solution);
+        if (doJsonDump) {
+            problem.DumpJSON(problem.solution, jsonPath, true);
+        }
+        return 0;
+    }
     Solver problem(layout, maxCoef, minCoef, targets, nbInputBits, costModel, lutWidth);
 
     problem.CPSolve(heuristic); // step 1: solve the problem with the CPSolver
@@ -116,6 +156,9 @@ int main(int argc, char* argv[]) {
     problem.SolveConfigToMuxMapping();
     if (doJsonDump) {
         problem.DumpJSON(problem.solution, jsonPath, true);
+    }
+    if (snapshotOut.has_value()) {
+        problem.DumpSnapshot(problem.solution, *snapshotOut, true);
     }
 
     return 0;

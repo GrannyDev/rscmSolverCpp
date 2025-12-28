@@ -563,6 +563,16 @@ void Solver::DumpJSON(const RSCM& solutionNode, const std::string& outputUri, co
     JSONDumper JSONDumper(solutionNode, outputUri, layers, idxToVarMap, varToIdxMap, nbInputBits, targets, scmDesigns, solutionCosts_, overwrite);
 }
 
+void Solver::DumpSnapshot(const RSCM& solutionNode, const std::string& outputUri, const bool overwrite) const
+{
+    WriteSnapshot(*this, solutionNode, outputUri, overwrite);
+}
+
+std::unordered_map<std::string, std::optional<unsigned int>> Solver::ComputeAllCosts(const RSCM& solutionNode) const
+{
+    return GetAllCosts(solutionNode);
+}
+
 void Solver::SolveConfigToMuxMapping() const
 {
     std::cout << "------------------" << std::endl;

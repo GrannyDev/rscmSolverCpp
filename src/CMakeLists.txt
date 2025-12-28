@@ -25,6 +25,8 @@ add_executable(rscmSolver main.cpp
         writers/Verilog.h
         writers/JSONDumper.cpp
         writers/JSONDumper.h
+        writers/SnapshotIO.cpp
+        writers/SnapshotIO.h
         solver/CostModel.h
         solver/CostComputer.cpp
         solver/CostComputer.h
