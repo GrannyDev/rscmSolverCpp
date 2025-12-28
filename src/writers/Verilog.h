@@ -6,7 +6,7 @@
 #define RMCMSOLVER_VERILOG_H
 #include <fstream>
 
-#include "RSCM.h"
+#include "../solver/RSCM.h"
 
 
 class VerilogGenerator

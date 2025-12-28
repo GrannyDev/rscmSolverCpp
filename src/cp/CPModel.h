@@ -17,8 +17,8 @@
 #include "ortools/util/sorted_interval_list.h"
 #include "ortools/sat/sat_parameters.pb.h"
 
-#include "Layer.h"
-#include "DAG.h"
+#include "../shared/Layer.h"
+#include "../shared/DAG.h"
 
 /**
  * @class CPModel

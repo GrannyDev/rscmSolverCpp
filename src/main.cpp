@@ -9,7 +9,7 @@
 #include <sstream>
 #include <optional>
 
-#include "Solver.h"
+#include "solver/Solver.h"
 
 int main(int argc, char* argv[]) {
     auto parseList = [](const std::string& s) {

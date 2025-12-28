@@ -13,9 +13,9 @@
 #include <optional>
 #include <unordered_map>
 
-#include "CPModel.h"
-#include "JSONDumper.h"
-#include "Verilog.h"
+#include "../cp/CPModel.h"
+#include "../writers/JSONDumper.h"
+#include "../writers/Verilog.h"
 
 // Constructor initializes solver parameters, layout configuration, and variable definitions
 Solver::Solver(

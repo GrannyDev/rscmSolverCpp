@@ -6,8 +6,8 @@
 #define NODE_H
 #include <boost/dynamic_bitset/dynamic_bitset.hpp>
 
-#include "Layer.h"
-#include "DAG.h"
+#include "../shared/Layer.h"
+#include "../shared/DAG.h"
 
 /**
  * @class RSCM

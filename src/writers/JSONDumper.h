@@ -8,7 +8,7 @@
 #include <unordered_map>
 #include <optional>
 
-#include "RSCM.h"
+#include "../solver/RSCM.h"
 
 class JSONDumper {
     public:

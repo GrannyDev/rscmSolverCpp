@@ -14,9 +14,9 @@
 #include <boost/asio/post.hpp>
 #include <fstream>
 
-#include "Layer.h"
+#include "../shared/Layer.h"
+#include "../shared/DAG.h"
 #include "RSCM.h"
-#include "DAG.h"
 
 /**
  * @class Solver
