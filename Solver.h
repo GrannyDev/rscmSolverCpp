@@ -45,13 +45,15 @@ public:
      * @param targets The set of target constants.
      * @param nbInputBits Number of bits encoding the input (X).
      * @param costModel Cost model to use during solving.
+     * @param lutWidth LUT width for LUT-based cost models
      */
     Solver(
         std::vector<int> const& layout,
         int maxCoef, int minCoef,
         std::vector<int> const& targets,
         size_t nbInputBits,
-        CostModel costModel = CostModel::MuxCount
+        CostModel costModel = CostModel::MuxCount,
+        size_t lutWidth = 6
     );
 
     /**
@@ -81,13 +83,13 @@ public:
         const RSCM& solutionNode,
         const std::string& outputUri,
         bool overwrite
-    );
+    ) const;
 
     void DumpJSON(
         const RSCM& solutionNode,
         const std::string& outputUri,
         bool overwrite
-    );
+    ) const;
 
     /**
      * @brief Gets the current best cost of the solution.
@@ -188,12 +190,17 @@ public:
     size_t nbAdders; ///< Number of adders in the layout.
     size_t nbPossibleVariables; ///< Number of variables in the layout.
     size_t nbInputBits; ///< Number of input bits of X.
+    size_t lutWidth_; ///< LUT width for LUT-based cost models
+    size_t nbMinEncodingBits_; ///< Number of bits required to encode each target constant
+    size_t maxMuxInputPerLut_; ///< The maximum number of mux inputs that can be implemented in a single LUT.
+    size_t nbInputsLeftByAdderLut_; ///< What's the biggest mux LUT we can merge into an adder LUT.
     CostModel costModel_; ///< Selected cost model.
     std::vector<VariableDefs> varDefs; ///< Variable definitions.
     std::vector<int> targets; ///< Target values.
     std::vector<Layer> layers; ///< Layers in the layout.
     std::vector<std::pair<int, std::vector<DAG>>> scmDesigns; ///< SCM designs for each target.
     RSCM solution; ///< The solution RSCM.
+    std::unordered_map<std::string, std::optional<unsigned int>> solutionCosts_; ///< Cached costs for the best solution.
     std::unordered_map<VariableDefs, unsigned int> varToIdxMap; ///< Map from variables to indices.
     std::unordered_map<unsigned int, VariableDefs> idxToVarMap; ///< Map from indices to variables.
 
@@ -216,6 +223,9 @@ private:
      * @param currentCost The current cost of the RSCM.
      */
     void ComputeBranch(int depth, int threadNb, unsigned int startIndex, unsigned int currentCost);
+
+    unsigned int ComputeMuxLutCost(const RSCM& node, unsigned bitsCount, unsigned idx, unsigned int& lutsToSave) const;
+    unsigned int ComputeMuxLutLevels(const RSCM& node, unsigned bitsCount, unsigned idx, unsigned int& lutsToSave) const;
 
     /**
      * @brief Prints the solution with the given cost.

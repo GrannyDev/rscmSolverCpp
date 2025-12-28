@@ -38,9 +38,10 @@ int main(int argc, char* argv[]) {
     std::vector<int> targets = {-20, -13, -8, -6, -5, -3, -2, -1, 0, 1, 2, 4, 5, 7, 12, 19}; // target const set of the RSCM
     std::vector<int> layout = {1, 1}; // {1,1} describes the chosen layout, i.e. 1 adder on the first layer and 1 adder on the second layer
     std::optional<unsigned int> heuristic;
+    size_t lutWidth = 6;
     bool doJsonDump = true;
     std::string jsonPath = "dump.json";
-    Solver::CostModel costModel = Solver::CostModel::MuxBits;
+    auto costModel = Solver::CostModel::MuxBits;
 
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
@@ -54,6 +55,7 @@ int main(int argc, char* argv[]) {
                 "  --layout=x,y             Comma-separated adders per layer\n"
                 "  --heuristic=<uint>       Limit CP solutions per target\n"
                 "  --cost=<model>           Cost model: area|mux_count|mux_bits|luts|fpga_delay|asic_delay\n"
+                "  --lut-width=<uint>       Set LUT width for LUT-based cost models, default 6\n"
                 "  --json=<path>            Enable JSON dump to path (default dump.json)\n"
                 "  --no-json                Disable JSON dump\n"
                 "  -h, --help               Show this help\n";
@@ -70,6 +72,8 @@ int main(int argc, char* argv[]) {
                 layout = parseList(arg.substr(9));
             } else if (arg.rfind("--heuristic=", 0) == 0) {
                 heuristic = static_cast<unsigned int>(std::stoul(arg.substr(12)));
+            } else if (arg.rfind("--lut-width=", 0) == 0) {
+                lutWidth = static_cast<size_t>(std::stoul(arg.substr(12)));
             } else if (arg == "--no-json") {
                 doJsonDump = false;
             } else if (arg.rfind("--json=", 0) == 0) {
@@ -93,7 +97,7 @@ int main(int argc, char* argv[]) {
     const auto maxCoef = static_cast<int>(std::pow(2, beta - 1) - 1);
     const auto minCoef = static_cast<int>(-1 * std::pow(2, beta - 1));
 
-    Solver problem(layout, maxCoef, minCoef, targets, nbInputBits, costModel);
+    Solver problem(layout, maxCoef, minCoef, targets, nbInputBits, costModel, lutWidth);
 
     problem.CPSolve(heuristic); // step 1: solve the problem with the CPSolver
 

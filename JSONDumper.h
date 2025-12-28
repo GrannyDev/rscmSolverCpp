@@ -23,6 +23,7 @@ class JSONDumper {
      * @param inputBW x bitwidth
      * @param targets target constants for testbench generation
      * @param scmDesigns per-target SCM designs for testbench configuration
+     * @param costs per-objective function computed cost
      */
     JSONDumper
     (
