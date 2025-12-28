@@ -17,6 +17,8 @@
 #include "../shared/Layer.h"
 #include "../shared/DAG.h"
 #include "RSCM.h"
+#include "CostModel.h"
+#include "ICostComputer.h"
 
 /**
  * @class Solver
@@ -24,19 +26,6 @@
  */
 class Solver {
 public:
-    /**
-     * @enum CostModel
-     * @brief Enumerates available cost computation strategies.
-     */
-    enum class CostModel {
-        AreaCost,
-        MuxCount,
-        MuxBits,
-        LutsCost,
-        FPGADelay,
-        ASICDelay
-    };
-
     /**
      * @brief Constructor for the Solver class.
      * @param layout Vector specifying where the adders and layers are: {2,1} means 2 adders in layer 1 and 1 in layer 2.
@@ -102,85 +91,6 @@ public:
      */
     void SolveConfigToMuxMapping() const;
 
-    /**
-     * @struct ICostComputer
-     * @brief Abstract base class for cost computation strategies.
-     */
-    struct ICostComputer {
-        /**
-         * @brief Constructor for ICostComputer.
-         * @param solver Pointer to the Solver instance.
-         */
-        explicit ICostComputer(Solver* solver) : solver(solver) {}
-
-        /**
-         * @brief Virtual destructor.
-         */
-        virtual ~ICostComputer() = default;
-
-        /**
-         * @brief Computes the cost of adding a DAG to a thread node.
-         * @param threadNode The RSCM to compute the cost for (once merged).
-         * @param scmToMerge The DAG to merge.
-         * @return The computed cost.
-         */
-        virtual unsigned int merge(RSCM& threadNode, DAG const& scmToMerge) const = 0;
-
-        Solver* solver; ///< Pointer to the Solver instance.
-    };
-
-    /**
-     * @struct AreaCostComputer
-     * @brief Computes costs with fine-grain granularity.
-     */
-    struct AreaCostComputer final : ICostComputer {
-        using ICostComputer::ICostComputer;
-
-        /**
-         * @brief Computes the cost of adding a DAG to a node with fine-grain granularity.
-         * @param node The RSCM to compute the cost for (once merged).
-         * @param scm The DAG to merge.
-         * @return The computed cost.
-         */
-        unsigned int merge(RSCM& node, DAG const& scm) const override;
-    };
-
-    /**
-     * @struct MuxCountComputer
-     * @brief Computes costs based on multiplexer count.
-     */
-    struct MuxCountComputer final : ICostComputer {
-        using ICostComputer::ICostComputer;
-
-        /**
-         * @brief Computes the cost of adding a DAG to a node based on multiplexer count.
-         * @param node The RSCM to compute the cost for (once merged).
-         * @param scm The DAG to merge.
-         * @return The computed cost.
-         */
-        unsigned int merge(RSCM& node, DAG const& scm) const override;
-    };
-
-    struct MuxBitsComputer final : ICostComputer {
-        using ICostComputer::ICostComputer;
-        unsigned int merge(RSCM& node, DAG const& scm) const override;
-    };
-
-    struct LutsCostComputer final : ICostComputer {
-        using ICostComputer::ICostComputer;
-        unsigned int merge(RSCM& node, DAG const& scm) const override;
-    };
-
-    struct FPGADelayComputer final : ICostComputer {
-        using ICostComputer::ICostComputer;
-        unsigned int merge(RSCM& node, DAG const& scm) const override;
-    };
-
-    struct ASICDelayComputer final : ICostComputer {
-        using ICostComputer::ICostComputer;
-        unsigned int merge(RSCM& node, DAG const& scm) const override;
-    };
-
     std::unique_ptr<ICostComputer> fuseCostComputer; ///< Pointer to the cost computation strategy.
     std::vector<int> layout; ///< Layout for the RSCM.
     int maxCoef; ///< Maximum (intermediate) coefficient value.
@@ -224,9 +134,6 @@ private:
      */
     void ComputeBranch(int depth, int threadNb, unsigned int startIndex, unsigned int currentCost);
 
-    unsigned int ComputeMuxLutCost(const RSCM& node, unsigned bitsCount, unsigned idx, unsigned int& lutsToSave) const;
-    unsigned int ComputeMuxLutLevels(const RSCM& node, unsigned bitsCount, unsigned idx, unsigned int& lutsToSave) const;
-
     /**
      * @brief Prints the solution with the given cost.
      * @param cost The cost of the solution.
@@ -250,9 +157,8 @@ private:
     /**
      * @brief Apply the normalization shift to the output shifts of the last adder in the given node.
      * @param node The RSCM node to update.
-     * @param logShifts Whether to print the applied shift changes.
      */
-    void ApplyNormalizationShift(RSCM& node, bool logShifts = false) const;
+    void ApplyNormalizationShift(RSCM& node) const;
 
     /**
      * @brief Compute cost for a given model using replay nodes when needed.

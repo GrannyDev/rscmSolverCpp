@@ -23,13 +23,13 @@ int main(int argc, char* argv[]) {
         return vals;
     };
 
-    auto parseCostModel = [](const std::string& s) -> std::optional<Solver::CostModel> {
-        if (s == "area" || s == "area_cost") return Solver::CostModel::AreaCost;
-        if (s == "mux_count") return Solver::CostModel::MuxCount;
-        if (s == "mux_bits") return Solver::CostModel::MuxBits;
-        if (s == "luts") return Solver::CostModel::LutsCost;
-        if (s == "fpga_delay") return Solver::CostModel::FPGADelay;
-        if (s == "asic_delay") return Solver::CostModel::ASICDelay;
+    auto parseCostModel = [](const std::string& s) -> std::optional<CostModel> {
+        if (s == "area" || s == "area_cost") return CostModel::AreaCost;
+        if (s == "mux_count") return CostModel::MuxCount;
+        if (s == "mux_bits") return CostModel::MuxBits;
+        if (s == "luts") return CostModel::LutsCost;
+        if (s == "fpga_delay") return CostModel::FPGADelay;
+        if (s == "asic_delay") return CostModel::ASICDelay;
         return std::nullopt;
     };
 
@@ -41,7 +41,7 @@ int main(int argc, char* argv[]) {
     size_t lutWidth = 6;
     bool doJsonDump = true;
     std::string jsonPath = "dump.json";
-    auto costModel = Solver::CostModel::MuxBits;
+    auto costModel = CostModel::MuxBits;
 
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];

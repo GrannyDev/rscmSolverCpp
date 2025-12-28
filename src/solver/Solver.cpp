@@ -16,6 +16,7 @@
 #include "../cp/CPModel.h"
 #include "../writers/JSONDumper.h"
 #include "../writers/Verilog.h"
+#include "CostComputer.h"
 
 // Constructor initializes solver parameters, layout configuration, and variable definitions
 Solver::Solver(
@@ -53,22 +54,22 @@ Solver::Solver(
     // Select cost model implementation
     switch (costModel_) {
     case CostModel::AreaCost:
-        fuseCostComputer = std::make_unique<AreaCostComputer>(this);
+        fuseCostComputer = std::make_unique<CostComputer::AreaCostComputer>(this);
         break;
     case CostModel::MuxCount:
-        fuseCostComputer = std::make_unique<MuxCountComputer>(this);
+        fuseCostComputer = std::make_unique<CostComputer::MuxCountComputer>(this);
         break;
     case CostModel::MuxBits:
-        fuseCostComputer = std::make_unique<MuxBitsComputer>(this);
+        fuseCostComputer = std::make_unique<CostComputer::MuxBitsComputer>(this);
         break;
     case CostModel::LutsCost:
-        fuseCostComputer = std::make_unique<LutsCostComputer>(this);
+        fuseCostComputer = std::make_unique<CostComputer::LutsCostComputer>(this);
         break;
     case CostModel::FPGADelay:
-        fuseCostComputer = std::make_unique<FPGADelayComputer>(this);
+        fuseCostComputer = std::make_unique<CostComputer::FPGADelayComputer>(this);
         break;
     case CostModel::ASICDelay:
-        fuseCostComputer = std::make_unique<ASICDelayComputer>(this);
+        fuseCostComputer = std::make_unique<CostComputer::ASICDelayComputer>(this);
         break;
     default:
         throw std::invalid_argument("Unknown cost model");
@@ -272,7 +273,7 @@ void Solver::Solve()
         for (auto& fst : this->scmDesigns | std::views::keys) {
             fst = fst << normShift_;
         }
-        ApplyNormalizationShift(solution, true);
+        ApplyNormalizationShift(solution);
     }
 
     // Compute all cost models once for the final solution
@@ -312,12 +313,12 @@ bool Solver::IsPowerOfTwo(const int x) {
     return x > 0 && (x & x - 1) == 0;
 }
 
-unsigned int Solver::BitLength(const int value)
+unsigned int Solver::BitLength(const int maxConstant)
 {
-    return static_cast<unsigned int>(std::ceil(std::log2(std::max(std::abs(value + 1), std::abs(value))))) + 1;
+    return static_cast<unsigned int>(std::ceil(std::log2(std::max(std::abs(maxConstant + 1), std::abs(maxConstant))))) + 1;
 }
 
-void Solver::ApplyNormalizationShift(RSCM& node, const bool logShifts) const
+void Solver::ApplyNormalizationShift(RSCM& node) const
 {
     if (normShift_ == 0) return;
 
@@ -350,9 +351,6 @@ void Solver::ApplyNormalizationShift(RSCM& node, const bool logShifts) const
 
                         const size_t newBitIndex = baseBit + static_cast<size_t>(shiftedValue);
                         node.rscm.set.set(newBitIndex);
-                        if (logShifts) {
-                            std::cout << v << " shifted to " << shiftedValue << std::endl;
-                        }
                     }
 
                     const size_t globalParamIdx =
@@ -385,7 +383,7 @@ std::optional<unsigned int> Solver::EvaluateCost(const RSCM& solutionNode, const
                 nbAdders * layers[0].adders[0].variables.size(), nbPossibleVariables);
             replayNode.rscm = scmDesigns[0].second[solutionNode.scmIndexes[0]];
             replayNode.InitializeMinShiftSavings(layers);
-            const AreaCostComputer areaCostComputer(solverPtr);
+            const CostComputer::AreaCostComputer areaCostComputer(solverPtr);
             for (int depth = 1; depth < targets.size(); depth++) {
                 areaCostComputer.merge(replayNode, scmDesigns[depth].second[solutionNode.scmIndexes[depth]]);
             }
@@ -396,7 +394,7 @@ std::optional<unsigned int> Solver::EvaluateCost(const RSCM& solutionNode, const
             DAG emptySCM(nbBitsPerSCM, nbAdders, nbPossibleVariables);
             emptySCM.set.reset();
             RSCM replayNode = solutionNode;
-            const MuxCountComputer muxCostComputer(solverPtr);
+            const CostComputer::MuxCountComputer muxCostComputer(solverPtr);
             ApplyNormalizationShift(replayNode);
             return muxCostComputer.merge(replayNode, emptySCM);
         }
@@ -404,7 +402,7 @@ std::optional<unsigned int> Solver::EvaluateCost(const RSCM& solutionNode, const
             DAG emptySCM(nbBitsPerSCM, nbAdders, nbPossibleVariables);
             emptySCM.set.reset();
             RSCM replayNode = solutionNode;
-            const MuxBitsComputer muxBitsComputer(solverPtr);
+            const CostComputer::MuxBitsComputer muxBitsComputer(solverPtr);
             ApplyNormalizationShift(replayNode);
             return muxBitsComputer.merge(replayNode, emptySCM);
         }
@@ -414,7 +412,7 @@ std::optional<unsigned int> Solver::EvaluateCost(const RSCM& solutionNode, const
                 nbAdders * layers[0].adders[0].variables.size(), nbPossibleVariables);
             replayNode.rscm = scmDesigns[0].second[solutionNode.scmIndexes[0]];
             replayNode.InitializeMinShiftSavings(layers);
-            const LutsCostComputer lutsCostComputer(solverPtr);
+            const CostComputer::LutsCostComputer lutsCostComputer(solverPtr);
             for (int depth = 1; depth < targets.size(); depth++) {
                 lutsCostComputer.merge(replayNode, scmDesigns[depth].second[solutionNode.scmIndexes[depth]]);
             }
@@ -427,7 +425,7 @@ std::optional<unsigned int> Solver::EvaluateCost(const RSCM& solutionNode, const
                 nbAdders * layers[0].adders[0].variables.size(), nbPossibleVariables);
             replayNode.rscm = scmDesigns[0].second[solutionNode.scmIndexes[0]];
             replayNode.InitializeMinShiftSavings(layers);
-            const FPGADelayComputer fpgaDelayComputer(solverPtr);
+            const CostComputer::FPGADelayComputer fpgaDelayComputer(solverPtr);
             for (int depth = 1; depth < targets.size(); depth++) {
                 fpgaDelayComputer.merge(replayNode, scmDesigns[depth].second[solutionNode.scmIndexes[depth]]);
             }
@@ -436,7 +434,7 @@ std::optional<unsigned int> Solver::EvaluateCost(const RSCM& solutionNode, const
         }
         case CostModel::ASICDelay: {
             RSCM replayNode = solutionNode;
-            const ASICDelayComputer asicDelayComputer(solverPtr);
+            const CostComputer::ASICDelayComputer asicDelayComputer(solverPtr);
             return asicDelayComputer.merge(replayNode, scmDesigns[0].second[solutionNode.scmIndexes[0]]);
         }
         default:
@@ -463,376 +461,6 @@ std::unordered_map<std::string, std::optional<unsigned int>> Solver::GetAllCosts
         costs[name] = EvaluateCost(solutionNode, model);
     }
     return costs;
-}
-
-unsigned int Solver::MuxCountComputer::merge(RSCM& node, DAG const& scm) const
-{
-    // 1) Merge resource sets and update bounds
-    node.rscm.set |= scm.set;
-
-    // Prepare to count
-    size_t bitPos = 0;
-    unsigned int totalParams = 0;
-    unsigned int muxCount = 0;
-
-    // Iterate layers → adders → variables
-    for (const auto& layer : solver->layers) {
-        for (const auto& adder : layer.adders) {
-            for (const auto& param : adder.variables) {
-                // Count how many bits in this parameter are set
-                unsigned int bitsSet = 0;
-                for (size_t j = 0; j < param.possibleValuesFusion.size(); ++j) {
-                    if (node.rscm.set.test(bitPos + j)) {
-                        ++bitsSet;
-                    }
-                }
-                bitPos += param.possibleValuesFusion.size();
-
-                // If more than one bit, we need (bitsSet - 1) multiplexers
-                if (bitsSet > 1)
-                {
-                    // compute the number of number of multiplexers needed
-                    muxCount += bitsSet - 1;
-                }
-
-                ++totalParams;
-            }
-        }
-    }
-
-    // Store result
-    node.cost = muxCount;
-    return muxCount;
-}
-
-unsigned int Solver::MuxBitsComputer::merge(RSCM& node, DAG const& scm) const
-{
-    // 1) Merge resource sets and update bounds
-    node.rscm.set |= scm.set;
-
-    // Prepare to count
-    size_t bitPos = 0;
-    unsigned int totalParams = 0;
-    unsigned int bitCount = 0;
-
-    // Iterate layers → adders → variables
-    for (const auto& layer : solver->layers) {
-        for (const auto& adder : layer.adders) {
-            for (const auto& param : adder.variables) {
-                // Count how many bits in this parameter are set
-                unsigned int bitsSet = 0;
-                for (size_t j = 0; j < param.possibleValuesFusion.size(); ++j) {
-                    if (node.rscm.set.test(bitPos + j)) {
-                        ++bitsSet;
-                    }
-                }
-                bitPos += param.possibleValuesFusion.size();
-
-                // If more than one bit, we need (bitsSet - 1) multiplexers
-                if (bitsSet > 1)
-                {
-                    // compute the number of bits to select instead
-                    bitCount += std::ceil(std::log2(bitsSet));
-                }
-
-                ++totalParams;
-            }
-        }
-    }
-
-    // Store result
-    node.cost = bitCount;
-    return bitCount;
-}
-
-unsigned int Solver::LutsCostComputer::merge(RSCM& node, DAG const& scm) const
-{
-    unsigned int lutCost = 0;
-
-    // 1) Merge resource sets and update bounds
-    node.rscm.set |= scm.set;
-    std::transform(
-        node.rscm.maxOutputValue.begin(),
-        node.rscm.maxOutputValue.end(),
-        scm.maxOutputValue.begin(),
-        node.rscm.maxOutputValue.begin(),
-        [](const int a, const int b) { return std::max(a, b); }
-    ); // max output values
-    std::transform(
-        node.rscm.minOutputValue.begin(),
-        node.rscm.minOutputValue.end(),
-        scm.minOutputValue.begin(),
-        node.rscm.minOutputValue.begin(),
-        [](const int a, const int b) { return std::min(a, b); }
-    ); // min output values
-
-    // update bitwidths
-    for (size_t i = 0; i < node.variableBitWidths.size(); ++i) {
-        node.variableBitWidths[i] = std::max(BitLength(node.rscm.maxOutputValue[i]), BitLength(node.rscm.minOutputValue[i]));
-    }
-
-    auto updateMinShift = [&](const unsigned idx) {
-        // Use coefficient's trailing zeros, not the multiplied values'
-        // This is correct because any input in the range could have 0 trailing zeros
-        const unsigned coeffTZ = scm.coefficientTrailingZeros[idx];
-        node.minShiftSavings[idx] = std::min(node.minShiftSavings[idx], coeffTZ);
-    };
-
-    auto muxTreeLuts = [&](const unsigned inputs, const unsigned bw) {
-        if (inputs <= 1 || bw == 0) return 0u;
-        unsigned tokens = inputs + static_cast<unsigned>(std::ceil(std::log2(static_cast<double>(inputs))));
-        unsigned luts = 0;
-        while (tokens > solver->lutWidth_) {
-            ++luts;
-            tokens = tokens - (solver->lutWidth_ - 1);
-        }
-        return (luts + 1) * bw; // final LUT handles the rest
-    };
-
-    size_t bitPos = 0;
-    unsigned int adderIdx = 0;
-    unsigned int paramGlobalIdx = 0;
-    unsigned int nbEncodingBits = 0;
-    std::array<std::pair<unsigned int, unsigned int>, 6> muxTracker; // indexed by static_cast<size_t>(VariableDefs)
-
-    // Iterate layers → adders → variables
-    for (const auto& layer : solver->layers) {
-        for (const auto& adder : layer.adders) {
-            // zero the tracker cheaply
-            for (auto& entry : muxTracker) entry = {0u, 0u};
-            // Track plus-minus flag
-            node.isPlusMinus[adderIdx] =
-                node.isPlusMinus[adderIdx] || node.rscm.isMinus[adderIdx] != scm.isMinus[adderIdx];
-
-            unsigned paramInAdderIdx = 0;
-            for (const auto& param : adder.variables) {
-                // 2) Update shift savings early
-                updateMinShift(paramGlobalIdx);
-
-                // 3) Count the number of bits at one for this variable
-                unsigned bitCount = 0;
-                for (size_t j = 0; j < param.possibleValuesFusion.size(); ++j) {
-                    if (node.rscm.set.test(bitPos + j)) ++bitCount;
-                }
-                bitPos += param.possibleValuesFusion.size();
-
-                if (bitCount > 1) nbEncodingBits += std::ceil(std::log2(bitCount));
-
-                // 5) Handle RIGHT_MULTIPLIER adder cost (an adder)
-                if (solver->idxToVarMap.at(paramInAdderIdx) == VariableDefs::RIGHT_MULTIPLIER) {
-                    const size_t mapSize = solver->varToIdxMap.size();
-                    const auto rightMultIdx =  solver->varToIdxMap.at(VariableDefs::RIGHT_MULTIPLIER) + adderIdx * mapSize;
-                    lutCost += node.variableBitWidths[rightMultIdx] - node.minShiftSavings[rightMultIdx];
-                } else {
-                const unsigned int bw = node.variableBitWidths[paramGlobalIdx] - node.minShiftSavings[paramGlobalIdx];
-                const auto varType = solver->idxToVarMap.at(paramInAdderIdx);
-                muxTracker[static_cast<size_t>(varType)] = {bitCount > 1 ? bitCount : 0, bw};
-                }
-
-                ++paramGlobalIdx;
-                ++paramInAdderIdx;
-            }
-
-            // handle mux merge logic
-            // 1) find the biggest one that can be merged into the add/sub
-            unsigned int maxLUTs = 0;
-            size_t maxIdx = static_cast<size_t>(VariableDefs::OUTPUTS_SHIFTS); // default to output (won't be used)
-            for (size_t i = 0; i < muxTracker.size(); ++i) {
-                if (i == static_cast<size_t>(VariableDefs::OUTPUTS_SHIFTS)) continue; // never merge output mux into adder
-                const auto [nbInputs, bw] = muxTracker[i];
-                if (nbInputs <= 1 || bw == 0) continue;
-                const unsigned selBits = static_cast<unsigned>(std::ceil(std::log2(static_cast<double>(nbInputs))));
-                if (nbInputs + selBits <= solver->nbInputsLeftByAdderLut_ && bw * (nbInputs + selBits) > maxLUTs) {
-                    maxLUTs = bw * (nbInputs + selBits);
-                    maxIdx = i;
-                }
-            }
-            // 2) remove it if found
-            if (maxLUTs > 0)
-            {
-                muxTracker[maxIdx].first = 0;
-            }
-            // 3) compute the number of LUTs per right/left path
-            auto fuseCost = [&](unsigned aCnt, unsigned aBw, unsigned bCnt, unsigned bBw) {
-                const unsigned separate = muxTreeLuts(aCnt, aBw) + muxTreeLuts(bCnt, bBw);
-                const unsigned combined = muxTreeLuts(aCnt + bCnt, std::max(aBw, bBw));
-                return std::min(separate, combined);
-            };
-
-            const unsigned leftCost = fuseCost(
-                muxTracker[static_cast<size_t>(VariableDefs::LEFT_INPUTS)].first,  muxTracker[static_cast<size_t>(VariableDefs::LEFT_INPUTS)].second,
-                muxTracker[static_cast<size_t>(VariableDefs::LEFT_SHIFTS)].first,  muxTracker[static_cast<size_t>(VariableDefs::LEFT_SHIFTS)].second
-            );
-            const unsigned rightCost = fuseCost(
-                muxTracker[static_cast<size_t>(VariableDefs::RIGHT_INPUTS)].first, muxTracker[static_cast<size_t>(VariableDefs::RIGHT_INPUTS)].second,
-                muxTracker[static_cast<size_t>(VariableDefs::RIGHT_SHIFTS)].first, muxTracker[static_cast<size_t>(VariableDefs::RIGHT_SHIFTS)].second
-            );
-
-            const auto outputPathInputs = muxTracker[static_cast<size_t>(VariableDefs::OUTPUTS_SHIFTS)].first;
-            const auto outputPathBw = muxTracker[static_cast<size_t>(VariableDefs::OUTPUTS_SHIFTS)].second;
-
-            lutCost += leftCost;
-            lutCost += rightCost;
-            lutCost += muxTreeLuts(outputPathInputs, outputPathBw);
-
-            ++adderIdx;
-        }
-    }
-
-    // add decoding overhead if nbEncodingBits > nbMinEncodingBits_
-    if (nbEncodingBits > solver->nbMinEncodingBits_)
-    {
-        auto overhead = muxTreeLuts(1 << solver->nbMinEncodingBits_, nbEncodingBits);
-        if (solver->nbMinEncodingBits_ <= solver->lutWidth_ - 1)
-        {
-            overhead = (overhead + 2 - 1) / 2;
-        }
-        lutCost += overhead;
-    }
-
-    // Store result
-    node.cost = lutCost;
-    return lutCost;
-}
-
-unsigned int Solver::FPGADelayComputer::merge(RSCM& /*node*/, DAG const& /*scm*/) const
-{
-    throw std::logic_error("ASICDelayComputer::merge not implemented");
-}
-
-unsigned int Solver::ASICDelayComputer::merge(RSCM& /*node*/, DAG const& /*scm*/) const
-{
-    throw std::logic_error("ASICDelayComputer::merge not implemented");
-}
-
-unsigned int Solver::AreaCostComputer::merge(RSCM& node, DAG const& scm) const
-{
-    unsigned int fineGrainCost = 0;
-
-    // 1) Merge resource sets and update bounds
-    node.rscm.set |= scm.set;
-    std::transform(
-        node.rscm.maxOutputValue.begin(),
-        node.rscm.maxOutputValue.end(),
-        scm.maxOutputValue.begin(),
-        node.rscm.maxOutputValue.begin(),
-        [](const int a, const int b) { return std::max(a, b); }
-    ); // max output values
-    std::transform(
-        node.rscm.minOutputValue.begin(),
-        node.rscm.minOutputValue.end(),
-        scm.minOutputValue.begin(),
-        node.rscm.minOutputValue.begin(),
-        [](const int a, const int b) { return std::min(a, b); }
-    ); // min output values
-
-    // update bitwidths
-    for (size_t i = 0; i < node.variableBitWidths.size(); ++i) {
-        node.variableBitWidths[i] = std::max(BitLength(node.rscm.maxOutputValue[i]), BitLength(node.rscm.minOutputValue[i]));
-    }
-
-    const auto leftShiftBase  = solver->varToIdxMap.at(VariableDefs::LEFT_SHIFTS);
-    const auto rightShiftBase = solver->varToIdxMap.at(VariableDefs::RIGHT_SHIFTS);
-    const size_t mapSize = solver->varToIdxMap.size();
-
-    auto updateMinShift = [&](const unsigned idx) {
-        // Use coefficient's trailing zeros, not the multiplied values'
-        // This is correct because any input in the range could have 0 trailing zeros
-        const unsigned coeffTZ = scm.coefficientTrailingZeros[idx];
-        node.minShiftSavings[idx] = std::min(node.minShiftSavings[idx], coeffTZ);
-    };
-
-    auto computeMuxCost = [&](const unsigned bitsCount, const unsigned idx) {
-        const unsigned int nbBits = node.variableBitWidths[idx] - node.minShiftSavings[idx];
-        return 14u * bitsCount * nbBits;
-    };
-
-    size_t bitPos = 0;
-    unsigned int adderIdx = 0;
-    unsigned int paramGlobalIdx = 0;
-
-    // Iterate layers → adders → variables
-    for (const auto& layer : solver->layers) {
-        for (const auto& adder : layer.adders) {
-            // Track plus-minus flag
-            node.isPlusMinus[adderIdx] =
-                node.isPlusMinus[adderIdx] || node.rscm.isMinus[adderIdx] != scm.isMinus[adderIdx];
-
-            unsigned paramInAdderIdx = 0;
-            for (const auto& param : adder.variables) {
-                // 2) Update shift savings early
-                updateMinShift(paramGlobalIdx);
-
-                // 3) Count the number of bits at one for this variable
-                unsigned bitCount = 0;
-                for (size_t j = 0; j < param.possibleValuesFusion.size(); ++j) {
-                    if (node.rscm.set.test(bitPos + j)) ++bitCount;
-                }
-                bitPos += param.possibleValuesFusion.size();
-
-                // 4) If more than one bit and not an adder -> we have a multiplexer
-                if (bitCount > 1 && solver->idxToVarMap.at(paramInAdderIdx) != VariableDefs::RIGHT_MULTIPLIER)
-                {
-                    fineGrainCost += computeMuxCost(bitCount, paramGlobalIdx);
-                }
-
-                // 5) Handle RIGHT_MULTIPLIER adder cost (an adder)
-                if (solver->idxToVarMap.at(paramInAdderIdx) == VariableDefs::RIGHT_MULTIPLIER) {
-                    // determine coefficient depending on the adder type
-                    unsigned coeff = 67u;
-                    if      (node.isPlusMinus[adderIdx])    coeff = 93u;
-                    else if (node.rscm.isMinus[adderIdx])   coeff = 75u;
-
-                    // compute the minimum shift savings (number of trailing zeros)
-                    const auto leftIdx  = leftShiftBase  + adderIdx * mapSize;
-                    const auto rightIdx = rightShiftBase + adderIdx * mapSize;
-                    const unsigned minShift   = std::min(
-                        node.minShiftSavings[leftIdx],
-                        node.minShiftSavings[rightIdx]
-                    );
-
-                    // compute FA/HA costs
-                    if (node.rscm.minOutputValue[rightIdx] != 0 && node.rscm.maxOutputValue[rightIdx] != 0) {
-                        unsigned wa = node.variableBitWidths[leftIdx] - minShift;
-                        unsigned wb = node.variableBitWidths[rightIdx] - minShift;
-                        unsigned int shiftA = node.minShiftSavings[leftIdx] - minShift;
-                        unsigned int shiftB = node.minShiftSavings[rightIdx] - minShift;
-                        auto [fst, snd] = std::minmax(shiftA, shiftB);
-                        const unsigned int diff = snd - fst;
-
-                        unsigned fa = 0, ha = 0;
-                        if (!node.isPlusMinus[adderIdx] && !node.rscm.isMinus[adderIdx]) {
-                            if (node.rscm.minOutputValue[leftIdx] != 0 && node.rscm.maxOutputValue[leftIdx] != 0) {
-                                fa = std::max(wa, wb) - diff - 1;
-                                ha = 1;
-                            }
-                        } else {
-                            if (node.rscm.minOutputValue[leftIdx] == 0 && node.rscm.maxOutputValue[leftIdx] == 0) { // left (a) is zero
-                                ha = wb - node.minShiftSavings[rightIdx];
-                            } else if (shiftB >= shiftA) {
-                                fa = std::max(wa, wb) - diff;
-                            } else if (node.minShiftSavings[leftIdx] >= wb) {
-                                fa = std::max(wa, wb) - diff - 1;
-                                ha = 1 + wb;
-                            } else {
-                                fa = std::max(wa, wb) - diff;
-                                ha = diff;
-                            }
-                        }
-                        fineGrainCost += static_cast<unsigned>(coeff * fa + 5.0/9.0 * coeff * ha);
-                    }
-                }
-
-                ++paramGlobalIdx;
-                ++paramInAdderIdx;
-            }
-            ++adderIdx;
-        }
-    }
-
-    // Store result
-    node.cost = fineGrainCost;
-    return fineGrainCost;
 }
 
 void Solver::PrintSolution(unsigned int const cost)

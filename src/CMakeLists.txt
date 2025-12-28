@@ -25,6 +25,10 @@ add_executable(rscmSolver main.cpp
         writers/Verilog.h
         writers/JSONDumper.cpp
         writers/JSONDumper.h
+        solver/CostModel.h
+        solver/CostComputer.cpp
+        solver/CostComputer.h
+        solver/ICostComputer.h
 )
 
 target_link_libraries(rscmSolver ortools::ortools)
