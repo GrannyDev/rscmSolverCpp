@@ -27,7 +27,8 @@ Solver::Solver(
     std::vector<int> const& targets,      // Target constants to synthesize
     const size_t nbInputBits,             // Input bit-width
     const CostModel costModel,            // Cost model selection
-    const size_t lutWidth                 // LUT width for LUT-based cost models
+    const size_t lutWidth,                // LUT width for LUT-based cost models
+    const bool isSymmetric                // symmetric mux support (-T)
 ) : solution(0, 0, 0, 0, 0)               // Initialize empty solution node
 {
     this->layout = layout;
@@ -39,6 +40,7 @@ Solver::Solver(
     this->nbAvailableThreads_ = std::thread::hardware_concurrency();
     this->costModel_ = costModel;
     this->lutWidth_ = lutWidth;
+    this->isSymmetric_ = isSymmetric;
     this->nbMinEncodingBits_ = std::ceil(std::log2(targets.size()));
 
     // Find largest m such that m + ceil(log2(m)) <= lutWidth
@@ -582,9 +584,30 @@ void Solver::Verilog(const RSCM& solutionNode, const std::string& outputUri, con
     VerilogGenerator verilog(solutionNode, outputUri, layers, idxToVarMap, varToIdxMap, nbInputBits, targets, scmDesigns, overwrite);
 }
 
-void Solver::DumpJSON(const RSCM& solutionNode, const std::string& outputUri, const bool overwrite) const
+void Solver::DumpJSON(const RSCM& solutionNode, const std::string& outputUri, const bool overwrite)
 {
-    JSONDumper JSONDumper(solutionNode, outputUri, layers, idxToVarMap, varToIdxMap, nbInputBits, targets, scmDesigns, solutionCosts_, overwrite);
+    const auto costs = GetAllCosts(solutionNode);
+
+    if (costModel_ != CostModel::AreaCost)
+    {
+        // more complicated, we have to replay the whole merging process to compute the fine-grained cost
+        RSCM replayNode(nbBitsPerSCM, targets.size(), nbAdders,
+            nbAdders * layers[0].adders[0].variables.size(), nbPossibleVariables);
+        // Start by copying the first SCM directly (not merging), like the native execution does
+        replayNode.rscm = scmDesigns[0].second[solutionNode.scmIndexes[0]];
+        replayNode.scmIndexes = solutionNode.scmIndexes;
+        replayNode.InitializeMinShiftSavings(layers);
+        const CostComputer::AreaCostComputer fineGrainCostComputer(this);
+        // Now merge the remaining SCMs starting from depth 1
+        for (int depth = 1; depth < targets.size(); depth++)
+        {
+            fineGrainCostComputer.merge(replayNode, scmDesigns[depth].second[solutionNode.scmIndexes[depth]]);
+        }
+        ApplyNormalizationShift(replayNode);
+        JSONDumper JSONDumper(replayNode, outputUri, layers, idxToVarMap, varToIdxMap, nbInputBits, targets, scmDesigns, costs, isSymmetric_, overwrite);
+    } else {
+        JSONDumper JSONDumper(solutionNode, outputUri, layers, idxToVarMap, varToIdxMap, nbInputBits, targets, scmDesigns, costs, isSymmetric_, overwrite);
+    }
 }
 
 void Solver::DumpSnapshot(const RSCM& solutionNode, const std::string& outputUri, const bool overwrite) const

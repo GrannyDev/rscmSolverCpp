@@ -45,7 +45,8 @@ public:
         std::vector<int> const& targets,
         size_t nbInputBits,
         CostModel costModel = CostModel::MuxCount,
-        size_t lutWidth = 6
+        size_t lutWidth = 6,
+        bool isSymmetric = false
     );
 
     /**
@@ -81,7 +82,7 @@ public:
         const RSCM& solutionNode,
         const std::string& outputUri,
         bool overwrite
-    ) const;
+    );
 
     void DumpSnapshot(
         const RSCM& solutionNode,
@@ -116,6 +117,7 @@ public:
     size_t maxMuxInputPerLut_; ///< The maximum number of mux inputs that can be implemented in a single LUT.
     size_t nbInputsLeftByAdderLut_; ///< What's the biggest mux LUT we can merge into an adder LUT.
     CostModel costModel_; ///< Selected cost model.
+    bool isSymmetric_ = false; ///< Whether symmetric mux (-T) is enabled.
     std::vector<VariableDefs> varDefs; ///< Variable definitions.
     std::vector<int> targets; ///< Target values.
     std::vector<Layer> layers; ///< Layers in the layout.
@@ -190,7 +192,6 @@ private:
      * @return Map of model name to optional cost.
      */
     std::unordered_map<std::string, std::optional<unsigned int>> GetAllCosts(const RSCM& solutionNode) const;
-
     std::mutex pushBackMutex_; ///< Mutex for thread-safe operations.
     std::mutex progressMutex_; ///< Mutex for progress updates.
     std::mutex solutionMutex_; ///< Mutex for solution updates.

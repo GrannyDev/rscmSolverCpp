@@ -15,9 +15,10 @@ JSONDumper::JSONDumper(
     const std::vector<int>& targets,
     const std::vector<std::pair<int, std::vector<DAG>>>& scmDesigns,
     const std::unordered_map<std::string, std::optional<unsigned int>>& costs,
+    const bool isSymmetric,
     const bool overwrite
 )
-    : solutionNode_(solutionNode), layers_(layers), idxToVarMap_(idxToVarMap), varToIdxMap_(varToIdxMap), inputBW_(inputBW), targets_(targets), scmDesigns_(scmDesigns), costs_(costs), varDefsTostring_(VarDefsToString())
+    : solutionNode_(solutionNode), layers_(layers), idxToVarMap_(idxToVarMap), varToIdxMap_(varToIdxMap), inputBW_(inputBW), targets_(targets), scmDesigns_(scmDesigns), costs_(costs), isSymmetric_(isSymmetric), varDefsTostring_(VarDefsToString())
 {
     // check if output already exists
     if (std::filesystem::exists(outputUri) && !overwrite)
@@ -270,6 +271,7 @@ void JSONDumper::Dump() {
     outputFile_ << std::string(nbTabs, '\t') << "\"needs_table\": " << (wConf != wMuxTotal ? "true" : "false") << ",\n";
     outputFile_ << std::string(nbTabs, '\t') << "\"wOut\": " << GetParamBitWidth(VariableDefs::OUTPUTS_SHIFTS, GetTotalAdderCount() - 1) << ",\n";
     outputFile_ << std::string(nbTabs, '\t') << R"("output": "ADDER_)" << GetTotalAdderCount() - 1 << "\",\n";
+    outputFile_ << std::string(nbTabs, '\t') << "\"is_symmetric\": " << (isSymmetric_ ? "true" : "false") << ",\n";
     outputFile_ << std::string(nbTabs, '\t') << "\"muxes_bw\": [";
     for (size_t i = 0; i < muxNbToMuxBw.size(); i++) {
         if (i > 0) outputFile_ << ", ";

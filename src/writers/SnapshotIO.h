@@ -23,6 +23,7 @@ struct SnapshotData {
     size_t nbAdders{};
     size_t nbVariables{};
     size_t nbMuxes{};
+    bool isSymmetric{};
 
     std::vector<unsigned int> scmIndexes;
 

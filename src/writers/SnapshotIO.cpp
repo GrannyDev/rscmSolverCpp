@@ -67,6 +67,7 @@ void WriteSnapshot(const Solver& solver, const RSCM& solutionNode, const std::st
     ofs << "nb_adders:" << solver.nbAdders << "\n";
     ofs << "nb_variables:" << solver.nbPossibleVariables << "\n";
     ofs << "nb_muxes:" << solver.varDefs.size() << "\n";
+    ofs << "is_symmetric:" << (solver.isSymmetric_ ? 1 : 0) << "\n";
 
     ofs << "scm_indexes:" << Join(solutionNode.scmIndexes) << "\n";
     ofs << "rscm_set:" << BitsetToString(solutionNode.rscm.set) << "\n";
@@ -115,6 +116,7 @@ std::optional<SnapshotData> ReadSnapshot(const std::string& path)
         else if (key == "nb_adders") snap.nbAdders = static_cast<size_t>(std::stoul(val));
         else if (key == "nb_variables") snap.nbVariables = static_cast<size_t>(std::stoul(val));
         else if (key == "nb_muxes") snap.nbMuxes = static_cast<size_t>(std::stoul(val));
+        else if (key == "is_symmetric") snap.isSymmetric = (std::stoi(val) != 0);
         else if (key == "scm_indexes") snap.scmIndexes = Split<unsigned int>(val);
         else if (key == "rscm_set") snap.rscmSet = BitsetFromString(val);
         else if (key == "rscm_max") snap.rscmMaxOutput = Split<int>(val);

@@ -36,6 +36,7 @@ class JSONDumper {
         const std::vector<int>& targets,
         const std::vector<std::pair<int, std::vector<DAG>>>& scmDesigns,
         const std::unordered_map<std::string, std::optional<unsigned int>>& costs,
+        bool isSymmetric,
         bool overwrite = false
     );
 
@@ -51,6 +52,7 @@ private:
     const std::vector<int>& targets_;
     const std::vector<std::pair<int, std::vector<DAG>>>& scmDesigns_;
     const std::unordered_map<std::string, std::optional<unsigned int>>& costs_;
+    const bool isSymmetric_;
     const VarDefsToString varDefsTostring_;
 
     // Helper methods

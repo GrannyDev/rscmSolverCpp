@@ -34,9 +34,9 @@ int main(int argc, char* argv[]) {
         return std::nullopt;
     };
 
-    size_t beta = 9; // maximum bit-width allowed for the constants (and intermediate values)
+    size_t beta = 6; // maximum bit-width allowed for the constants (and intermediate values)
     size_t nbInputBits = 8; // number of bits of the input (to compute the fine-grained cost function)
-    std::vector<int> targets = {-20, -13, -8, -6, -5, -3, -2, -1, 0, 1, 2, 4, 5, 7, 12, 19}; // target const set of the RSCM
+    std::vector<int> targets = {0, 1, 2, 4, 5, 7, 12, 19}; // target const set of the RSCM
     std::vector<int> layout = {1, 1}; // {1,1} describes the chosen layout, i.e. 1 adder on the first layer and 1 adder on the second layer
     std::optional<unsigned int> heuristic;
     std::optional<unsigned int> timeoutSeconds;
@@ -46,6 +46,7 @@ int main(int argc, char* argv[]) {
     std::optional<std::string> snapshotOut;
     std::optional<std::string> snapshotIn;
     auto costModel = CostModel::MuxBits;
+    bool isSymmetric = false;
 
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
@@ -99,6 +100,8 @@ int main(int argc, char* argv[]) {
                 snapshotOut = arg.substr(15);
             } else if (arg.rfind("--recompute-snapshot=", 0) == 0) {
                 snapshotIn = arg.substr(22);
+            } else if (arg == "--is_symmetric") {
+                isSymmetric = true;
             } else {
                 std::cerr << "Ignoring unknown argument: " << arg << std::endl;
             }
@@ -117,7 +120,8 @@ int main(int argc, char* argv[]) {
             return 1;
         }
         const auto& s = *snap;
-        Solver problem(s.layout, s.maxCoef, s.minCoef, s.targets, s.nbInputBits, costModel, s.lutWidth);
+        const bool sym = isSymmetric || s.isSymmetric;
+        Solver problem(s.layout, s.maxCoef, s.minCoef, s.targets, s.nbInputBits, costModel, s.lutWidth, sym);
         problem.scmDesigns.clear();
         for (size_t i = 0; i < s.targets.size(); ++i) {
             problem.scmDesigns.emplace_back(s.targets[i], std::vector{ s.selectedScms[i] });
@@ -141,7 +145,7 @@ int main(int argc, char* argv[]) {
         }
         return 0;
     }
-    Solver problem(layout, maxCoef, minCoef, targets, nbInputBits, costModel, lutWidth);
+    Solver problem(layout, maxCoef, minCoef, targets, nbInputBits, costModel, lutWidth, isSymmetric);
 
     problem.CPSolve(heuristic); // step 1: solve the problem with the CPSolver
 
