@@ -45,7 +45,7 @@ int main(int argc, char* argv[]) {
     std::string jsonPath = "dump.json";
     std::optional<std::string> snapshotOut;
     std::optional<std::string> snapshotIn;
-    auto costModel = CostModel::MuxBits;
+    auto costModel = CostModel::MuxCount;
     bool isSymmetric = false;
 
     for (int i = 1; i < argc; ++i) {

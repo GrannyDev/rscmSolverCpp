@@ -19,6 +19,7 @@ unsigned int CostComputer::MuxCountComputer::merge(RSCM& node, DAG const& scm) c
     // Iterate layers → adders → variables
     for (const auto& layer : solver->layers) {
         for (const auto& adder : layer.adders) {
+            unsigned paramInAdderIdx = 0;
             for (const auto& param : adder.variables) {
                 // Count how many bits in this parameter are set
                 unsigned int bitsSet = 0;
@@ -30,13 +31,14 @@ unsigned int CostComputer::MuxCountComputer::merge(RSCM& node, DAG const& scm) c
                 bitPos += param.possibleValuesFusion.size();
 
                 // If more than one bit, we need (bitsSet - 1) multiplexers
-                if (bitsSet > 1)
+                if (bitsSet > 1 && solver->idxToVarMap.at(paramInAdderIdx) != VariableDefs::RIGHT_MULTIPLIER)
                 {
                     // compute the number of number of multiplexers needed
                     muxCount += bitsSet - 1;
                 }
 
                 ++totalParams;
+                ++paramInAdderIdx;
             }
         }
     }

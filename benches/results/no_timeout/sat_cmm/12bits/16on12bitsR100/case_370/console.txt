@@ -1,0 +1,3118 @@
+USER INPUTS:
+Reconfigurable SCM with coefficient(s)
+-> Configuration #0:
+   < 448 >
+-> Configuration #1:
+   < 1264 >
+-> Configuration #2:
+   < 79 >
+-> Configuration #3:
+   < 253 >
+-> Configuration #4:
+   < 11 >
+-> Configuration #5:
+   < 704 >
+-> Configuration #6:
+   < 296 >
+-> Configuration #7:
+   < 530 >
+-> Configuration #8:
+   < 68 >
+-> Configuration #9:
+   < 650 >
+-> Configuration #10:
+   < 2008 >
+-> Configuration #11:
+   < 488 >
+-> Configuration #12:
+   < 2039 >
+-> Configuration #13:
+   < 137 >
+-> Configuration #14:
+   < 318 >
+-> Configuration #15:
+   < 924 >
+
+Timeout: 300 seconds
+Solver: executable
+Threads: 1
+Attention! Reconfigurability not fully supported yet!
+Coefficients before preprocessing:
+Reconfigurable SCM with coefficient(s)
+-> Configuration #0:
+   < 7 >
+-> Configuration #1:
+   < 79 >
+-> Configuration #2:
+   < 79 >
+-> Configuration #3:
+   < 253 >
+-> Configuration #4:
+   < 11 >
+-> Configuration #5:
+   < 11 >
+-> Configuration #6:
+   < 37 >
+-> Configuration #7:
+   < 265 >
+-> Configuration #8:
+   < 17 >
+-> Configuration #9:
+   < 325 >
+-> Configuration #10:
+   < 251 >
+-> Configuration #11:
+   < 61 >
+-> Configuration #12:
+   < 2039 >
+-> Configuration #13:
+   < 137 >
+-> Configuration #14:
+   < 159 >
+-> Configuration #15:
+   < 231 >
+
+Coefficients after preprocessing:
+Reconfigurable SCM with coefficient(s)
+-> Configuration #0:
+   < 7 >
+-> Configuration #1:
+   < 79 >
+-> Configuration #2:
+   < 79 >
+-> Configuration #3:
+   < 253 >
+-> Configuration #4:
+   < 11 >
+-> Configuration #5:
+   < 11 >
+-> Configuration #6:
+   < 37 >
+-> Configuration #7:
+   < 265 >
+-> Configuration #8:
+   < 17 >
+-> Configuration #9:
+   < 325 >
+-> Configuration #10:
+   < 251 >
+-> Configuration #11:
+   < 61 >
+-> Configuration #12:
+   < 2039 >
+-> Configuration #13:
+   < 137 >
+-> Configuration #14:
+   < 159 >
+-> Configuration #15:
+   < 231 >
+
+Internal word size: 19
+Max shift: 16
+Shift word size: 5
+Min #adders: 2
+  Found solution for #adders = 2 with min 0 (of 75) shared reconfiguration MUX ports after 0.313 seconds 8-)
+Solution is verified :-)
+Current solution shares 39 MUX ports
+The solver reported 0 shared MUX ports
+Found solution!
+#adders = 2, word size = 19
+-> CONFIGURATION #0:
+  node #0 = [1]
+  node #1 = [448]
+    left input: node 0
+    right input: node 0
+    left input shift value: 9
+    right input shift value: 6
+    subtract: 1
+  node #2 = [65537]
+    left input: node 0
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 16
+    subtract: 0
+-> CONFIGURATION #1:
+  node #0 = [1]
+  node #1 = [1008]
+    left input: node 0
+    right input: node 0
+    left input shift value: 10
+    right input shift value: 4
+    subtract: 1
+  node #2 = [1264]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 8
+    subtract: 0
+-> CONFIGURATION #2:
+  node #0 = [1]
+  node #1 = [63]
+    left input: node 0
+    right input: node 0
+    left input shift value: 6
+    right input shift value: 0
+    subtract: 1
+  node #2 = [79]
+    left input: node 0
+    right input: node 1
+    left input shift value: 4
+    right input shift value: 0
+    subtract: 0
+-> CONFIGURATION #3:
+  node #0 = [1]
+  node #1 = [-252]
+    left input: node 0
+    right input: node 0
+    left input shift value: 2
+    right input shift value: 8
+    subtract: 1
+  node #2 = [253]
+    left input: node 0
+    right input: node 1
+    left input shift value: 0
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #4:
+  node #0 = [1]
+  node #1 = [5]
+    left input: node 0
+    right input: node 0
+    left input shift value: 2
+    right input shift value: 0
+    subtract: 0
+  node #2 = [11]
+    left input: node 0
+    right input: node 1
+    left input shift value: 0
+    right input shift value: 1
+    subtract: 0
+-> CONFIGURATION #5:
+  node #0 = [1]
+  node #1 = [28]
+    left input: node 0
+    right input: node 0
+    left input shift value: 5
+    right input shift value: 2
+    subtract: 1
+  node #2 = [44]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 4
+    subtract: 0
+-> CONFIGURATION #6:
+  node #0 = [1]
+  node #1 = [18]
+    left input: node 0
+    right input: node 0
+    left input shift value: 1
+    right input shift value: 4
+    subtract: 0
+  node #2 = [74]
+    left input: node 1
+    right input: node 0
+    left input shift value: 2
+    right input shift value: 1
+    subtract: 0
+-> CONFIGURATION #7:
+  node #0 = [1]
+  node #1 = [33]
+    left input: node 0
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 5
+    subtract: 0
+  node #2 = [265]
+    left input: node 1
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 0
+    subtract: 0
+-> CONFIGURATION #8:
+  node #0 = [1]
+  node #1 = [68]
+    left input: node 0
+    right input: node 0
+    left input shift value: 6
+    right input shift value: 2
+    subtract: 0
+  node #2 = [5]
+    left input: node 0
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 2
+    subtract: 0
+-> CONFIGURATION #9:
+  node #0 = [1]
+  node #1 = [65]
+    left input: node 0
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 6
+    subtract: 0
+  node #2 = [650]
+    left input: node 1
+    right input: node 1
+    left input shift value: 1
+    right input shift value: 3
+    subtract: 0
+-> CONFIGURATION #10:
+  node #0 = [1]
+  node #1 = [20]
+    left input: node 0
+    right input: node 0
+    left input shift value: 2
+    right input shift value: 4
+    subtract: 0
+  node #2 = [1004]
+    left input: node 0
+    right input: node 1
+    left input shift value: 10
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #11:
+  node #0 = [1]
+  node #1 = [130]
+    left input: node 0
+    right input: node 0
+    left input shift value: 7
+    right input shift value: 1
+    subtract: 0
+  node #2 = [122]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 3
+    subtract: 1
+-> CONFIGURATION #12:
+  node #0 = [1]
+  node #1 = [255]
+    left input: node 0
+    right input: node 0
+    left input shift value: 8
+    right input shift value: 0
+    subtract: 1
+  node #2 = [2039]
+    left input: node 1
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #13:
+  node #0 = [1]
+  node #1 = [68]
+    left input: node 0
+    right input: node 0
+    left input shift value: 2
+    right input shift value: 6
+    subtract: 0
+  node #2 = [137]
+    left input: node 1
+    right input: node 0
+    left input shift value: 1
+    right input shift value: 0
+    subtract: 0
+-> CONFIGURATION #14:
+  node #0 = [1]
+  node #1 = [40]
+    left input: node 0
+    right input: node 0
+    left input shift value: 5
+    right input shift value: 3
+    subtract: 0
+  node #2 = [159]
+    left input: node 1
+    right input: node 0
+    left input shift value: 2
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #15:
+  node #0 = [1]
+  node #1 = [33]
+    left input: node 0
+    right input: node 0
+    left input shift value: 5
+    right input shift value: 0
+    subtract: 0
+  node #2 = [924]
+    left input: node 1
+    right input: node 1
+    left input shift value: 5
+    right input shift value: 2
+    subtract: 1
+  Found solution for #adders = 2 with min 40 (of 75) shared reconfiguration MUX ports after 0.959 seconds 8-)
+Solution is verified :-)
+Current solution shares 49 MUX ports
+The solver reported 42 shared MUX ports
+Found solution!
+#adders = 2, word size = 19
+-> CONFIGURATION #0:
+  node #0 = [1]
+  node #1 = [32]
+    left input: node 0
+    right input: node 0
+    left input shift value: 6
+    right input shift value: 5
+    subtract: 1
+  node #2 = [448]
+    left input: node 1
+    right input: node 1
+    left input shift value: 4
+    right input shift value: 1
+    subtract: 1
+-> CONFIGURATION #1:
+  node #0 = [1]
+  node #1 = [-60]
+    left input: node 0
+    right input: node 0
+    left input shift value: 2
+    right input shift value: 6
+    subtract: 1
+  node #2 = [632]
+    left input: node 0
+    right input: node 1
+    left input shift value: 9
+    right input shift value: 1
+    subtract: 1
+-> CONFIGURATION #2:
+  node #0 = [1]
+  node #1 = [-15]
+    left input: node 0
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 4
+    subtract: 1
+  node #2 = [79]
+    left input: node 0
+    right input: node 1
+    left input shift value: 6
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #3:
+  node #0 = [1]
+  node #1 = [126]
+    left input: node 0
+    right input: node 0
+    left input shift value: 7
+    right input shift value: 1
+    subtract: 1
+  node #2 = [253]
+    left input: node 0
+    right input: node 1
+    left input shift value: 0
+    right input shift value: 1
+    subtract: 0
+-> CONFIGURATION #4:
+  node #0 = [1]
+  node #1 = [10]
+    left input: node 0
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 1
+    subtract: 0
+  node #2 = [11]
+    left input: node 0
+    right input: node 1
+    left input shift value: 0
+    right input shift value: 0
+    subtract: 0
+-> CONFIGURATION #5:
+  node #0 = [1]
+  node #1 = [-3]
+    left input: node 0
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 2
+    subtract: 1
+  node #2 = [704]
+    left input: node 0
+    right input: node 1
+    left input shift value: 9
+    right input shift value: 6
+    subtract: 1
+-> CONFIGURATION #6:
+  node #0 = [1]
+  node #1 = [33]
+    left input: node 0
+    right input: node 0
+    left input shift value: 5
+    right input shift value: 0
+    subtract: 0
+  node #2 = [296]
+    left input: node 0
+    right input: node 1
+    left input shift value: 5
+    right input shift value: 3
+    subtract: 0
+-> CONFIGURATION #7:
+  node #0 = [1]
+  node #1 = [66]
+    left input: node 0
+    right input: node 0
+    left input shift value: 6
+    right input shift value: 1
+    subtract: 0
+  node #2 = [530]
+    left input: node 0
+    right input: node 1
+    left input shift value: 1
+    right input shift value: 3
+    subtract: 0
+-> CONFIGURATION #8:
+  node #0 = [1]
+  node #1 = [66]
+    left input: node 0
+    right input: node 0
+    left input shift value: 6
+    right input shift value: 1
+    subtract: 0
+  node #2 = [68]
+    left input: node 1
+    right input: node 0
+    left input shift value: 1
+    right input shift value: 6
+    subtract: 1
+-> CONFIGURATION #9:
+  node #0 = [1]
+  node #1 = [65]
+    left input: node 0
+    right input: node 0
+    left input shift value: 6
+    right input shift value: 0
+    subtract: 0
+  node #2 = [650]
+    left input: node 1
+    right input: node 1
+    left input shift value: 1
+    right input shift value: 3
+    subtract: 0
+-> CONFIGURATION #10:
+  node #0 = [1]
+  node #1 = [40]
+    left input: node 0
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 5
+    subtract: 0
+  node #2 = [2008]
+    left input: node 0
+    right input: node 1
+    left input shift value: 11
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #11:
+  node #0 = [1]
+  node #1 = [-30]
+    left input: node 0
+    right input: node 0
+    left input shift value: 1
+    right input shift value: 5
+    subtract: 1
+  node #2 = [122]
+    left input: node 0
+    right input: node 1
+    left input shift value: 1
+    right input shift value: 2
+    subtract: 1
+-> CONFIGURATION #12:
+  node #0 = [1]
+  node #1 = [9]
+    left input: node 0
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 0
+    subtract: 0
+  node #2 = [2039]
+    left input: node 0
+    right input: node 1
+    left input shift value: 11
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #13:
+  node #0 = [1]
+  node #1 = [34]
+    left input: node 0
+    right input: node 0
+    left input shift value: 5
+    right input shift value: 1
+    subtract: 0
+  node #2 = [137]
+    left input: node 0
+    right input: node 1
+    left input shift value: 0
+    right input shift value: 2
+    subtract: 0
+-> CONFIGURATION #14:
+  node #0 = [1]
+  node #1 = [160]
+    left input: node 0
+    right input: node 0
+    left input shift value: 7
+    right input shift value: 5
+    subtract: 0
+  node #2 = [318]
+    left input: node 1
+    right input: node 0
+    left input shift value: 1
+    right input shift value: 1
+    subtract: 1
+-> CONFIGURATION #15:
+  node #0 = [1]
+  node #1 = [66]
+    left input: node 0
+    right input: node 0
+    left input shift value: 6
+    right input shift value: 1
+    subtract: 0
+  node #2 = [924]
+    left input: node 1
+    right input: node 1
+    left input shift value: 4
+    right input shift value: 1
+    subtract: 1
+  Found solution for #adders = 2 with min 50 (of 75) shared reconfiguration MUX ports after 1.284 seconds 8-)
+Solution is verified :-)
+Current solution shares 54 MUX ports
+The solver reported 52 shared MUX ports
+Found solution!
+#adders = 2, word size = 19
+-> CONFIGURATION #0:
+  node #0 = [1]
+  node #1 = [320]
+    left input: node 0
+    right input: node 0
+    left input shift value: 8
+    right input shift value: 6
+    subtract: 0
+  node #2 = [448]
+    left input: node 0
+    right input: node 1
+    left input shift value: 7
+    right input shift value: 0
+    subtract: 0
+-> CONFIGURATION #1:
+  node #0 = [1]
+  node #1 = [-504]
+    left input: node 0
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 9
+    subtract: 1
+  node #2 = [632]
+    left input: node 0
+    right input: node 1
+    left input shift value: 7
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #2:
+  node #0 = [1]
+  node #1 = [63]
+    left input: node 0
+    right input: node 0
+    left input shift value: 6
+    right input shift value: 0
+    subtract: 1
+  node #2 = [79]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 4
+    subtract: 0
+-> CONFIGURATION #3:
+  node #0 = [1]
+  node #1 = [-126]
+    left input: node 0
+    right input: node 0
+    left input shift value: 1
+    right input shift value: 7
+    subtract: 1
+  node #2 = [253]
+    left input: node 0
+    right input: node 1
+    left input shift value: 0
+    right input shift value: 1
+    subtract: 1
+-> CONFIGURATION #4:
+  node #0 = [1]
+  node #1 = [9]
+    left input: node 0
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 0
+    subtract: 0
+  node #2 = [11]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 1
+    subtract: 0
+-> CONFIGURATION #5:
+  node #0 = [1]
+  node #1 = [576]
+    left input: node 0
+    right input: node 0
+    left input shift value: 6
+    right input shift value: 9
+    subtract: 0
+  node #2 = [704]
+    left input: node 0
+    right input: node 1
+    left input shift value: 7
+    right input shift value: 0
+    subtract: 0
+-> CONFIGURATION #6:
+  node #0 = [1]
+  node #1 = [10]
+    left input: node 0
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 1
+    subtract: 0
+  node #2 = [148]
+    left input: node 0
+    right input: node 1
+    left input shift value: 7
+    right input shift value: 1
+    subtract: 0
+-> CONFIGURATION #7:
+  node #0 = [1]
+  node #1 = [514]
+    left input: node 0
+    right input: node 0
+    left input shift value: 1
+    right input shift value: 9
+    subtract: 0
+  node #2 = [530]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 4
+    subtract: 0
+-> CONFIGURATION #8:
+  node #0 = [1]
+  node #1 = [-30]
+    left input: node 0
+    right input: node 0
+    left input shift value: 1
+    right input shift value: 5
+    subtract: 1
+  node #2 = [68]
+    left input: node 0
+    right input: node 1
+    left input shift value: 7
+    right input shift value: 1
+    subtract: 0
+-> CONFIGURATION #9:
+  node #0 = [1]
+  node #1 = [10]
+    left input: node 0
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 1
+    subtract: 0
+  node #2 = [650]
+    left input: node 1
+    right input: node 1
+    left input shift value: 6
+    right input shift value: 0
+    subtract: 0
+-> CONFIGURATION #10:
+  node #0 = [1]
+  node #1 = [1020]
+    left input: node 0
+    right input: node 0
+    left input shift value: 10
+    right input shift value: 2
+    subtract: 1
+  node #2 = [1004]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 4
+    subtract: 1
+-> CONFIGURATION #11:
+  node #0 = [1]
+  node #1 = [63]
+    left input: node 0
+    right input: node 0
+    left input shift value: 6
+    right input shift value: 0
+    subtract: 1
+  node #2 = [61]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 1
+    subtract: 1
+-> CONFIGURATION #12:
+  node #0 = [1]
+  node #1 = [9]
+    left input: node 0
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 0
+    subtract: 0
+  node #2 = [2039]
+    left input: node 0
+    right input: node 1
+    left input shift value: 11
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #13:
+  node #0 = [1]
+  node #1 = [9]
+    left input: node 0
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 0
+    subtract: 0
+  node #2 = [137]
+    left input: node 0
+    right input: node 1
+    left input shift value: 7
+    right input shift value: 0
+    subtract: 0
+-> CONFIGURATION #14:
+  node #0 = [1]
+  node #1 = [31]
+    left input: node 0
+    right input: node 0
+    left input shift value: 5
+    right input shift value: 0
+    subtract: 1
+  node #2 = [159]
+    left input: node 0
+    right input: node 1
+    left input shift value: 7
+    right input shift value: 0
+    subtract: 0
+-> CONFIGURATION #15:
+  node #0 = [1]
+  node #1 = [14]
+    left input: node 0
+    right input: node 0
+    left input shift value: 4
+    right input shift value: 1
+    subtract: 1
+  node #2 = [924]
+    left input: node 1
+    right input: node 1
+    left input shift value: 6
+    right input shift value: 1
+    subtract: 0
+  Found solution for #adders = 2 with min 55 (of 75) shared reconfiguration MUX ports after 1.32 seconds 8-)
+Solution is verified :-)
+Current solution shares 57 MUX ports
+The solver reported 56 shared MUX ports
+Found solution!
+#adders = 2, word size = 19
+-> CONFIGURATION #0:
+  node #0 = [1]
+  node #1 = [112]
+    left input: node 0
+    right input: node 0
+    left input shift value: 7
+    right input shift value: 4
+    subtract: 1
+  node #2 = [114]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 1
+    subtract: 0
+-> CONFIGURATION #1:
+  node #0 = [1]
+  node #1 = [126]
+    left input: node 0
+    right input: node 0
+    left input shift value: 7
+    right input shift value: 1
+    subtract: 1
+  node #2 = [632]
+    left input: node 0
+    right input: node 1
+    left input shift value: 7
+    right input shift value: 2
+    subtract: 0
+-> CONFIGURATION #2:
+  node #0 = [1]
+  node #1 = [10]
+    left input: node 0
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 1
+    subtract: 0
+  node #2 = [79]
+    left input: node 1
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #3:
+  node #0 = [1]
+  node #1 = [254]
+    left input: node 0
+    right input: node 0
+    left input shift value: 8
+    right input shift value: 1
+    subtract: 1
+  node #2 = [253]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #4:
+  node #0 = [1]
+  node #1 = [3]
+    left input: node 0
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 1
+    subtract: 0
+  node #2 = [11]
+    left input: node 1
+    right input: node 0
+    left input shift value: 2
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #5:
+  node #0 = [1]
+  node #1 = [48]
+    left input: node 0
+    right input: node 0
+    left input shift value: 6
+    right input shift value: 4
+    subtract: 1
+  node #2 = [176]
+    left input: node 0
+    right input: node 1
+    left input shift value: 7
+    right input shift value: 0
+    subtract: 0
+-> CONFIGURATION #6:
+  node #0 = [1]
+  node #1 = [66]
+    left input: node 0
+    right input: node 0
+    left input shift value: 6
+    right input shift value: 1
+    subtract: 0
+  node #2 = [74]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 3
+    subtract: 0
+-> CONFIGURATION #7:
+  node #0 = [1]
+  node #1 = [66]
+    left input: node 0
+    right input: node 0
+    left input shift value: 6
+    right input shift value: 1
+    subtract: 0
+  node #2 = [530]
+    left input: node 1
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 1
+    subtract: 0
+-> CONFIGURATION #8:
+  node #0 = [1]
+  node #1 = [17]
+    left input: node 0
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 4
+    subtract: 0
+  node #2 = [153]
+    left input: node 1
+    right input: node 1
+    left input shift value: 3
+    right input shift value: 0
+    subtract: 0
+-> CONFIGURATION #9:
+  node #0 = [1]
+  node #1 = [130]
+    left input: node 0
+    right input: node 0
+    left input shift value: 7
+    right input shift value: 1
+    subtract: 0
+  node #2 = [650]
+    left input: node 1
+    right input: node 1
+    left input shift value: 2
+    right input shift value: 0
+    subtract: 0
+-> CONFIGURATION #10:
+  node #0 = [1]
+  node #1 = [126]
+    left input: node 0
+    right input: node 0
+    left input shift value: 7
+    right input shift value: 1
+    subtract: 1
+  node #2 = [502]
+    left input: node 1
+    right input: node 0
+    left input shift value: 2
+    right input shift value: 1
+    subtract: 1
+-> CONFIGURATION #11:
+  node #0 = [1]
+  node #1 = [6]
+    left input: node 0
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 1
+    subtract: 1
+  node #2 = [122]
+    left input: node 0
+    right input: node 1
+    left input shift value: 7
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #12:
+  node #0 = [1]
+  node #1 = [255]
+    left input: node 0
+    right input: node 0
+    left input shift value: 8
+    right input shift value: 0
+    subtract: 1
+  node #2 = [2039]
+    left input: node 1
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #13:
+  node #0 = [1]
+  node #1 = [129]
+    left input: node 0
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 7
+    subtract: 0
+  node #2 = [137]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 3
+    subtract: 0
+-> CONFIGURATION #14:
+  node #0 = [1]
+  node #1 = [80]
+    left input: node 0
+    right input: node 0
+    left input shift value: 6
+    right input shift value: 4
+    subtract: 0
+  node #2 = [318]
+    left input: node 1
+    right input: node 0
+    left input shift value: 2
+    right input shift value: 1
+    subtract: 1
+-> CONFIGURATION #15:
+  node #0 = [1]
+  node #1 = [7]
+    left input: node 0
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 0
+    subtract: 1
+  node #2 = [231]
+    left input: node 1
+    right input: node 1
+    left input shift value: 0
+    right input shift value: 5
+    subtract: 0
+  Found solution for #adders = 2 with min 58 (of 75) shared reconfiguration MUX ports after 1.393 seconds 8-)
+Solution is verified :-)
+Current solution shares 58 MUX ports
+The solver reported 58 shared MUX ports
+Found solution!
+#adders = 2, word size = 19
+-> CONFIGURATION #0:
+  node #0 = [1]
+  node #1 = [16]
+    left input: node 0
+    right input: node 0
+    left input shift value: 5
+    right input shift value: 4
+    subtract: 1
+  node #2 = [112]
+    left input: node 1
+    right input: node 1
+    left input shift value: 3
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #1:
+  node #0 = [1]
+  node #1 = [1008]
+    left input: node 0
+    right input: node 0
+    left input shift value: 10
+    right input shift value: 4
+    subtract: 1
+  node #2 = [1264]
+    left input: node 0
+    right input: node 1
+    left input shift value: 8
+    right input shift value: 0
+    subtract: 0
+-> CONFIGURATION #2:
+  node #0 = [1]
+  node #1 = [80]
+    left input: node 0
+    right input: node 0
+    left input shift value: 6
+    right input shift value: 4
+    subtract: 0
+  node #2 = [79]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #3:
+  node #0 = [1]
+  node #1 = [3]
+    left input: node 0
+    right input: node 0
+    left input shift value: 2
+    right input shift value: 0
+    subtract: 1
+  node #2 = [253]
+    left input: node 0
+    right input: node 1
+    left input shift value: 8
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #4:
+  node #0 = [1]
+  node #1 = [3]
+    left input: node 0
+    right input: node 0
+    left input shift value: 1
+    right input shift value: 0
+    subtract: 0
+  node #2 = [11]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 3
+    subtract: 0
+-> CONFIGURATION #5:
+  node #0 = [1]
+  node #1 = [80]
+    left input: node 0
+    right input: node 0
+    left input shift value: 6
+    right input shift value: 4
+    subtract: 0
+  node #2 = [176]
+    left input: node 0
+    right input: node 1
+    left input shift value: 8
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #6:
+  node #0 = [1]
+  node #1 = [5]
+    left input: node 0
+    right input: node 0
+    left input shift value: 2
+    right input shift value: 0
+    subtract: 0
+  node #2 = [37]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 5
+    subtract: 0
+-> CONFIGURATION #7:
+  node #0 = [1]
+  node #1 = [33]
+    left input: node 0
+    right input: node 0
+    left input shift value: 5
+    right input shift value: 0
+    subtract: 0
+  node #2 = [265]
+    left input: node 1
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 0
+    subtract: 0
+-> CONFIGURATION #8:
+  node #0 = [1]
+  node #1 = [-15]
+    left input: node 0
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 4
+    subtract: 1
+  node #2 = [17]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 5
+    subtract: 0
+-> CONFIGURATION #9:
+  node #0 = [1]
+  node #1 = [5]
+    left input: node 0
+    right input: node 0
+    left input shift value: 2
+    right input shift value: 0
+    subtract: 0
+  node #2 = [325]
+    left input: node 1
+    right input: node 1
+    left input shift value: 0
+    right input shift value: 6
+    subtract: 0
+-> CONFIGURATION #10:
+  node #0 = [1]
+  node #1 = [5]
+    left input: node 0
+    right input: node 0
+    left input shift value: 2
+    right input shift value: 0
+    subtract: 0
+  node #2 = [251]
+    left input: node 0
+    right input: node 1
+    left input shift value: 8
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #11:
+  node #0 = [1]
+  node #1 = [-12]
+    left input: node 0
+    right input: node 0
+    left input shift value: 2
+    right input shift value: 4
+    subtract: 1
+  node #2 = [244]
+    left input: node 0
+    right input: node 1
+    left input shift value: 8
+    right input shift value: 0
+    subtract: 0
+-> CONFIGURATION #12:
+  node #0 = [1]
+  node #1 = [255]
+    left input: node 0
+    right input: node 0
+    left input shift value: 8
+    right input shift value: 0
+    subtract: 1
+  node #2 = [2039]
+    left input: node 1
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #13:
+  node #0 = [1]
+  node #1 = [129]
+    left input: node 0
+    right input: node 0
+    left input shift value: 7
+    right input shift value: 0
+    subtract: 0
+  node #2 = [137]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 3
+    subtract: 0
+-> CONFIGURATION #14:
+  node #0 = [1]
+  node #1 = [127]
+    left input: node 0
+    right input: node 0
+    left input shift value: 7
+    right input shift value: 0
+    subtract: 1
+  node #2 = [159]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 5
+    subtract: 0
+-> CONFIGURATION #15:
+  node #0 = [1]
+  node #1 = [33]
+    left input: node 0
+    right input: node 0
+    left input shift value: 5
+    right input shift value: 0
+    subtract: 0
+  node #2 = [231]
+    left input: node 1
+    right input: node 1
+    left input shift value: 3
+    right input shift value: 0
+    subtract: 1
+  Found solution for #adders = 2 with min 59 (of 75) shared reconfiguration MUX ports after 2.035 seconds 8-)
+Solution is verified :-)
+Current solution shares 59 MUX ports
+The solver reported 59 shared MUX ports
+Found solution!
+#adders = 2, word size = 19
+-> CONFIGURATION #0:
+  node #0 = [1]
+  node #1 = [28]
+    left input: node 0
+    right input: node 0
+    left input shift value: 5
+    right input shift value: 2
+    subtract: 1
+  node #2 = [224]
+    left input: node 1
+    right input: node 1
+    left input shift value: 2
+    right input shift value: 2
+    subtract: 0
+-> CONFIGURATION #1:
+  node #0 = [1]
+  node #1 = [30]
+    left input: node 0
+    right input: node 0
+    left input shift value: 5
+    right input shift value: 1
+    subtract: 1
+  node #2 = [632]
+    left input: node 0
+    right input: node 1
+    left input shift value: 9
+    right input shift value: 2
+    subtract: 0
+-> CONFIGURATION #2:
+  node #0 = [1]
+  node #1 = [10]
+    left input: node 0
+    right input: node 0
+    left input shift value: 1
+    right input shift value: 3
+    subtract: 0
+  node #2 = [79]
+    left input: node 1
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #3:
+  node #0 = [1]
+  node #1 = [-3]
+    left input: node 0
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 2
+    subtract: 1
+  node #2 = [253]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 8
+    subtract: 0
+-> CONFIGURATION #4:
+  node #0 = [1]
+  node #1 = [3]
+    left input: node 0
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 1
+    subtract: 0
+  node #2 = [11]
+    left input: node 1
+    right input: node 0
+    left input shift value: 2
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #5:
+  node #0 = [1]
+  node #1 = [40]
+    left input: node 0
+    right input: node 0
+    left input shift value: 5
+    right input shift value: 3
+    subtract: 0
+  node #2 = [352]
+    left input: node 0
+    right input: node 1
+    left input shift value: 9
+    right input shift value: 2
+    subtract: 1
+-> CONFIGURATION #6:
+  node #0 = [1]
+  node #1 = [40]
+    left input: node 0
+    right input: node 0
+    left input shift value: 5
+    right input shift value: 3
+    subtract: 0
+  node #2 = [296]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 8
+    subtract: 0
+-> CONFIGURATION #7:
+  node #0 = [1]
+  node #1 = [66]
+    left input: node 0
+    right input: node 0
+    left input shift value: 1
+    right input shift value: 6
+    subtract: 0
+  node #2 = [265]
+    left input: node 1
+    right input: node 0
+    left input shift value: 2
+    right input shift value: 0
+    subtract: 0
+-> CONFIGURATION #8:
+  node #0 = [1]
+  node #1 = [66]
+    left input: node 0
+    right input: node 0
+    left input shift value: 1
+    right input shift value: 6
+    subtract: 0
+  node #2 = [34]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 5
+    subtract: 1
+-> CONFIGURATION #9:
+  node #0 = [1]
+  node #1 = [65]
+    left input: node 0
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 6
+    subtract: 0
+  node #2 = [325]
+    left input: node 1
+    right input: node 1
+    left input shift value: 0
+    right input shift value: 2
+    subtract: 0
+-> CONFIGURATION #10:
+  node #0 = [1]
+  node #1 = [2040]
+    left input: node 0
+    right input: node 0
+    left input shift value: 11
+    right input shift value: 3
+    subtract: 1
+  node #2 = [2008]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 5
+    subtract: 1
+-> CONFIGURATION #11:
+  node #0 = [1]
+  node #1 = [-6]
+    left input: node 0
+    right input: node 0
+    left input shift value: 1
+    right input shift value: 3
+    subtract: 1
+  node #2 = [488]
+    left input: node 0
+    right input: node 1
+    left input shift value: 9
+    right input shift value: 2
+    subtract: 0
+-> CONFIGURATION #12:
+  node #0 = [1]
+  node #1 = [2047]
+    left input: node 0
+    right input: node 0
+    left input shift value: 11
+    right input shift value: 0
+    subtract: 1
+  node #2 = [2039]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 3
+    subtract: 1
+-> CONFIGURATION #13:
+  node #0 = [1]
+  node #1 = [34]
+    left input: node 0
+    right input: node 0
+    left input shift value: 5
+    right input shift value: 1
+    subtract: 0
+  node #2 = [137]
+    left input: node 1
+    right input: node 0
+    left input shift value: 2
+    right input shift value: 0
+    subtract: 0
+-> CONFIGURATION #14:
+  node #0 = [1]
+  node #1 = [40]
+    left input: node 0
+    right input: node 0
+    left input shift value: 5
+    right input shift value: 3
+    subtract: 0
+  node #2 = [159]
+    left input: node 1
+    right input: node 0
+    left input shift value: 2
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #15:
+  node #0 = [1]
+  node #1 = [28]
+    left input: node 0
+    right input: node 0
+    left input shift value: 5
+    right input shift value: 2
+    subtract: 1
+  node #2 = [924]
+    left input: node 1
+    right input: node 1
+    left input shift value: 0
+    right input shift value: 5
+    subtract: 0
+  Found solution for #adders = 2 with min 60 (of 75) shared reconfiguration MUX ports after 2.532 seconds 8-)
+Solution is verified :-)
+Current solution shares 60 MUX ports
+The solver reported 60 shared MUX ports
+Found solution!
+#adders = 2, word size = 19
+-> CONFIGURATION #0:
+  node #0 = [1]
+  node #1 = [-24]
+    left input: node 0
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 5
+    subtract: 1
+  node #2 = [56]
+    left input: node 0
+    right input: node 1
+    left input shift value: 3
+    right input shift value: 1
+    subtract: 1
+-> CONFIGURATION #1:
+  node #0 = [1]
+  node #1 = [-120]
+    left input: node 0
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 7
+    subtract: 1
+  node #2 = [632]
+    left input: node 0
+    right input: node 1
+    left input shift value: 9
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #2:
+  node #0 = [1]
+  node #1 = [40]
+    left input: node 0
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 5
+    subtract: 0
+  node #2 = [79]
+    left input: node 1
+    right input: node 0
+    left input shift value: 1
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #3:
+  node #0 = [1]
+  node #1 = [-126]
+    left input: node 0
+    right input: node 0
+    left input shift value: 1
+    right input shift value: 7
+    subtract: 1
+  node #2 = [253]
+    left input: node 0
+    right input: node 1
+    left input shift value: 0
+    right input shift value: 1
+    subtract: 1
+-> CONFIGURATION #4:
+  node #0 = [1]
+  node #1 = [5]
+    left input: node 0
+    right input: node 0
+    left input shift value: 2
+    right input shift value: 0
+    subtract: 0
+  node #2 = [11]
+    left input: node 1
+    right input: node 0
+    left input shift value: 1
+    right input shift value: 0
+    subtract: 0
+-> CONFIGURATION #5:
+  node #0 = [1]
+  node #1 = [40]
+    left input: node 0
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 5
+    subtract: 0
+  node #2 = [88]
+    left input: node 0
+    right input: node 1
+    left input shift value: 3
+    right input shift value: 1
+    subtract: 0
+-> CONFIGURATION #6:
+  node #0 = [1]
+  node #1 = [36]
+    left input: node 0
+    right input: node 0
+    left input shift value: 2
+    right input shift value: 5
+    subtract: 0
+  node #2 = [37]
+    left input: node 0
+    right input: node 1
+    left input shift value: 0
+    right input shift value: 0
+    subtract: 0
+-> CONFIGURATION #7:
+  node #0 = [1]
+  node #1 = [132]
+    left input: node 0
+    right input: node 0
+    left input shift value: 2
+    right input shift value: 7
+    subtract: 0
+  node #2 = [265]
+    left input: node 1
+    right input: node 0
+    left input shift value: 1
+    right input shift value: 0
+    subtract: 0
+-> CONFIGURATION #8:
+  node #0 = [1]
+  node #1 = [34]
+    left input: node 0
+    right input: node 0
+    left input shift value: 1
+    right input shift value: 5
+    subtract: 0
+  node #2 = [34]
+    left input: node 1
+    right input: node 1
+    left input shift value: 1
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #9:
+  node #0 = [1]
+  node #1 = [130]
+    left input: node 0
+    right input: node 0
+    left input shift value: 1
+    right input shift value: 7
+    subtract: 0
+  node #2 = [650]
+    left input: node 1
+    right input: node 1
+    left input shift value: 2
+    right input shift value: 0
+    subtract: 0
+-> CONFIGURATION #10:
+  node #0 = [1]
+  node #1 = [40]
+    left input: node 0
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 5
+    subtract: 0
+  node #2 = [2008]
+    left input: node 0
+    right input: node 1
+    left input shift value: 11
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #11:
+  node #0 = [1]
+  node #1 = [-24]
+    left input: node 0
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 5
+    subtract: 1
+  node #2 = [488]
+    left input: node 0
+    right input: node 1
+    left input shift value: 9
+    right input shift value: 0
+    subtract: 0
+-> CONFIGURATION #12:
+  node #0 = [1]
+  node #1 = [9]
+    left input: node 0
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 0
+    subtract: 0
+  node #2 = [2039]
+    left input: node 0
+    right input: node 1
+    left input shift value: 11
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #13:
+  node #0 = [1]
+  node #1 = [68]
+    left input: node 0
+    right input: node 0
+    left input shift value: 2
+    right input shift value: 6
+    subtract: 0
+  node #2 = [137]
+    left input: node 1
+    right input: node 0
+    left input shift value: 1
+    right input shift value: 0
+    subtract: 0
+-> CONFIGURATION #14:
+  node #0 = [1]
+  node #1 = [40]
+    left input: node 0
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 5
+    subtract: 0
+  node #2 = [159]
+    left input: node 1
+    right input: node 0
+    left input shift value: 2
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #15:
+  node #0 = [1]
+  node #1 = [66]
+    left input: node 0
+    right input: node 0
+    left input shift value: 1
+    right input shift value: 6
+    subtract: 0
+  node #2 = [462]
+    left input: node 1
+    right input: node 1
+    left input shift value: 3
+    right input shift value: 0
+    subtract: 1
+  Found solution for #adders = 2 with min 61 (of 75) shared reconfiguration MUX ports after 2.194 seconds 8-)
+Solution is verified :-)
+Current solution shares 61 MUX ports
+The solver reported 61 shared MUX ports
+Found solution!
+#adders = 2, word size = 19
+-> CONFIGURATION #0:
+  node #0 = [1]
+  node #1 = [224]
+    left input: node 0
+    right input: node 0
+    left input shift value: 8
+    right input shift value: 5
+    subtract: 1
+  node #2 = [448]
+    left input: node 1
+    right input: node 1
+    left input shift value: 0
+    right input shift value: 0
+    subtract: 0
+-> CONFIGURATION #1:
+  node #0 = [1]
+  node #1 = [40]
+    left input: node 0
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 5
+    subtract: 0
+  node #2 = [1264]
+    left input: node 1
+    right input: node 0
+    left input shift value: 5
+    right input shift value: 4
+    subtract: 1
+-> CONFIGURATION #2:
+  node #0 = [1]
+  node #1 = [63]
+    left input: node 0
+    right input: node 0
+    left input shift value: 6
+    right input shift value: 0
+    subtract: 1
+  node #2 = [79]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 4
+    subtract: 0
+-> CONFIGURATION #3:
+  node #0 = [1]
+  node #1 = [257]
+    left input: node 0
+    right input: node 0
+    left input shift value: 8
+    right input shift value: 0
+    subtract: 0
+  node #2 = [253]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 2
+    subtract: 1
+-> CONFIGURATION #4:
+  node #0 = [1]
+  node #1 = [7]
+    left input: node 0
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 0
+    subtract: 1
+  node #2 = [11]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 2
+    subtract: 0
+-> CONFIGURATION #5:
+  node #0 = [1]
+  node #1 = [224]
+    left input: node 0
+    right input: node 0
+    left input shift value: 8
+    right input shift value: 5
+    subtract: 1
+  node #2 = [352]
+    left input: node 0
+    right input: node 1
+    left input shift value: 7
+    right input shift value: 0
+    subtract: 0
+-> CONFIGURATION #6:
+  node #0 = [1]
+  node #1 = [9]
+    left input: node 0
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 0
+    subtract: 0
+  node #2 = [296]
+    left input: node 1
+    right input: node 0
+    left input shift value: 5
+    right input shift value: 3
+    subtract: 0
+-> CONFIGURATION #7:
+  node #0 = [1]
+  node #1 = [257]
+    left input: node 0
+    right input: node 0
+    left input shift value: 8
+    right input shift value: 0
+    subtract: 0
+  node #2 = [265]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 3
+    subtract: 0
+-> CONFIGURATION #8:
+  node #0 = [1]
+  node #1 = [60]
+    left input: node 0
+    right input: node 0
+    left input shift value: 6
+    right input shift value: 2
+    subtract: 1
+  node #2 = [68]
+    left input: node 0
+    right input: node 1
+    left input shift value: 7
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #9:
+  node #0 = [1]
+  node #1 = [65]
+    left input: node 0
+    right input: node 0
+    left input shift value: 6
+    right input shift value: 0
+    subtract: 0
+  node #2 = [325]
+    left input: node 1
+    right input: node 1
+    left input shift value: 2
+    right input shift value: 0
+    subtract: 0
+-> CONFIGURATION #10:
+  node #0 = [1]
+  node #1 = [2016]
+    left input: node 0
+    right input: node 0
+    left input shift value: 11
+    right input shift value: 5
+    subtract: 1
+  node #2 = [2008]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 3
+    subtract: 1
+-> CONFIGURATION #11:
+  node #0 = [1]
+  node #1 = [63]
+    left input: node 0
+    right input: node 0
+    left input shift value: 6
+    right input shift value: 0
+    subtract: 1
+  node #2 = [244]
+    left input: node 1
+    right input: node 0
+    left input shift value: 2
+    right input shift value: 3
+    subtract: 1
+-> CONFIGURATION #12:
+  node #0 = [1]
+  node #1 = [2047]
+    left input: node 0
+    right input: node 0
+    left input shift value: 11
+    right input shift value: 0
+    subtract: 1
+  node #2 = [2039]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 3
+    subtract: 1
+-> CONFIGURATION #13:
+  node #0 = [1]
+  node #1 = [129]
+    left input: node 0
+    right input: node 0
+    left input shift value: 7
+    right input shift value: 0
+    subtract: 0
+  node #2 = [137]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 3
+    subtract: 0
+-> CONFIGURATION #14:
+  node #0 = [1]
+  node #1 = [31]
+    left input: node 0
+    right input: node 0
+    left input shift value: 5
+    right input shift value: 0
+    subtract: 1
+  node #2 = [159]
+    left input: node 0
+    right input: node 1
+    left input shift value: 7
+    right input shift value: 0
+    subtract: 0
+-> CONFIGURATION #15:
+  node #0 = [1]
+  node #1 = [28]
+    left input: node 0
+    right input: node 0
+    left input shift value: 5
+    right input shift value: 2
+    subtract: 1
+  node #2 = [924]
+    left input: node 1
+    right input: node 1
+    left input shift value: 5
+    right input shift value: 0
+    subtract: 0
+  Found solution for #adders = 2 with min 62 (of 75) shared reconfiguration MUX ports after 2.11 seconds 8-)
+Solution is verified :-)
+Current solution shares 62 MUX ports
+The solver reported 62 shared MUX ports
+Found solution!
+#adders = 2, word size = 19
+-> CONFIGURATION #0:
+  node #0 = [1]
+  node #1 = [28]
+    left input: node 0
+    right input: node 0
+    left input shift value: 5
+    right input shift value: 2
+    subtract: 1
+  node #2 = [224]
+    left input: node 1
+    right input: node 1
+    left input shift value: 2
+    right input shift value: 2
+    subtract: 0
+-> CONFIGURATION #1:
+  node #0 = [1]
+  node #1 = [504]
+    left input: node 0
+    right input: node 0
+    left input shift value: 9
+    right input shift value: 3
+    subtract: 1
+  node #2 = [632]
+    left input: node 0
+    right input: node 1
+    left input shift value: 7
+    right input shift value: 0
+    subtract: 0
+-> CONFIGURATION #2:
+  node #0 = [1]
+  node #1 = [20]
+    left input: node 0
+    right input: node 0
+    left input shift value: 4
+    right input shift value: 2
+    subtract: 0
+  node #2 = [79]
+    left input: node 1
+    right input: node 0
+    left input shift value: 2
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #3:
+  node #0 = [1]
+  node #1 = [63]
+    left input: node 0
+    right input: node 0
+    left input shift value: 6
+    right input shift value: 0
+    subtract: 1
+  node #2 = [253]
+    left input: node 1
+    right input: node 0
+    left input shift value: 2
+    right input shift value: 0
+    subtract: 0
+-> CONFIGURATION #4:
+  node #0 = [1]
+  node #1 = [3]
+    left input: node 0
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 1
+    subtract: 0
+  node #2 = [11]
+    left input: node 1
+    right input: node 0
+    left input shift value: 2
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #5:
+  node #0 = [1]
+  node #1 = [56]
+    left input: node 0
+    right input: node 0
+    left input shift value: 6
+    right input shift value: 3
+    subtract: 1
+  node #2 = [352]
+    left input: node 0
+    right input: node 1
+    left input shift value: 7
+    right input shift value: 2
+    subtract: 0
+-> CONFIGURATION #6:
+  node #0 = [1]
+  node #1 = [72]
+    left input: node 0
+    right input: node 0
+    left input shift value: 6
+    right input shift value: 3
+    subtract: 0
+  node #2 = [296]
+    left input: node 1
+    right input: node 0
+    left input shift value: 2
+    right input shift value: 3
+    subtract: 0
+-> CONFIGURATION #7:
+  node #0 = [1]
+  node #1 = [66]
+    left input: node 0
+    right input: node 0
+    left input shift value: 6
+    right input shift value: 1
+    subtract: 0
+  node #2 = [265]
+    left input: node 1
+    right input: node 0
+    left input shift value: 2
+    right input shift value: 0
+    subtract: 0
+-> CONFIGURATION #8:
+  node #0 = [1]
+  node #1 = [60]
+    left input: node 0
+    right input: node 0
+    left input shift value: 6
+    right input shift value: 2
+    subtract: 1
+  node #2 = [68]
+    left input: node 0
+    right input: node 1
+    left input shift value: 7
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #9:
+  node #0 = [1]
+  node #1 = [65]
+    left input: node 0
+    right input: node 0
+    left input shift value: 6
+    right input shift value: 0
+    subtract: 0
+  node #2 = [325]
+    left input: node 1
+    right input: node 1
+    left input shift value: 2
+    right input shift value: 0
+    subtract: 0
+-> CONFIGURATION #10:
+  node #0 = [1]
+  node #1 = [504]
+    left input: node 0
+    right input: node 0
+    left input shift value: 9
+    right input shift value: 3
+    subtract: 1
+  node #2 = [2008]
+    left input: node 1
+    right input: node 0
+    left input shift value: 2
+    right input shift value: 3
+    subtract: 1
+-> CONFIGURATION #11:
+  node #0 = [1]
+  node #1 = [62]
+    left input: node 0
+    right input: node 0
+    left input shift value: 6
+    right input shift value: 1
+    subtract: 1
+  node #2 = [488]
+    left input: node 1
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 3
+    subtract: 1
+-> CONFIGURATION #12:
+  node #0 = [1]
+  node #1 = [510]
+    left input: node 0
+    right input: node 0
+    left input shift value: 9
+    right input shift value: 1
+    subtract: 1
+  node #2 = [2039]
+    left input: node 1
+    right input: node 0
+    left input shift value: 2
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #13:
+  node #0 = [1]
+  node #1 = [34]
+    left input: node 0
+    right input: node 0
+    left input shift value: 5
+    right input shift value: 1
+    subtract: 0
+  node #2 = [137]
+    left input: node 1
+    right input: node 0
+    left input shift value: 2
+    right input shift value: 0
+    subtract: 0
+-> CONFIGURATION #14:
+  node #0 = [1]
+  node #1 = [40]
+    left input: node 0
+    right input: node 0
+    left input shift value: 5
+    right input shift value: 3
+    subtract: 0
+  node #2 = [159]
+    left input: node 1
+    right input: node 0
+    left input shift value: 2
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #15:
+  node #0 = [1]
+  node #1 = [66]
+    left input: node 0
+    right input: node 0
+    left input shift value: 6
+    right input shift value: 1
+    subtract: 0
+  node #2 = [462]
+    left input: node 1
+    right input: node 1
+    left input shift value: 3
+    right input shift value: 0
+    subtract: 1
+  Found solution for #adders = 2 with min 63 (of 75) shared reconfiguration MUX ports after 3.524 seconds 8-)
+Solution is verified :-)
+Current solution shares 63 MUX ports
+The solver reported 63 shared MUX ports
+Found solution!
+#adders = 2, word size = 19
+-> CONFIGURATION #0:
+  node #0 = [1]
+  node #1 = [12]
+    left input: node 0
+    right input: node 0
+    left input shift value: 4
+    right input shift value: 2
+    subtract: 1
+  node #2 = [7]
+    left input: node 0
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #1:
+  node #0 = [1]
+  node #1 = [252]
+    left input: node 0
+    right input: node 0
+    left input shift value: 8
+    right input shift value: 2
+    subtract: 1
+  node #2 = [316]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 6
+    subtract: 0
+-> CONFIGURATION #2:
+  node #0 = [1]
+  node #1 = [20]
+    left input: node 0
+    right input: node 0
+    left input shift value: 4
+    right input shift value: 2
+    subtract: 0
+  node #2 = [79]
+    left input: node 1
+    right input: node 0
+    left input shift value: 2
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #3:
+  node #0 = [1]
+  node #1 = [252]
+    left input: node 0
+    right input: node 0
+    left input shift value: 8
+    right input shift value: 2
+    subtract: 1
+  node #2 = [253]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 0
+    subtract: 0
+-> CONFIGURATION #4:
+  node #0 = [1]
+  node #1 = [12]
+    left input: node 0
+    right input: node 0
+    left input shift value: 4
+    right input shift value: 2
+    subtract: 1
+  node #2 = [11]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #5:
+  node #0 = [1]
+  node #1 = [12]
+    left input: node 0
+    right input: node 0
+    left input shift value: 4
+    right input shift value: 2
+    subtract: 1
+  node #2 = [11]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #6:
+  node #0 = [1]
+  node #1 = [18]
+    left input: node 0
+    right input: node 0
+    left input shift value: 4
+    right input shift value: 1
+    subtract: 0
+  node #2 = [74]
+    left input: node 1
+    right input: node 0
+    left input shift value: 2
+    right input shift value: 1
+    subtract: 0
+-> CONFIGURATION #7:
+  node #0 = [1]
+  node #1 = [132]
+    left input: node 0
+    right input: node 0
+    left input shift value: 7
+    right input shift value: 2
+    subtract: 0
+  node #2 = [530]
+    left input: node 1
+    right input: node 0
+    left input shift value: 2
+    right input shift value: 1
+    subtract: 0
+-> CONFIGURATION #8:
+  node #0 = [1]
+  node #1 = [18]
+    left input: node 0
+    right input: node 0
+    left input shift value: 4
+    right input shift value: 1
+    subtract: 0
+  node #2 = [17]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #9:
+  node #0 = [1]
+  node #1 = [130]
+    left input: node 0
+    right input: node 0
+    left input shift value: 7
+    right input shift value: 1
+    subtract: 0
+  node #2 = [650]
+    left input: node 1
+    right input: node 1
+    left input shift value: 2
+    right input shift value: 0
+    subtract: 0
+-> CONFIGURATION #10:
+  node #0 = [1]
+  node #1 = [126]
+    left input: node 0
+    right input: node 0
+    left input shift value: 7
+    right input shift value: 1
+    subtract: 1
+  node #2 = [502]
+    left input: node 1
+    right input: node 0
+    left input shift value: 2
+    right input shift value: 1
+    subtract: 1
+-> CONFIGURATION #11:
+  node #0 = [1]
+  node #1 = [15]
+    left input: node 0
+    right input: node 0
+    left input shift value: 4
+    right input shift value: 0
+    subtract: 1
+  node #2 = [122]
+    left input: node 1
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 1
+    subtract: 0
+-> CONFIGURATION #12:
+  node #0 = [1]
+  node #1 = [255]
+    left input: node 0
+    right input: node 0
+    left input shift value: 8
+    right input shift value: 0
+    subtract: 1
+  node #2 = [2039]
+    left input: node 1
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #13:
+  node #0 = [1]
+  node #1 = [129]
+    left input: node 0
+    right input: node 0
+    left input shift value: 7
+    right input shift value: 0
+    subtract: 0
+  node #2 = [137]
+    left input: node 0
+    right input: node 1
+    left input shift value: 3
+    right input shift value: 0
+    subtract: 0
+-> CONFIGURATION #14:
+  node #0 = [1]
+  node #1 = [254]
+    left input: node 0
+    right input: node 0
+    left input shift value: 8
+    right input shift value: 1
+    subtract: 1
+  node #2 = [318]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 6
+    subtract: 0
+-> CONFIGURATION #15:
+  node #0 = [1]
+  node #1 = [132]
+    left input: node 0
+    right input: node 0
+    left input shift value: 7
+    right input shift value: 2
+    subtract: 0
+  node #2 = [924]
+    left input: node 1
+    right input: node 1
+    left input shift value: 3
+    right input shift value: 0
+    subtract: 1
+  Found solution for #adders = 2 with min 64 (of 75) shared reconfiguration MUX ports after 2.28 seconds 8-)
+Solution is verified :-)
+Current solution shares 64 MUX ports
+The solver reported 64 shared MUX ports
+Found solution!
+#adders = 2, word size = 19
+-> CONFIGURATION #0:
+  node #0 = [1]
+  node #1 = [6]
+    left input: node 0
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 1
+    subtract: 1
+  node #2 = [56]
+    left input: node 1
+    right input: node 0
+    left input shift value: 2
+    right input shift value: 5
+    subtract: 0
+-> CONFIGURATION #1:
+  node #0 = [1]
+  node #1 = [40]
+    left input: node 0
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 5
+    subtract: 0
+  node #2 = [158]
+    left input: node 1
+    right input: node 0
+    left input shift value: 2
+    right input shift value: 1
+    subtract: 1
+-> CONFIGURATION #2:
+  node #0 = [1]
+  node #1 = [10]
+    left input: node 0
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 1
+    subtract: 0
+  node #2 = [79]
+    left input: node 1
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #3:
+  node #0 = [1]
+  node #1 = [63]
+    left input: node 0
+    right input: node 0
+    left input shift value: 6
+    right input shift value: 0
+    subtract: 1
+  node #2 = [253]
+    left input: node 1
+    right input: node 0
+    left input shift value: 2
+    right input shift value: 0
+    subtract: 0
+-> CONFIGURATION #4:
+  node #0 = [1]
+  node #1 = [3]
+    left input: node 0
+    right input: node 0
+    left input shift value: 1
+    right input shift value: 0
+    subtract: 0
+  node #2 = [11]
+    left input: node 1
+    right input: node 0
+    left input shift value: 2
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #5:
+  node #0 = [1]
+  node #1 = [7]
+    left input: node 0
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 0
+    subtract: 1
+  node #2 = [88]
+    left input: node 1
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 5
+    subtract: 0
+-> CONFIGURATION #6:
+  node #0 = [1]
+  node #1 = [9]
+    left input: node 0
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 0
+    subtract: 0
+  node #2 = [37]
+    left input: node 1
+    right input: node 0
+    left input shift value: 2
+    right input shift value: 0
+    subtract: 0
+-> CONFIGURATION #7:
+  node #0 = [1]
+  node #1 = [66]
+    left input: node 0
+    right input: node 0
+    left input shift value: 6
+    right input shift value: 1
+    subtract: 0
+  node #2 = [530]
+    left input: node 1
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 1
+    subtract: 0
+-> CONFIGURATION #8:
+  node #0 = [1]
+  node #1 = [9]
+    left input: node 0
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 0
+    subtract: 0
+  node #2 = [68]
+    left input: node 1
+    right input: node 0
+    left input shift value: 2
+    right input shift value: 5
+    subtract: 0
+-> CONFIGURATION #9:
+  node #0 = [1]
+  node #1 = [65]
+    left input: node 0
+    right input: node 0
+    left input shift value: 6
+    right input shift value: 0
+    subtract: 0
+  node #2 = [650]
+    left input: node 1
+    right input: node 1
+    left input shift value: 3
+    right input shift value: 1
+    subtract: 0
+-> CONFIGURATION #10:
+  node #0 = [1]
+  node #1 = [255]
+    left input: node 0
+    right input: node 0
+    left input shift value: 8
+    right input shift value: 0
+    subtract: 1
+  node #2 = [2008]
+    left input: node 1
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 5
+    subtract: 1
+-> CONFIGURATION #11:
+  node #0 = [1]
+  node #1 = [65]
+    left input: node 0
+    right input: node 0
+    left input shift value: 6
+    right input shift value: 0
+    subtract: 0
+  node #2 = [488]
+    left input: node 1
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 5
+    subtract: 1
+-> CONFIGURATION #12:
+  node #0 = [1]
+  node #1 = [255]
+    left input: node 0
+    right input: node 0
+    left input shift value: 8
+    right input shift value: 0
+    subtract: 1
+  node #2 = [2039]
+    left input: node 1
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #13:
+  node #0 = [1]
+  node #1 = [34]
+    left input: node 0
+    right input: node 0
+    left input shift value: 1
+    right input shift value: 5
+    subtract: 0
+  node #2 = [137]
+    left input: node 1
+    right input: node 0
+    left input shift value: 2
+    right input shift value: 0
+    subtract: 0
+-> CONFIGURATION #14:
+  node #0 = [1]
+  node #1 = [40]
+    left input: node 0
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 5
+    subtract: 0
+  node #2 = [318]
+    left input: node 1
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 1
+    subtract: 1
+-> CONFIGURATION #15:
+  node #0 = [1]
+  node #1 = [7]
+    left input: node 0
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 0
+    subtract: 1
+  node #2 = [924]
+    left input: node 1
+    right input: node 1
+    left input shift value: 2
+    right input shift value: 7
+    subtract: 0
+  Found solution for #adders = 2 with min 65 (of 75) shared reconfiguration MUX ports after 10.611 seconds 8-)
+Solution is verified :-)
+Current solution shares 65 MUX ports
+The solver reported 65 shared MUX ports
+Found solution!
+#adders = 2, word size = 19
+-> CONFIGURATION #0:
+  node #0 = [1]
+  node #1 = [6]
+    left input: node 0
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 1
+    subtract: 1
+  node #2 = [224]
+    left input: node 1
+    right input: node 0
+    left input shift value: 4
+    right input shift value: 7
+    subtract: 0
+-> CONFIGURATION #1:
+  node #0 = [1]
+  node #1 = [63]
+    left input: node 0
+    right input: node 0
+    left input shift value: 6
+    right input shift value: 0
+    subtract: 1
+  node #2 = [632]
+    left input: node 1
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 7
+    subtract: 0
+-> CONFIGURATION #2:
+  node #0 = [1]
+  node #1 = [10]
+    left input: node 0
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 1
+    subtract: 0
+  node #2 = [79]
+    left input: node 1
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #3:
+  node #0 = [1]
+  node #1 = [254]
+    left input: node 0
+    right input: node 0
+    left input shift value: 8
+    right input shift value: 1
+    subtract: 1
+  node #2 = [253]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #4:
+  node #0 = [1]
+  node #1 = [7]
+    left input: node 0
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 0
+    subtract: 1
+  node #2 = [11]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 2
+    subtract: 0
+-> CONFIGURATION #5:
+  node #0 = [1]
+  node #1 = [30]
+    left input: node 0
+    right input: node 0
+    left input shift value: 5
+    right input shift value: 1
+    subtract: 1
+  node #2 = [352]
+    left input: node 1
+    right input: node 0
+    left input shift value: 4
+    right input shift value: 7
+    subtract: 1
+-> CONFIGURATION #6:
+  node #0 = [1]
+  node #1 = [9]
+    left input: node 0
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 0
+    subtract: 0
+  node #2 = [148]
+    left input: node 1
+    right input: node 0
+    left input shift value: 4
+    right input shift value: 2
+    subtract: 0
+-> CONFIGURATION #7:
+  node #0 = [1]
+  node #1 = [33]
+    left input: node 0
+    right input: node 0
+    left input shift value: 5
+    right input shift value: 0
+    subtract: 0
+  node #2 = [265]
+    left input: node 1
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 0
+    subtract: 0
+-> CONFIGURATION #8:
+  node #0 = [1]
+  node #1 = [9]
+    left input: node 0
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 0
+    subtract: 0
+  node #2 = [68]
+    left input: node 1
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 2
+    subtract: 1
+-> CONFIGURATION #9:
+  node #0 = [1]
+  node #1 = [65]
+    left input: node 0
+    right input: node 0
+    left input shift value: 6
+    right input shift value: 0
+    subtract: 0
+  node #2 = [650]
+    left input: node 1
+    right input: node 1
+    left input shift value: 3
+    right input shift value: 1
+    subtract: 0
+-> CONFIGURATION #10:
+  node #0 = [1]
+  node #1 = [63]
+    left input: node 0
+    right input: node 0
+    left input shift value: 6
+    right input shift value: 0
+    subtract: 1
+  node #2 = [1004]
+    left input: node 1
+    right input: node 0
+    left input shift value: 4
+    right input shift value: 2
+    subtract: 1
+-> CONFIGURATION #11:
+  node #0 = [1]
+  node #1 = [30]
+    left input: node 0
+    right input: node 0
+    left input shift value: 5
+    right input shift value: 1
+    subtract: 1
+  node #2 = [244]
+    left input: node 1
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 2
+    subtract: 0
+-> CONFIGURATION #12:
+  node #0 = [1]
+  node #1 = [255]
+    left input: node 0
+    right input: node 0
+    left input shift value: 8
+    right input shift value: 0
+    subtract: 1
+  node #2 = [2039]
+    left input: node 1
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #13:
+  node #0 = [1]
+  node #1 = [9]
+    left input: node 0
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 0
+    subtract: 0
+  node #2 = [137]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 7
+    subtract: 0
+-> CONFIGURATION #14:
+  node #0 = [1]
+  node #1 = [31]
+    left input: node 0
+    right input: node 0
+    left input shift value: 5
+    right input shift value: 0
+    subtract: 1
+  node #2 = [159]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 7
+    subtract: 0
+-> CONFIGURATION #15:
+  node #0 = [1]
+  node #1 = [33]
+    left input: node 0
+    right input: node 0
+    left input shift value: 5
+    right input shift value: 0
+    subtract: 0
+  node #2 = [462]
+    left input: node 1
+    right input: node 1
+    left input shift value: 4
+    right input shift value: 1
+    subtract: 1
+  Problem for #adders = 2 with min 66 (of 75) shared reconfiguration MUX ports is proven to be infeasible after 12.639 seconds... 
+Found solution!
+#adders = 2, word size = 19
+-> CONFIGURATION #0:
+  node #0 = [1]
+  node #1 = [6]
+    left input: node 0
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 1
+    subtract: 1
+  node #2 = [224]
+    left input: node 1
+    right input: node 0
+    left input shift value: 4
+    right input shift value: 7
+    subtract: 0
+-> CONFIGURATION #1:
+  node #0 = [1]
+  node #1 = [63]
+    left input: node 0
+    right input: node 0
+    left input shift value: 6
+    right input shift value: 0
+    subtract: 1
+  node #2 = [632]
+    left input: node 1
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 7
+    subtract: 0
+-> CONFIGURATION #2:
+  node #0 = [1]
+  node #1 = [10]
+    left input: node 0
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 1
+    subtract: 0
+  node #2 = [79]
+    left input: node 1
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #3:
+  node #0 = [1]
+  node #1 = [254]
+    left input: node 0
+    right input: node 0
+    left input shift value: 8
+    right input shift value: 1
+    subtract: 1
+  node #2 = [253]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #4:
+  node #0 = [1]
+  node #1 = [7]
+    left input: node 0
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 0
+    subtract: 1
+  node #2 = [11]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 2
+    subtract: 0
+-> CONFIGURATION #5:
+  node #0 = [1]
+  node #1 = [30]
+    left input: node 0
+    right input: node 0
+    left input shift value: 5
+    right input shift value: 1
+    subtract: 1
+  node #2 = [352]
+    left input: node 1
+    right input: node 0
+    left input shift value: 4
+    right input shift value: 7
+    subtract: 1
+-> CONFIGURATION #6:
+  node #0 = [1]
+  node #1 = [9]
+    left input: node 0
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 0
+    subtract: 0
+  node #2 = [148]
+    left input: node 1
+    right input: node 0
+    left input shift value: 4
+    right input shift value: 2
+    subtract: 0
+-> CONFIGURATION #7:
+  node #0 = [1]
+  node #1 = [33]
+    left input: node 0
+    right input: node 0
+    left input shift value: 5
+    right input shift value: 0
+    subtract: 0
+  node #2 = [265]
+    left input: node 1
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 0
+    subtract: 0
+-> CONFIGURATION #8:
+  node #0 = [1]
+  node #1 = [9]
+    left input: node 0
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 0
+    subtract: 0
+  node #2 = [68]
+    left input: node 1
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 2
+    subtract: 1
+-> CONFIGURATION #9:
+  node #0 = [1]
+  node #1 = [65]
+    left input: node 0
+    right input: node 0
+    left input shift value: 6
+    right input shift value: 0
+    subtract: 0
+  node #2 = [650]
+    left input: node 1
+    right input: node 1
+    left input shift value: 3
+    right input shift value: 1
+    subtract: 0
+-> CONFIGURATION #10:
+  node #0 = [1]
+  node #1 = [63]
+    left input: node 0
+    right input: node 0
+    left input shift value: 6
+    right input shift value: 0
+    subtract: 1
+  node #2 = [1004]
+    left input: node 1
+    right input: node 0
+    left input shift value: 4
+    right input shift value: 2
+    subtract: 1
+-> CONFIGURATION #11:
+  node #0 = [1]
+  node #1 = [30]
+    left input: node 0
+    right input: node 0
+    left input shift value: 5
+    right input shift value: 1
+    subtract: 1
+  node #2 = [244]
+    left input: node 1
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 2
+    subtract: 0
+-> CONFIGURATION #12:
+  node #0 = [1]
+  node #1 = [255]
+    left input: node 0
+    right input: node 0
+    left input shift value: 8
+    right input shift value: 0
+    subtract: 1
+  node #2 = [2039]
+    left input: node 1
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #13:
+  node #0 = [1]
+  node #1 = [9]
+    left input: node 0
+    right input: node 0
+    left input shift value: 3
+    right input shift value: 0
+    subtract: 0
+  node #2 = [137]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 7
+    subtract: 0
+-> CONFIGURATION #14:
+  node #0 = [1]
+  node #1 = [31]
+    left input: node 0
+    right input: node 0
+    left input shift value: 5
+    right input shift value: 0
+    subtract: 1
+  node #2 = [159]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 7
+    subtract: 0
+-> CONFIGURATION #15:
+  node #0 = [1]
+  node #1 = [33]
+    left input: node 0
+    right input: node 0
+    left input shift value: 5
+    right input shift value: 0
+    subtract: 0
+  node #2 = [462]
+    left input: node 1
+    right input: node 1
+    left input shift value: 4
+    right input shift value: 1
+    subtract: 1
+
+Adder graph: {{'M',[512;1024;64;4;4;32;2;1;64;1;4;128;256;4;32;32],1,[1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1],0,[9;10;6;2;2;5;1;0;6;0;2;7;8;2;5;5]},{'M',[64;16;1;256;1;4;16;32;4;64;16;2;1;64;8;1],1,[1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1],0,[6;4;0;8;0;2;4;5;2;6;4;1;0;6;3;0]},{'A',[448;1008;63;-252;5;28;18;33;68;65;20;130;255;68;40;33],2,[512;1024;64;4;4;32;2;1;64;1;4;128;256;4;32;32],1,0,[-64;-16;-1;-256;1;-4;16;32;4;64;16;2;-1;64;8;1],1,0},{'M',[1;1008;16;1;1;28;72;264;1;130;1024;130;2040;136;160;1056],3,[1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1],0,[0;NaN;4;0;0;NaN;NaN;NaN;0;NaN;10;NaN;NaN;NaN;NaN;NaN],[448;1008;63;-252;5;28;18;33;68;65;20;130;255;68;40;33],2,[NaN;0;NaN;NaN;NaN;0;2;3;NaN;1;NaN;0;3;1;2;5]},{'M',[65536;256;63;-252;10;16;2;1;4;520;20;8;1;1;1;132],3,[1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1],0,[16;8;NaN;NaN;NaN;4;1;0;2;NaN;NaN;3;0;0;0;NaN],[448;1008;63;-252;5;28;18;33;68;65;20;130;255;68;40;33],2,[NaN;NaN;0;0;1;NaN;NaN;NaN;NaN;3;0;NaN;NaN;NaN;NaN;2]},{'A',[65537;1264;79;253;11;44;74;265;5;650;1004;122;2039;137;159;924],4,[1;1008;16;1;1;28;72;264;1;130;1024;130;2040;136;160;1056],3,0,[65536;256;63;252;10;16;2;1;4;520;-20;-8;-1;1;-1;-132],3,0},{'M',[448;1264;79;253;11;704;296;530;68;650;2008;488;2039;137;318;924],5,[448;1008;63;-252;5;28;18;33;68;65;20;130;255;68;40;33],2,[0;NaN;NaN;NaN;NaN;NaN;NaN;NaN;0;NaN;NaN;NaN;NaN;NaN;NaN;NaN],[65537;1264;79;253;11;44;74;265;5;650;1004;122;2039;137;159;924],4,[NaN;0;0;0;0;4;2;1;NaN;0;1;2;0;0;1;0]},{'O',[448;1264;79;253;11;704;296;530;68;650;2008;488;2039;137;318;924],5,[448;1264;79;253;11;704;296;530;68;650;2008;488;2039;137;318;924],5,0}}
+Adder graph: {{'M',[64;4;1;128;8;1;32;64;64;64;8;2;8;32;128;64],1,[1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1],0,[6;2;0;7;3;0;5;6;6;6;3;1;3;5;7;6]},{'M',[32;64;16;2;2;4;1;2;2;1;32;32;1;2;32;2],1,[1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1],0,[5;6;4;1;1;2;0;1;1;0;5;5;0;1;5;1]},{'A',[32;-60;-15;126;10;-3;33;66;66;65;40;-30;9;34;160;66],2,[64;4;1;128;8;1;32;64;64;64;8;2;8;32;128;64],1,0,[-32;-64;-16;-2;2;-4;1;2;2;1;32;-32;1;2;32;2],1,0},{'M',[512;512;64;1;1;512;32;2;132;130;2048;2;2048;1;320;1056],3,[1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1],0,[NaN;9;6;0;0;9;5;1;NaN;NaN;11;1;11;0;NaN;NaN],[32;-60;-15;126;10;-3;33;66;66;65;40;-30;9;34;160;66],2,[4;NaN;NaN;NaN;NaN;NaN;NaN;NaN;1;1;NaN;NaN;NaN;NaN;1;4]},{'M',[64;-120;-15;252;10;-192;264;528;64;520;40;-120;9;136;2;132],3,[1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1],0,[NaN;NaN;NaN;NaN;NaN;NaN;NaN;NaN;6;NaN;NaN;NaN;NaN;NaN;1;NaN],[32;-60;-15;126;10;-3;33;66;66;65;40;-30;9;34;160;66],2,[1;1;0;1;0;6;3;3;NaN;3;0;2;0;2;NaN;1]},{'A',[448;632;79;253;11;704;296;530;68;650;2008;122;2039;137;318;924],4,[512;512;64;1;1;512;32;2;132;130;2048;2;2048;1;320;1056],3,0,[-64;120;15;252;10;192;264;528;-64;520;-40;120;-9;136;-2;-132],3,0},{'M',[448;1264;79;253;11;704;296;530;68;650;2008;488;2039;137;318;924],5,[448;632;79;253;11;704;296;530;68;650;2008;122;2039;137;318;924],4,[0;1;0;0;0;0;0;0;0;0;0;2;0;0;0;0]},{'O',[448;1264;79;253;11;704;296;530;68;650;2008;488;2039;137;318;924],5,[448;1264;79;253;11;704;296;530;68;650;2008;488;2039;137;318;924],5,0}}
+Adder graph: {{'M',[128;4;32;1;4;32;4;1;1;4;512;32;4;4;16;8],1,[1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1],0,[7;2;5;0;2;5;2;0;0;2;9;5;2;2;4;3]},{'M',[64;512;1;128;1;512;2;512;32;2;4;1;1;1;1;2],1,[1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1],0,[6;9;0;7;0;9;1;9;5;1;2;0;0;0;0;1]},{'A',[320;-504;63;-126;9;576;10;514;-30;10;1020;63;9;9;31;14],2,[128;4;32;1;4;32;4;1;1;4;512;32;4;4;16;8],1,1,[64;-512;-1;-128;1;512;2;512;-32;2;-4;-1;1;1;-1;-2],1,0},{'M',[128;128;63;1;9;128;128;514;128;640;1020;63;2048;128;128;896],3,[1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1],0,[7;7;NaN;0;NaN;7;7;NaN;7;NaN;NaN;NaN;11;7;7;NaN],[320;-504;63;-126;9;576;10;514;-30;10;1020;63;9;9;31;14],2,[NaN;NaN;0;NaN;0;NaN;NaN;0;NaN;6;0;0;NaN;NaN;NaN;6]},{'M',[320;-504;16;-252;2;576;20;16;-60;10;16;2;9;9;31;28],3,[1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1],0,[NaN;NaN;4;NaN;1;NaN;NaN;4;NaN;NaN;4;1;NaN;NaN;NaN;NaN],[320;-504;63;-126;9;576;10;514;-30;10;1020;63;9;9;31;14],2,[0;0;NaN;1;NaN;0;1;NaN;1;0;NaN;NaN;0;0;0;1]},{'A',[448;632;79;253;11;704;148;530;68;650;1004;61;2039;137;159;924],4,[128;128;63;1;9;128;128;514;128;640;1020;63;2048;128;128;896],3,0,[320;504;16;252;2;576;20;16;-60;10;-16;-2;-9;9;31;28],3,0},{'M',[448;1264;79;253;11;704;296;530;68;650;2008;488;2039;137;318;924],5,[448;632;79;253;11;704;148;530;68;650;1004;61;2039;137;159;924],4,[0;1;0;0;0;0;1;0;0;0;1;3;0;0;1;0]},{'O',[448;1264;79;253;11;704;296;530;68;650;2008;488;2039;137;318;924],5,[448;1264;79;253;11;704;296;530;68;650;2008;488;2039;137;318;924],5,0}}
+Adder graph: {{'M',[128;128;8;256;1;64;64;64;1;128;128;8;256;1;64;8],1,[1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1],0,[7;7;3;8;0;6;6;6;0;7;7;3;8;0;6;3]},{'M',[16;2;2;2;2;16;2;2;16;2;2;2;1;128;16;1],1,[1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1],0,[4;1;1;1;1;4;1;1;4;1;1;1;0;7;4;0]},{'A',[112;126;10;254;3;48;66;66;17;130;126;6;255;129;80;7],2,[128;128;8;256;1;64;64;64;1;128;128;8;256;1;64;8],1,0,[-16;-2;2;-2;2;-16;2;2;16;2;-2;-2;-1;128;16;-1],1,0},{'M',[112;128;80;254;12;128;66;528;136;520;504;128;2040;129;320;7],3,[1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1],0,[NaN;7;NaN;NaN;NaN;7;NaN;NaN;NaN;NaN;NaN;7;NaN;NaN;NaN;NaN],[112;126;10;254;3;48;66;66;17;130;126;6;255;129;80;7],2,[0;NaN;3;0;2;NaN;0;3;3;2;2;NaN;3;0;2;0]},{'M',[2;504;1;1;1;48;8;2;17;130;2;6;1;8;2;224],3,[1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1],0,[1;NaN;0;0;0;NaN;3;1;NaN;NaN;1;NaN;0;3;1;NaN],[112;126;10;254;3;48;66;66;17;130;126;6;255;129;80;7],2,[NaN;2;NaN;NaN;NaN;0;NaN;NaN;0;0;NaN;0;NaN;NaN;NaN;5]},{'A',[114;632;79;253;11;176;74;530;153;650;502;122;2039;137;318;231],4,[112;128;80;254;12;128;66;528;136;520;504;128;2040;129;320;7],3,0,[2;504;-1;-1;-1;48;8;2;17;130;-2;-6;-1;8;-2;224],3,0},{'M',[448;1264;79;253;11;704;296;530;68;650;2008;488;2039;137;318;924],5,[112;126;10;254;3;48;66;66;17;130;126;6;255;129;80;7],2,[2;NaN;NaN;NaN;NaN;NaN;NaN;NaN;2;NaN;NaN;NaN;NaN;NaN;NaN;NaN],[114;632;79;253;11;176;74;530;153;650;502;122;2039;137;318;231],4,[NaN;1;0;0;0;2;2;0;NaN;0;2;2;0;0;0;2]},{'O',[448;1264;79;253;11;704;296;530;68;650;2008;488;2039;137;318;924],5,[448;1264;79;253;11;704;296;530;68;650;2008;488;2039;137;318;924],5,0}}
+Adder graph: {{'M',[32;1024;64;4;2;64;4;32;1;4;4;4;256;128;128;32],1,[1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1],0,[5;10;6;2;1;6;2;5;0;2;2;2;8;7;7;5]},{'M',[16;16;16;1;1;16;1;1;16;1;1;16;1;1;1;1],1,[1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1],0,[4;4;4;0;0;4;0;0;4;0;0;4;0;0;0;0]},{'A',[16;1008;80;3;3;80;5;33;-15;5;5;-12;255;129;127;33],2,[32;1024;64;4;2;64;4;32;1;4;4;4;256;128;128;32],1,0,[-16;-16;16;-1;1;16;1;1;-16;1;1;-16;-1;1;-1;1],1,0},{'M',[128;256;80;256;3;256;5;264;-15;5;256;256;2040;129;127;264],3,[1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1],0,[NaN;8;NaN;8;NaN;8;NaN;NaN;NaN;NaN;8;8;NaN;NaN;NaN;NaN],[16;1008;80;3;3;80;5;33;-15;5;5;-12;255;129;127;33],2,[3;NaN;0;NaN;0;NaN;0;3;0;0;NaN;NaN;3;0;0;3]},{'M',[16;1008;1;3;8;80;32;1;32;320;5;-12;1;8;32;33],3,[1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1],0,[NaN;NaN;0;NaN;3;NaN;5;0;5;NaN;NaN;NaN;0;3;5;NaN],[16;1008;80;3;3;80;5;33;-15;5;5;-12;255;129;127;33],2,[0;0;NaN;0;NaN;0;NaN;NaN;NaN;6;0;0;NaN;NaN;NaN;0]},{'A',[112;1264;79;253;11;176;37;265;17;325;251;244;2039;137;159;231],4,[128;256;80;256;3;256;5;264;-15;5;256;256;2040;129;127;264],3,0,[-16;1008;-1;-3;8;-80;32;1;32;320;-5;-12;-1;8;32;-33],3,0},{'M',[448;1264;79;253;11;704;296;530;68;650;2008;488;2039;137;318;924],5,[112;1264;79;253;11;176;37;265;17;325;251;244;2039;137;159;231],4,[2;0;0;0;0;2;3;1;2;1;3;1;0;0;1;2]},{'O',[448;1264;79;253;11;704;296;530;68;650;2008;488;2039;137;318;924],5,[448;1264;79;253;11;704;296;530;68;650;2008;488;2039;137;318;924],5,0}}
+Adder graph: {{'M',[32;32;2;1;1;32;32;2;2;1;2048;2;2048;32;32;32],1,[1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1],0,[5;5;1;0;0;5;5;1;1;0;11;1;11;5;5;5]},{'M',[4;2;8;4;2;8;8;64;64;64;8;8;1;2;8;4],1,[1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1],0,[2;1;3;2;1;3;3;6;6;6;3;3;0;1;3;2]},{'A',[28;30;10;-3;3;40;40;66;66;65;2040;-6;2047;34;40;28],2,[32;32;2;1;1;32;32;2;2;1;2048;2;2048;32;32;32],1,0,[-4;-2;8;-4;2;8;8;64;64;64;-8;-8;-1;2;8;-4],1,0},{'M',[112;512;80;-3;12;512;40;264;66;65;2040;512;2047;136;160;28],3,[1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1],0,[NaN;9;NaN;NaN;NaN;9;NaN;NaN;NaN;NaN;NaN;9;NaN;NaN;NaN;NaN],[28;30;10;-3;3;40;40;66;66;65;2040;-6;2047;34;40;28],2,[2;NaN;3;0;2;NaN;0;2;0;0;0;NaN;0;2;2;0]},{'M',[112;120;1;256;1;160;256;1;32;260;32;-24;8;1;1;896],3,[1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1],0,[NaN;NaN;0;8;0;NaN;8;0;5;NaN;5;NaN;3;0;0;NaN],[28;30;10;-3;3;40;40;66;66;65;2040;-6;2047;34;40;28],2,[2;2;NaN;NaN;NaN;2;NaN;NaN;NaN;2;NaN;2;NaN;NaN;NaN;5]},{'A',[224;632;79;253;11;352;296;265;34;325;2008;488;2039;137;159;924],4,[112;512;80;-3;12;512;40;264;66;65;2040;512;2047;136;160;28],3,0,[112;120;-1;256;-1;-160;256;1;-32;260;-32;-24;-8;1;-1;896],3,0},{'M',[448;1264;79;253;11;704;296;530;68;650;2008;488;2039;137;318;924],5,[224;632;79;253;11;352;296;265;34;325;2008;488;2039;137;159;924],4,[1;1;0;0;0;1;0;1;1;1;0;0;0;0;1;0]},{'O',[448;1264;79;253;11;704;296;530;68;650;2008;488;2039;137;318;924],5,[448;1264;79;253;11;704;296;530;68;650;2008;488;2039;137;318;924],5,0}}
+Adder graph: {{'M',[4;4;4;1;2;4;2;2;1;1;4;4;4;2;4;1],1,[1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1],0,[2;2;2;0;1;2;1;1;0;0;2;2;2;1;2;0]},{'M',[32;128;32;128;1;32;32;128;32;128;32;32;1;64;32;64],1,[1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1],0,[5;7;5;7;0;5;5;7;5;7;5;5;0;6;5;6]},{'A',[-24;-120;40;-126;5;40;36;132;34;130;40;-24;9;68;40;66],2,[4;4;4;1;2;4;2;2;1;1;4;4;4;2;4;1],1,1,[-32;-128;32;-128;1;32;32;128;32;128;32;-32;1;64;32;64],1,0},{'M',[8;512;80;1;10;8;1;264;68;520;2048;512;2048;136;160;528],3,[1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1],0,[3;9;NaN;0;NaN;3;0;NaN;NaN;NaN;11;9;11;NaN;NaN;NaN],[-24;-120;40;-126;5;40;36;132;34;130;40;-24;9;68;40;66],2,[NaN;NaN;1;NaN;1;NaN;NaN;1;1;2;NaN;NaN;NaN;1;2;3]},{'M',[-48;-120;1;-252;1;80;36;1;34;130;40;-24;9;1;1;66],3,[1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1],0,[NaN;NaN;0;NaN;0;NaN;NaN;0;NaN;NaN;NaN;NaN;NaN;0;0;NaN],[-24;-120;40;-126;5;40;36;132;34;130;40;-24;9;68;40;66],2,[1;0;NaN;1;NaN;1;0;NaN;0;0;0;0;0;NaN;NaN;0]},{'A',[56;632;79;253;11;88;37;265;34;650;2008;488;2039;137;159;462],4,[8;512;80;1;10;8;1;264;68;520;2048;512;2048;136;160;528],3,0,[48;120;-1;252;1;80;36;1;-34;130;-40;-24;-9;1;-1;-66],3,0},{'M',[448;1264;79;253;11;704;296;530;68;650;2008;488;2039;137;318;924],5,[56;632;79;253;11;88;37;265;34;650;2008;488;2039;137;159;462],4,[3;1;0;0;0;3;3;1;1;0;0;0;0;0;1;1]},{'O',[448;1264;79;253;11;704;296;530;68;650;2008;488;2039;137;318;924],5,[448;1264;79;253;11;704;296;530;68;650;2008;488;2039;137;318;924],5,0}}
+Adder graph: {{'M',[32;1;8;32;1;32;1;32;8;8;256;8;256;16;4;4],1,[1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1],0,[5;0;3;5;0;5;0;5;3;3;8;3;8;4;2;2]},{'M',[32;32;1;1;1;32;1;1;4;1;32;1;1;1;1;4],1,[1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1],0,[5;5;0;0;0;5;0;0;2;0;5;0;0;0;0;2]},{'A',[224;40;63;257;7;224;9;257;60;65;2016;63;2047;129;31;28],2,[32;1;8;32;1;32;1;32;8;8;256;8;256;16;4;4],1,3,[-32;32;-1;1;-1;-32;1;1;-4;1;-32;-1;-1;1;-1;-4],1,0},{'M',[224;1280;63;257;7;128;288;257;128;260;2016;252;2047;129;128;896],3,[1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1],0,[NaN;NaN;NaN;NaN;NaN;7;NaN;NaN;7;NaN;NaN;NaN;NaN;NaN;7;NaN],[224;40;63;257;7;224;9;257;60;65;2016;63;2047;129;31;28],2,[0;5;0;0;0;NaN;5;0;NaN;2;0;2;0;0;NaN;5]},{'M',[224;16;16;4;4;224;8;8;60;65;8;8;8;8;31;28],3,[1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1],0,[NaN;4;4;2;2;NaN;3;3;NaN;NaN;3;3;3;3;NaN;NaN],[224;40;63;257;7;224;9;257;60;65;2016;63;2047;129;31;28],2,[0;NaN;NaN;NaN;NaN;0;NaN;NaN;0;0;NaN;NaN;NaN;NaN;0;0]},{'A',[448;1264;79;253;11;352;296;265;68;325;2008;244;2039;137;159;924],4,[224;1280;63;257;7;128;288;257;128;260;2016;252;2047;129;128;896],3,0,[224;-16;16;-4;4;224;8;8;-60;65;-8;-8;-8;8;31;28],3,0},{'M',[448;1264;79;253;11;704;296;530;68;650;2008;488;2039;137;318;924],5,[448;1264;79;253;11;352;296;265;68;325;2008;244;2039;137;159;924],4,[0;0;0;0;0;1;0;1;0;1;0;1;0;0;1;0]},{'O',[448;1264;79;253;11;704;296;530;68;650;2008;488;2039;137;318;924],5,[448;1264;79;253;11;704;296;530;68;650;2008;488;2039;137;318;924],5,0}}
+Adder graph: {{'M',[32;512;16;64;1;64;64;64;64;64;512;64;512;32;32;64],1,[1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1],0,[5;9;4;6;0;6;6;6;6;6;9;6;9;5;5;6]},{'M',[4;8;4;1;2;8;8;2;4;1;8;2;2;2;8;2],1,[1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1],0,[2;3;2;0;1;3;3;1;2;0;3;1;1;1;3;1]},{'A',[28;504;20;63;3;56;72;66;60;65;504;62;510;34;40;66],2,[32;512;16;64;1;64;64;64;64;64;512;64;512;32;32;64],1,0,[-4;-8;4;-1;2;-8;8;2;-4;1;-8;-2;-2;2;8;2],1,0},{'M',[28;32;20;63;3;32;72;66;32;65;504;124;510;34;40;132],3,[1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1],0,[NaN;5;NaN;NaN;NaN;5;NaN;NaN;5;NaN;NaN;NaN;NaN;NaN;NaN;NaN],[28;504;20;63;3;56;72;66;60;65;504;62;510;34;40;66],2,[0;NaN;0;0;0;NaN;0;0;NaN;0;0;1;0;0;0;1]},{'M',[112;504;1;1;1;224;8;1;60;65;8;8;1;1;1;66],3,[1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1],0,[NaN;NaN;0;0;0;NaN;3;0;NaN;NaN;3;3;0;0;0;NaN],[28;504;20;63;3;56;72;66;60;65;504;62;510;34;40;66],2,[2;0;NaN;NaN;NaN;2;NaN;NaN;0;0;NaN;NaN;NaN;NaN;NaN;0]},{'A',[224;632;79;253;11;352;296;265;68;325;2008;488;2039;137;159;462],4,[28;32;20;63;3;32;72;66;32;65;504;124;510;34;40;132],3,2,[112;504;-1;1;-1;224;8;1;-60;65;-8;-8;-1;1;-1;-66],3,0},{'M',[448;1264;79;253;11;704;296;530;68;650;2008;488;2039;137;318;924],5,[224;632;79;253;11;352;296;265;68;325;2008;488;2039;137;159;462],4,[1;1;0;0;0;1;0;1;0;1;0;0;0;0;1;1]},{'O',[448;1264;79;253;11;704;296;530;68;650;2008;488;2039;137;318;924],5,[448;1264;79;253;11;704;296;530;68;650;2008;488;2039;137;318;924],5,0}}
+Adder graph: {{'M',[1;16;1;16;1;1;1;8;1;8;8;1;16;8;16;8],1,[1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1],0,[0;4;0;4;0;0;0;3;0;3;3;0;4;3;4;3]},{'M',[4;4;4;4;4;4;2;4;2;2;2;1;1;1;2;4],1,[1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1],0,[2;2;2;2;2;2;1;2;1;1;1;0;0;0;1;2]},{'A',[12;252;20;252;12;12;18;132;18;130;126;15;255;129;254;132],2,[1;16;1;16;1;1;1;8;1;8;8;1;16;8;16;8],1,4,[-4;-4;4;-4;-4;-4;2;4;2;2;-2;-1;-1;1;-2;4],1,0},{'M',[8;252;80;252;12;12;72;528;18;520;504;120;2040;8;254;1056],3,[1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1],0,[3;NaN;NaN;NaN;NaN;NaN;NaN;NaN;NaN;NaN;NaN;NaN;NaN;3;NaN;NaN],[12;252;20;252;12;12;18;132;18;130;126;15;255;129;254;132],2,[NaN;0;2;0;0;0;2;2;0;2;2;3;3;NaN;0;3]},{'M',[1;64;1;1;1;1;2;2;1;130;2;2;1;129;64;132],3,[1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1],0,[0;6;0;0;0;0;1;1;0;NaN;1;1;0;NaN;6;NaN],[12;252;20;252;12;12;18;132;18;130;126;15;255;129;254;132],2,[NaN;NaN;NaN;NaN;NaN;NaN;NaN;NaN;NaN;0;NaN;NaN;NaN;0;NaN;0]},{'A',[7;316;79;253;11;11;74;530;17;650;502;122;2039;137;318;924],4,[8;252;80;252;12;12;72;528;18;520;504;120;2040;8;254;1056],3,0,[-1;64;-1;1;-1;-1;2;2;-1;130;-2;2;-1;129;64;-132],3,0},{'M',[448;1264;79;253;11;704;296;530;68;650;2008;488;2039;137;318;924],5,[7;316;79;253;11;11;74;530;17;650;502;122;2039;137;318;924],4,[6;2;0;0;0;6;2;0;2;0;2;2;0;0;0;0]},{'O',[448;1264;79;253;11;704;296;530;68;650;2008;488;2039;137;318;924],5,[448;1264;79;253;11;704;296;530;68;650;2008;488;2039;137;318;924],5,0}}
+Adder graph: {{'M',[4;4;4;32;1;4;4;32;4;32;128;32;128;1;4;4],1,[1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1],0,[2;2;2;5;0;2;2;5;2;5;7;5;7;0;2;2]},{'M',[2;32;2;1;1;1;1;2;1;1;1;1;1;32;32;1],1,[1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1],0,[1;5;1;0;0;0;0;1;0;0;0;0;0;5;5;0]},{'A',[6;40;10;63;3;7;9;66;9;65;255;65;255;34;40;7],2,[4;4;4;32;1;4;4;32;4;32;128;32;128;1;4;4],1,1,[-2;32;2;-1;1;-1;1;2;1;1;-1;1;-1;32;32;-1],1,0},{'M',[6;40;20;63;3;14;9;132;9;130;510;130;510;34;80;7],3,[6;40;10;63;3;7;9;66;9;65;255;65;255;34;40;7],2,[0;0;1;0;0;1;0;1;0;1;1;1;1;0;1;0]},{'M',[32;2;1;1;1;32;1;2;32;130;32;32;1;1;2;896],3,[1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1],0,[5;1;0;0;0;5;0;1;5;NaN;5;5;0;0;1;NaN],[6;40;10;63;3;7;9;66;9;65;255;65;255;34;40;7],2,[NaN;NaN;NaN;NaN;NaN;NaN;NaN;NaN;NaN;1;NaN;NaN;NaN;NaN;NaN;7]},{'A',[56;158;79;253;11;88;37;530;68;650;2008;488;2039;137;318;924],4,[6;40;20;63;3;14;9;132;9;130;510;130;510;34;80;7],3,2,[32;-2;-1;1;-1;32;1;2;32;130;-32;-32;-1;1;-2;896],3,0},{'M',[448;1264;79;253;11;704;296;530;68;650;2008;488;2039;137;318;924],5,[56;158;79;253;11;88;37;530;68;650;2008;488;2039;137;318;924],4,[3;3;0;0;0;3;3;0;0;0;0;0;0;0;0;0]},{'O',[448;1264;79;253;11;704;296;530;68;650;2008;488;2039;137;318;924],5,[448;1264;79;253;11;704;296;530;68;650;2008;488;2039;137;318;924],5,0}}
+Adder graph: {{'M',[1;8;1;32;1;4;1;4;1;8;8;4;32;1;4;4],1,[1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1],0,[0;3;0;5;0;2;0;2;0;3;3;2;5;0;2;2]},{'M',[2;1;2;2;1;2;1;1;1;1;1;2;1;1;1;1],1,[1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1],0,[1;0;1;1;0;1;0;0;0;0;0;1;0;0;0;0]},{'A',[6;63;10;254;7;30;9;33;9;65;63;30;255;9;31;33],2,[1;8;1;32;1;4;1;4;1;8;8;4;32;1;4;4],1,3,[-2;-1;2;-2;-1;-2;1;1;1;1;-1;-2;-1;1;-1;1],1,0},{'M',[96;504;80;254;7;480;144;264;72;520;1008;240;2040;9;31;528],3,[6;63;10;254;7;30;9;33;9;65;63;30;255;9;31;33],2,[4;3;3;0;0;4;4;3;3;3;4;3;3;0;0;4]},{'M',[128;128;1;1;4;128;4;1;4;130;4;4;1;128;128;66],3,[1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1],0,[7;7;0;0;2;7;2;0;2;NaN;2;2;0;7;7;NaN],[6;63;10;254;7;30;9;33;9;65;63;30;255;9;31;33],2,[NaN;NaN;NaN;NaN;NaN;NaN;NaN;NaN;NaN;1;NaN;NaN;NaN;NaN;NaN;1]},{'A',[224;632;79;253;11;352;148;265;68;650;1004;244;2039;137;159;462],4,[96;504;80;254;7;480;144;264;72;520;1008;240;2040;9;31;528],3,0,[128;128;-1;-1;4;-128;4;1;-4;130;-4;4;-1;128;128;-66],3,0},{'M',[448;1264;79;253;11;704;296;530;68;650;2008;488;2039;137;318;924],5,[224;632;79;253;11;352;148;265;68;650;1004;244;2039;137;159;462],4,[1;1;0;0;0;1;1;1;0;0;1;1;0;0;1;1]},{'O',[448;1264;79;253;11;704;296;530;68;650;2008;488;2039;137;318;924],5,[448;1264;79;253;11;704;296;530;68;650;2008;488;2039;137;318;924],5,0}}
+Finished solving after 43.213 seconds
+Adder graph: {{'M',[1;8;1;32;1;4;1;4;1;8;8;4;32;1;4;4],1,[1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1],0,[0;3;0;5;0;2;0;2;0;3;3;2;5;0;2;2]},{'M',[2;1;2;2;1;2;1;1;1;1;1;2;1;1;1;1],1,[1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1],0,[1;0;1;1;0;1;0;0;0;0;0;1;0;0;0;0]},{'A',[6;63;10;254;7;30;9;33;9;65;63;30;255;9;31;33],2,[1;8;1;32;1;4;1;4;1;8;8;4;32;1;4;4],1,3,[-2;-1;2;-2;-1;-2;1;1;1;1;-1;-2;-1;1;-1;1],1,0},{'M',[96;504;80;254;7;480;144;264;72;520;1008;240;2040;9;31;528],3,[6;63;10;254;7;30;9;33;9;65;63;30;255;9;31;33],2,[4;3;3;0;0;4;4;3;3;3;4;3;3;0;0;4]},{'M',[128;128;1;1;4;128;4;1;4;130;4;4;1;128;128;66],3,[1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1],0,[7;7;0;0;2;7;2;0;2;NaN;2;2;0;7;7;NaN],[6;63;10;254;7;30;9;33;9;65;63;30;255;9;31;33],2,[NaN;NaN;NaN;NaN;NaN;NaN;NaN;NaN;NaN;1;NaN;NaN;NaN;NaN;NaN;1]},{'A',[224;632;79;253;11;352;148;265;68;650;1004;244;2039;137;159;462],4,[96;504;80;254;7;480;144;264;72;520;1008;240;2040;9;31;528],3,0,[128;128;-1;-1;4;-128;4;1;-4;130;-4;4;-1;128;128;-66],3,0},{'M',[448;1264;79;253;11;704;296;530;68;650;2008;488;2039;137;318;924],5,[224;632;79;253;11;352;148;265;68;650;1004;244;2039;137;159;462],4,[1;1;0;0;0;1;1;1;0;0;1;1;0;0;1;1]},{'O',[448;1264;79;253;11;704;296;530;68;650;2008;488;2039;137;318;924],5,[448;1264;79;253;11;704;296;530;68;650;2008;488;2039;137;318;924],5,0}}
+# Add optimal = 1
+# Mux optimal = 1
+# FAs optimal = 0

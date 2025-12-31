@@ -84,10 +84,14 @@ def run_case(
     ]
     if heuristic is not None:
         args.append(f"--heuristic={heuristic}")
+    timeout_seconds = timeout_minutes * 60 if timeout_minutes is not None else None
+    if timeout_seconds is not None:
+        args.append(f"--timeout={timeout_seconds}")
 
     start = time.perf_counter()
-    timeout_seconds = timeout_minutes * 60 if timeout_minutes is not None else None
-    result = subprocess.run(args, capture_output=True, text=True, timeout=timeout_seconds)
+    # Note: solver timeout is passed via --timeout=<seconds> (see src/main.cpp).
+    # We intentionally do not use Python's subprocess timeout so the solver controls timing.
+    result = subprocess.run(args, capture_output=True, text=True)
     duration = time.perf_counter() - start
 
     console_path.write_text(result.stdout + "\n" + result.stderr)
@@ -100,6 +104,7 @@ def run_case(
         "cost": cost,
         "heuristic": heuristic,
         "timeout_minutes": timeout_minutes,
+        "timeout_seconds": timeout_seconds,
         "cmd": args,
         "returncode": result.returncode,
         "duration_seconds": duration,

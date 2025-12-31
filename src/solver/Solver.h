@@ -82,7 +82,7 @@ public:
         const RSCM& solutionNode,
         const std::string& outputUri,
         bool overwrite
-    );
+    ) const;
 
     void DumpSnapshot(
         const RSCM& solutionNode,

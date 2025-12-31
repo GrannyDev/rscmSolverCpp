@@ -298,6 +298,25 @@ void Solver::Solve()
 
     // Compute all cost models once for the final solution
     solutionCosts_ = GetAllCosts(solution);
+
+    if (costModel_ != CostModel::AreaCost)
+    {
+        // more complicated, we have to replay the whole merging process to compute the fine-grained cost
+        RSCM replayNode(nbBitsPerSCM, targets.size(), nbAdders,
+            nbAdders * layers[0].adders[0].variables.size(), nbPossibleVariables);
+        // Start by copying the first SCM directly (not merging), like the native execution does
+        replayNode.rscm = scmDesigns[0].second[solution.scmIndexes[0]];
+        replayNode.scmIndexes = solution.scmIndexes;
+        replayNode.InitializeMinShiftSavings(layers);
+        const CostComputer::AreaCostComputer fineGrainCostComputer(this);
+        // Now merge the remaining SCMs starting from depth 1
+        for (int depth = 1; depth < targets.size(); depth++)
+        {
+            fineGrainCostComputer.merge(replayNode, scmDesigns[depth].second[solution.scmIndexes[depth]]);
+        }
+        ApplyNormalizationShift(replayNode);
+        solution = replayNode;
+    }
 }
 
 // Recursive branch and prune search to find minimum-cost solution
@@ -584,30 +603,10 @@ void Solver::Verilog(const RSCM& solutionNode, const std::string& outputUri, con
     VerilogGenerator verilog(solutionNode, outputUri, layers, idxToVarMap, varToIdxMap, nbInputBits, targets, scmDesigns, overwrite);
 }
 
-void Solver::DumpJSON(const RSCM& solutionNode, const std::string& outputUri, const bool overwrite)
+void Solver::DumpJSON(const RSCM& solutionNode, const std::string& outputUri, const bool overwrite) const
 {
     const auto costs = GetAllCosts(solutionNode);
-
-    if (costModel_ != CostModel::AreaCost)
-    {
-        // more complicated, we have to replay the whole merging process to compute the fine-grained cost
-        RSCM replayNode(nbBitsPerSCM, targets.size(), nbAdders,
-            nbAdders * layers[0].adders[0].variables.size(), nbPossibleVariables);
-        // Start by copying the first SCM directly (not merging), like the native execution does
-        replayNode.rscm = scmDesigns[0].second[solutionNode.scmIndexes[0]];
-        replayNode.scmIndexes = solutionNode.scmIndexes;
-        replayNode.InitializeMinShiftSavings(layers);
-        const CostComputer::AreaCostComputer fineGrainCostComputer(this);
-        // Now merge the remaining SCMs starting from depth 1
-        for (int depth = 1; depth < targets.size(); depth++)
-        {
-            fineGrainCostComputer.merge(replayNode, scmDesigns[depth].second[solutionNode.scmIndexes[depth]]);
-        }
-        ApplyNormalizationShift(replayNode);
-        JSONDumper JSONDumper(replayNode, outputUri, layers, idxToVarMap, varToIdxMap, nbInputBits, targets, scmDesigns, costs, isSymmetric_, overwrite);
-    } else {
-        JSONDumper JSONDumper(solutionNode, outputUri, layers, idxToVarMap, varToIdxMap, nbInputBits, targets, scmDesigns, costs, isSymmetric_, overwrite);
-    }
+    JSONDumper JSONDumper(solution, outputUri, layers, idxToVarMap, varToIdxMap, nbInputBits, targets, scmDesigns, costs, isSymmetric_, overwrite);
 }
 
 void Solver::DumpSnapshot(const RSCM& solutionNode, const std::string& outputUri, const bool overwrite) const
