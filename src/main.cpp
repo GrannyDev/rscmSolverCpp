@@ -34,9 +34,9 @@ int main(int argc, char* argv[]) {
         return std::nullopt;
     };
 
-    size_t beta = 6; // maximum bit-width allowed for the constants (and intermediate values)
+    size_t beta = 11; // maximum bit-width allowed for the constants (and intermediate values)
     size_t nbInputBits = 8; // number of bits of the input (to compute the fine-grained cost function)
-    std::vector<int> targets = {0, 1, 2, 4, 5, 7, 12, 19}; // target const set of the RSCM
+    std::vector<int> targets = {383,1016,961,991,122,640,276,1020,60,10,945,360,132,543,251,488}; // target const set of the RSCM
     std::vector<int> layout = {1, 1}; // {1,1} describes the chosen layout, i.e. 1 adder on the first layer and 1 adder on the second layer
     std::optional<unsigned int> heuristic;
     std::optional<unsigned int> timeoutSeconds;
@@ -147,6 +147,7 @@ int main(int argc, char* argv[]) {
     }
     Solver problem(layout, maxCoef, minCoef, targets, nbInputBits, costModel, lutWidth, isSymmetric);
 
+    problem.SetBranchTimeoutSeconds(timeoutSeconds);
     problem.CPSolve(heuristic); // step 1: solve the problem with the CPSolver
 
     // print the numbers of SCMs found for each target constant
@@ -157,7 +158,6 @@ int main(int argc, char* argv[]) {
     std::cout << std::endl;
 
     // step 2: solve the problem with the DFS B&P
-    problem.SetBranchTimeoutSeconds(timeoutSeconds);
     problem.Solve();
 
     std::cout << "_____________________BEST SOLUTION_____________________" << std::endl;

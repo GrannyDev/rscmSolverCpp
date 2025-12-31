@@ -160,6 +160,11 @@ void Solver::CPSolve()
 
 void Solver::CPSolve(std::optional<unsigned int> heuristic)
 {
+    // Start timeout countdown at beginning of solving if configured
+    if (bbTimeoutSeconds_.has_value() && !bbDeadline_.has_value()) {
+        bbDeadline_ = std::chrono::steady_clock::now() + std::chrono::seconds(*bbTimeoutSeconds_);
+    }
+
     std::atomic completedJobs(0);
     boost::asio::thread_pool pool(std::thread::hardware_concurrency());
 
@@ -203,11 +208,6 @@ void Solver::RunSolver(const int coef, std::atomic<int>& completedJobs,
 void Solver::Solve()
 {
     timeoutTriggered_.store(false, std::memory_order_relaxed);
-    if (bbTimeoutSeconds_.has_value()) {
-        bbDeadline_ = std::chrono::steady_clock::now() + std::chrono::seconds(*bbTimeoutSeconds_);
-    } else {
-        bbDeadline_.reset();
-    }
 
     // 1. Select the target with the number of SCMs closest in size to number of available threads
     // (this is usefull to balance the load across threads)
