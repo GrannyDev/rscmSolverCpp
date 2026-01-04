@@ -72,6 +72,7 @@ def run_case(
     console_path = out_dir / "console.txt"
     json_path = out_dir / "solution.json"
     params_path = out_dir / "params.json"
+    snapshot_path = out_dir / "snapshot.rscm"
 
     args = [
         str(solver_path),
@@ -81,6 +82,7 @@ def run_case(
         f"--targets={targets}",
         f"--cost={cost}",
         f"--json={json_path}",
+        f"--snapshot-out={snapshot_path}",
     ]
     if heuristic is not None:
         args.append(f"--heuristic={heuristic}")
@@ -197,6 +199,7 @@ def main() -> None:
                 targets_list = load_targets(target_file, args.max_cases)
                 rel_base = target_file.relative_to(args.dataset_root)
                 base_out_dir = args.results_root / rel_base.with_suffix("")
+                total_cases = len(targets_list)
 
                 for idx, targets in enumerate(targets_list, start=1):
                     case_dir = base_out_dir / f"case_{idx:03d}"
@@ -211,6 +214,10 @@ def main() -> None:
                         heuristic=args.heuristic,
                         timeout_minutes=args.timeout_minutes,
                     )
+                    progress = (idx / total_cases) * 100 if total_cases else 100.0
+                    print(f"\r{target_file.name}: {idx}/{total_cases} ({progress:5.1f}%)", end="", flush=True)
+                if total_cases:
+                    print()
                 aggregate_results(base_out_dir)
 
 

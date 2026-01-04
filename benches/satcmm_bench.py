@@ -97,13 +97,24 @@ def run_case(
         f"max_num_adders={max_adders}",
         f"allow_coefficient_sign_inversion={sign_inversion}",
     ]
-    if timeout_seconds is not None:
-        sat_args.append(f"timeout={timeout_seconds}")
-
+    killed = False
     start = time.perf_counter()
-    sat_res = subprocess.run(sat_args, capture_output=True, text=True)
+    try:
+        sat_res = subprocess.run(
+            sat_args,
+            capture_output=True,
+            text=True,
+            timeout=timeout_seconds if timeout_seconds is not None else None,
+        )
+        sat_output = (sat_res.stdout or "") + "\n" + (sat_res.stderr or "")
+        returncode = sat_res.returncode
+    except subprocess.TimeoutExpired as e:
+        killed = True
+        out_txt = e.stdout.decode() if isinstance(e.stdout, bytes) else (e.stdout or "")
+        err_txt = e.stderr.decode() if isinstance(e.stderr, bytes) else (e.stderr or "")
+        sat_output = out_txt + "\n" + err_txt
+        returncode = -9  # killed by bench
     sat_duration = time.perf_counter() - start
-    sat_output = sat_res.stdout + "\n" + sat_res.stderr
     console_path.write_text(sat_output)
 
     adder_graph = extract_adder_graph(sat_output)
@@ -119,11 +130,12 @@ def run_case(
     params = {
         "targets": targets,
         "satcmm_args": sat_args,
-        "returncode": sat_res.returncode,
+        "returncode": returncode,
         "satcmm_duration_seconds": sat_duration,
         "analyzer_duration_seconds": analyzer_duration if adder_graph else None,
         "mux_cost": mux_cost,
         "adder_graph_found": adder_graph is not None,
+        "killed_by_timeout": killed,
     }
     params_path.write_text(json.dumps(params, indent=2))
 
@@ -138,6 +150,7 @@ def aggregate_results(out_root: Path) -> None:
     sat_runs = 0
     analyzer_time = 0.0
     analyzer_runs = 0
+    killed = 0
 
     for case_dir in sorted(out_root.glob("case_*")):
         params_file = case_dir / "params.json"
@@ -155,12 +168,15 @@ def aggregate_results(out_root: Path) -> None:
         if params.get("analyzer_duration_seconds") is not None:
             analyzer_time += float(params["analyzer_duration_seconds"])
             analyzer_runs += 1
+        if params.get("killed_by_timeout"):
+            killed += 1
 
     summary = {
         "runs": sat_runs,
         "avg_satcmm_runtime_seconds": (sat_time / sat_runs) if sat_runs else None,
         "avg_analyzer_runtime_seconds": (analyzer_time / analyzer_runs) if analyzer_runs else None,
         "avg_mux_cost": (mux_sum / mux_count) if mux_count else None,
+        "killed_by_timeout": killed,
     }
     (out_root / "summary.json").write_text(json.dumps(summary, indent=2))
 
