@@ -92,7 +92,6 @@ unsigned int CostComputer::MuxBitsComputer::merge(RSCM& node, DAG const& scm) co
 
 unsigned int CostComputer::LutsCostComputer::merge(RSCM& node, DAG const& scm) const
 {
-    std::cout << "--------------------------LutsCostComputer::merge-------------------------" << std::endl;
     unsigned int lutCost = 0;
 
     // 1) Merge resource sets and update bounds
@@ -147,7 +146,6 @@ unsigned int CostComputer::LutsCostComputer::merge(RSCM& node, DAG const& scm) c
     // Iterate layers → adders → variables
     for (const auto& layer : solver->layers) {
         for (const auto& adder : layer.adders) {
-            std::cout << "adder " << adderIdx << std::endl;
             // zero the tracker cheaply
             for (auto& entry : muxTracker) entry = {0u, 0u};
             // Track plus-minus flag
@@ -176,7 +174,6 @@ unsigned int CostComputer::LutsCostComputer::merge(RSCM& node, DAG const& scm) c
                     if (node.minShiftSavings[rightMultIdx] == 0) lutCost--; // no need for a carry lut
                     unsigned tempaddcost = node.variableBitWidths[rightMultIdx];
                     if (node.minShiftSavings[rightMultIdx] == 0) tempaddcost--; // no need for a carry lut
-                    std::cout << "adder cost " << tempaddcost << std::endl;
                 } else {
                     const auto varType = solver->idxToVarMap.at(paramInAdderIdx);
                     muxTracker[static_cast<size_t>(varType)] = {bitCount > 1 ? bitCount : 0, node.variableBitWidths[paramGlobalIdx]};
@@ -228,8 +225,6 @@ unsigned int CostComputer::LutsCostComputer::merge(RSCM& node, DAG const& scm) c
             const auto outputPathInputs = muxTracker[static_cast<size_t>(VariableDefs::OUTPUTS_SHIFTS)].first;
             const auto outputPathBw = muxTracker[static_cast<size_t>(VariableDefs::OUTPUTS_SHIFTS)].second;
 
-            std::cout << "leftCost " << leftCost << std::endl;
-            std::cout << "rightCost " << rightCost << std::endl;
             lutCost += leftCost;
             lutCost += rightCost;
             lutCost += muxTreeLuts(outputPathInputs, outputPathBw);
@@ -247,7 +242,6 @@ unsigned int CostComputer::LutsCostComputer::merge(RSCM& node, DAG const& scm) c
             overhead = (overhead + 2 - 1) / 2;
         }
         lutCost += overhead;
-        std::cout << "overhead cost " << overhead << std::endl;
     }
 
     // Store result
