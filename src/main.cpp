@@ -34,9 +34,9 @@ int main(int argc, char* argv[]) {
         return std::nullopt;
     };
 
-    size_t beta = 11; // maximum bit-width allowed for the constants (and intermediate values)
+    size_t beta = 13; // maximum bit-width allowed for the constants (and intermediate values)
     size_t nbInputBits = 8; // number of bits of the input (to compute the fine-grained cost function)
-    std::vector<int> targets = {383,1016,961,991,122,640,276,1020,60,10,945,360,132,543,251,488}; // target const set of the RSCM
+    std::vector<int> targets = {2552,112,2300,1920,2096,952,94,288,585,480,247,21,484,242,136,2480}; // target const set of the RSCM
     std::vector<int> layout = {1, 1}; // {1,1} describes the chosen layout, i.e. 1 adder on the first layer and 1 adder on the second layer
     std::optional<unsigned int> heuristic;
     std::optional<unsigned int> timeoutSeconds;
@@ -44,8 +44,8 @@ int main(int argc, char* argv[]) {
     bool doJsonDump = true;
     std::string jsonPath = "dump.json";
     std::optional<std::string> snapshotOut;
-    std::optional<std::string> snapshotIn;
-    auto costModel = CostModel::MuxCount;
+    std::optional<std::string> snapshotIn = "25522480_97_114";
+    auto costModel = CostModel::LutsCost;
     bool isSymmetric = false;
 
     for (int i = 1; i < argc; ++i) {

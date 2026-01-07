@@ -4,6 +4,8 @@
 
 #include "CostComputer.h"
 
+#include <iostream>
+
 #include "Solver.h"
 
 unsigned int CostComputer::MuxCountComputer::merge(RSCM& node, DAG const& scm) const
@@ -90,6 +92,7 @@ unsigned int CostComputer::MuxBitsComputer::merge(RSCM& node, DAG const& scm) co
 
 unsigned int CostComputer::LutsCostComputer::merge(RSCM& node, DAG const& scm) const
 {
+    std::cout << "--------------------------LutsCostComputer::merge-------------------------" << std::endl;
     unsigned int lutCost = 0;
 
     // 1) Merge resource sets and update bounds
@@ -117,19 +120,22 @@ unsigned int CostComputer::LutsCostComputer::merge(RSCM& node, DAG const& scm) c
     auto updateMinShift = [&](const unsigned idx) {
         // Use coefficient's trailing zeros, not the multiplied values'
         // This is correct because any input in the range could have 0 trailing zeros
-        const unsigned coeffTZ = scm.coefficientTrailingZeros[idx];
-        node.minShiftSavings[idx] = std::min(node.minShiftSavings[idx], coeffTZ);
+        node.minShiftSavings[idx] = std::min(node.minShiftSavings[idx], scm.coefficientTrailingZeros[idx]);
     };
 
     auto muxTreeLuts = [&](const unsigned inputs, const unsigned bw) {
         if (inputs <= 1 || bw == 0) return 0u;
         unsigned tokens = inputs + static_cast<unsigned>(std::ceil(std::log2(static_cast<double>(inputs))));
-        unsigned luts = 0;
+        unsigned luts6 = 0;
+        unsigned total = 0;
         while (tokens > solver->lutWidth_) {
-            ++luts;
+            ++luts6;
             tokens = tokens - (solver->lutWidth_ - 1);
         }
-        return (luts + 1) * bw; // final LUT handles the rest
+        if (tokens == 6) ++luts6; // one last LUT
+        else total += (bw + 2 - 1) / 2; // decompose in luts5
+        total += luts6 * bw;
+        return total; // final LUT handles the rest
     };
 
     size_t bitPos = 0;
@@ -141,6 +147,7 @@ unsigned int CostComputer::LutsCostComputer::merge(RSCM& node, DAG const& scm) c
     // Iterate layers → adders → variables
     for (const auto& layer : solver->layers) {
         for (const auto& adder : layer.adders) {
+            std::cout << "adder " << adderIdx << std::endl;
             // zero the tracker cheaply
             for (auto& entry : muxTracker) entry = {0u, 0u};
             // Track plus-minus flag
@@ -165,11 +172,14 @@ unsigned int CostComputer::LutsCostComputer::merge(RSCM& node, DAG const& scm) c
                 if (solver->idxToVarMap.at(paramInAdderIdx) == VariableDefs::RIGHT_MULTIPLIER) {
                     const size_t mapSize = solver->varToIdxMap.size();
                     const auto rightMultIdx =  solver->varToIdxMap.at(VariableDefs::RIGHT_MULTIPLIER) + adderIdx * mapSize;
-                    lutCost += node.variableBitWidths[rightMultIdx] - node.minShiftSavings[rightMultIdx];
+                    lutCost += node.variableBitWidths[rightMultIdx];
+                    if (node.minShiftSavings[rightMultIdx] == 0) lutCost--; // no need for a carry lut
+                    unsigned tempaddcost = node.variableBitWidths[rightMultIdx];
+                    if (node.minShiftSavings[rightMultIdx] == 0) tempaddcost--; // no need for a carry lut
+                    std::cout << "adder cost " << tempaddcost << std::endl;
                 } else {
-                const unsigned int bw = node.variableBitWidths[paramGlobalIdx] - node.minShiftSavings[paramGlobalIdx];
-                const auto varType = solver->idxToVarMap.at(paramInAdderIdx);
-                muxTracker[static_cast<size_t>(varType)] = {bitCount > 1 ? bitCount : 0, bw};
+                    const auto varType = solver->idxToVarMap.at(paramInAdderIdx);
+                    muxTracker[static_cast<size_t>(varType)] = {bitCount > 1 ? bitCount : 0, node.variableBitWidths[paramGlobalIdx]};
                 }
 
                 ++paramGlobalIdx;
@@ -177,28 +187,32 @@ unsigned int CostComputer::LutsCostComputer::merge(RSCM& node, DAG const& scm) c
             }
 
             // handle mux merge logic
-            // 1) find the biggest one that can be merged into the add/sub
-            unsigned int maxLUTs = 0;
-            size_t maxIdx = static_cast<size_t>(VariableDefs::OUTPUTS_SHIFTS); // default to output (won't be used)
-            for (size_t i = 0; i < muxTracker.size(); ++i) {
-                if (i == static_cast<size_t>(VariableDefs::OUTPUTS_SHIFTS)) continue; // never merge output mux into adder
-                const auto [nbInputs, bw] = muxTracker[i];
-                if (nbInputs <= 1 || bw == 0) continue;
-                const unsigned selBits = static_cast<unsigned>(std::ceil(std::log2(static_cast<double>(nbInputs))));
-                if (nbInputs + selBits <= solver->nbInputsLeftByAdderLut_ && bw * (nbInputs + selBits) > maxLUTs) {
-                    maxLUTs = bw * (nbInputs + selBits);
-                    maxIdx = i;
+            // 1) find the biggest one that can be merged into the add or sub
+            if (!node.isPlusMinus[adderIdx]) // can't merge if it's both
+            {
+                unsigned int maxLUTs = 0;
+                auto maxIdx = static_cast<size_t>(VariableDefs::OUTPUTS_SHIFTS); // default to output (won't be used)
+                for (size_t i = 0; i < muxTracker.size(); ++i) {
+                    if (i == static_cast<size_t>(VariableDefs::OUTPUTS_SHIFTS)) continue; // never merge output mux into adder
+                    const auto [nbInputs, bw] = muxTracker[i];
+                    if (nbInputs <= 1 || bw == 0) continue;
+                    const auto selBits = static_cast<unsigned>(std::ceil(std::log2(static_cast<double>(nbInputs))));
+                    if (nbInputs + selBits <= solver->nbInputsLeftByAdderLut_ && bw * (nbInputs + selBits) > maxLUTs) {
+                        maxLUTs = muxTreeLuts(nbInputs + selBits, bw);
+                        maxIdx = i;
+                    }
+                }
+                // 2) remove the merged mux if there's one
+                if (maxLUTs > 0)
+                {
+                    muxTracker[maxIdx].first = 0;
                 }
             }
-            // 2) remove it if found
-            if (maxLUTs > 0)
-            {
-                muxTracker[maxIdx].first = 0;
-            }
+
             // 3) compute the number of LUTs per right/left path
-            auto fuseCost = [&](unsigned aCnt, unsigned aBw, unsigned bCnt, unsigned bBw) {
+            auto fuseCost = [&](const unsigned aCnt, const unsigned aBw, const unsigned bCnt, const unsigned bBw) {
                 const unsigned separate = muxTreeLuts(aCnt, aBw) + muxTreeLuts(bCnt, bBw);
-                const unsigned combined = muxTreeLuts(aCnt + bCnt, std::max(aBw, bBw));
+                const unsigned combined = muxTreeLuts(aCnt + bCnt, bBw);
                 return std::min(separate, combined);
             };
 
@@ -214,6 +228,8 @@ unsigned int CostComputer::LutsCostComputer::merge(RSCM& node, DAG const& scm) c
             const auto outputPathInputs = muxTracker[static_cast<size_t>(VariableDefs::OUTPUTS_SHIFTS)].first;
             const auto outputPathBw = muxTracker[static_cast<size_t>(VariableDefs::OUTPUTS_SHIFTS)].second;
 
+            std::cout << "leftCost " << leftCost << std::endl;
+            std::cout << "rightCost " << rightCost << std::endl;
             lutCost += leftCost;
             lutCost += rightCost;
             lutCost += muxTreeLuts(outputPathInputs, outputPathBw);
@@ -225,12 +241,13 @@ unsigned int CostComputer::LutsCostComputer::merge(RSCM& node, DAG const& scm) c
     // add decoding overhead if nbEncodingBits > nbMinEncodingBits_
     if (nbEncodingBits > solver->nbMinEncodingBits_)
     {
-        auto overhead = muxTreeLuts(1 << solver->nbMinEncodingBits_, nbEncodingBits);
+        auto overhead = muxTreeLuts(solver->nbMinEncodingBits_, nbEncodingBits);
         if (solver->nbMinEncodingBits_ <= solver->lutWidth_ - 1)
         {
             overhead = (overhead + 2 - 1) / 2;
         }
         lutCost += overhead;
+        std::cout << "overhead cost " << overhead << std::endl;
     }
 
     // Store result
