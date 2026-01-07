@@ -44,7 +44,7 @@ int main(int argc, char* argv[]) {
     bool doJsonDump = true;
     std::string jsonPath = "dump.json";
     std::optional<std::string> snapshotOut;
-    std::optional<std::string> snapshotIn = "25522480_97_114";
+    std::optional<std::string> snapshotIn;
     auto costModel = CostModel::LutsCost;
     bool isSymmetric = false;
 
