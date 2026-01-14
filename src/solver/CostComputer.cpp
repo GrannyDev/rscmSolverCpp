@@ -172,8 +172,6 @@ unsigned int CostComputer::LutsCostComputer::merge(RSCM& node, DAG const& scm) c
                     const auto rightMultIdx =  solver->varToIdxMap.at(VariableDefs::RIGHT_MULTIPLIER) + adderIdx * mapSize;
                     lutCost += node.variableBitWidths[rightMultIdx];
                     if (node.minShiftSavings[rightMultIdx] == 0) lutCost--; // no need for a carry lut
-                    unsigned tempaddcost = node.variableBitWidths[rightMultIdx];
-                    if (node.minShiftSavings[rightMultIdx] == 0) tempaddcost--; // no need for a carry lut
                 } else {
                     const auto varType = solver->idxToVarMap.at(paramInAdderIdx);
                     muxTracker[static_cast<size_t>(varType)] = {bitCount > 1 ? bitCount : 0, node.variableBitWidths[paramGlobalIdx]};
@@ -236,11 +234,7 @@ unsigned int CostComputer::LutsCostComputer::merge(RSCM& node, DAG const& scm) c
     // add decoding overhead if nbEncodingBits > nbMinEncodingBits_
     if (nbEncodingBits > solver->nbMinEncodingBits_)
     {
-        auto overhead = muxTreeLuts(solver->nbMinEncodingBits_, nbEncodingBits);
-        if (solver->nbMinEncodingBits_ <= solver->lutWidth_ - 1)
-        {
-            overhead = (overhead + 2 - 1) / 2;
-        }
+        const auto overhead = muxTreeLuts(solver->nbMinEncodingBits_, nbEncodingBits);
         lutCost += overhead;
     }
 
