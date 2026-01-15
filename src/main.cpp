@@ -99,7 +99,7 @@ int main(int argc, char* argv[]) {
             } else if (arg.rfind("--snapshot-out=", 0) == 0) {
                 snapshotOut = arg.substr(15);
             } else if (arg.rfind("--recompute-snapshot=", 0) == 0) {
-                snapshotIn = arg.substr(22);
+                snapshotIn = arg.substr(21);
             } else if (arg == "--is_symmetric") {
                 isSymmetric = true;
             } else {
