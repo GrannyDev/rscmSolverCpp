@@ -234,8 +234,7 @@ unsigned int CostComputer::LutsCostComputer::merge(RSCM& node, DAG const& scm) c
     // add decoding overhead if nbEncodingBits > nbMinEncodingBits_
     if (nbEncodingBits > solver->nbMinEncodingBits_)
     {
-        const auto overhead = muxTreeLuts(solver->nbMinEncodingBits_, nbEncodingBits);
-        lutCost += overhead;
+        lutCost +=  muxTreeLuts(solver->nbMinEncodingBits_, nbEncodingBits);
     }
 
     // Store result
@@ -292,12 +291,13 @@ unsigned int CostComputer::AreaCostComputer::merge(RSCM& node, DAG const& scm) c
 
     auto computeMuxCost = [&](const unsigned bitsCount, const unsigned idx) {
         const unsigned int nbBits = node.variableBitWidths[idx] - node.minShiftSavings[idx];
-        return 14u * bitsCount * nbBits;
+        return 11u * (bitsCount - 1) * nbBits;
     };
 
     size_t bitPos = 0;
     unsigned int adderIdx = 0;
     unsigned int paramGlobalIdx = 0;
+    unsigned int nbEncodingBits = 0;
 
     // Iterate layers → adders → variables
     for (const auto& layer : solver->layers) {
@@ -318,23 +318,32 @@ unsigned int CostComputer::AreaCostComputer::merge(RSCM& node, DAG const& scm) c
                 }
                 bitPos += param.possibleValuesFusion.size();
 
-                // 4) If more than one bit and not an adder -> we have a multiplexer
-                if (bitCount > 1 && solver->idxToVarMap.at(paramInAdderIdx) != VariableDefs::RIGHT_MULTIPLIER)
+                if (bitCount > 1)
                 {
-                    fineGrainCost += computeMuxCost(bitCount, paramGlobalIdx);
+                    nbEncodingBits += std::ceil(std::log2(bitCount));
+                    // 4) If more than one bit and not an adder -> we have a multiplexer
+                    if (solver->idxToVarMap.at(paramInAdderIdx) != VariableDefs::RIGHT_MULTIPLIER) {
+                        fineGrainCost += computeMuxCost(bitCount, paramGlobalIdx);
+                    }
                 }
 
                 // 5) Handle RIGHT_MULTIPLIER adder cost (an adder)
                 if (solver->idxToVarMap.at(paramInAdderIdx) == VariableDefs::RIGHT_MULTIPLIER) {
                     // determine coefficient depending on the adder type
-                    unsigned coeff = 67u;
-                    if      (node.isPlusMinus[adderIdx])    coeff = 93u;
-                    else if (node.rscm.isMinus[adderIdx])   coeff = 75u;
+                    unsigned coefFA = 20u;
+                    unsigned coefHA = 13u;
+                    if (node.isPlusMinus[adderIdx]) {
+                        coefFA = 29u;
+                        coefHA = 21u;
+                    } else if (node.rscm.isMinus[adderIdx]) {
+                        coefFA = 24u;
+                        coefHA = 16u;
+                    }
 
                     // compute the minimum shift savings (number of trailing zeros)
                     const auto leftIdx  = leftShiftBase  + adderIdx * mapSize;
                     const auto rightIdx = rightShiftBase + adderIdx * mapSize;
-                    const unsigned minShift   = std::min(
+                    const unsigned minShift = std::min(
                         node.minShiftSavings[leftIdx],
                         node.minShiftSavings[rightIdx]
                     );
@@ -367,7 +376,7 @@ unsigned int CostComputer::AreaCostComputer::merge(RSCM& node, DAG const& scm) c
                                 ha = diff;
                             }
                         }
-                        fineGrainCost += static_cast<unsigned>(coeff * fa + 5.0/9.0 * coeff * ha);
+                        fineGrainCost += coefFA * fa + coefHA * ha;
                     }
                 }
 
@@ -376,6 +385,12 @@ unsigned int CostComputer::AreaCostComputer::merge(RSCM& node, DAG const& scm) c
             }
             ++adderIdx;
         }
+    }
+
+    // add decoding overhead if nbEncodingBits > nbMinEncodingBits_
+    if (nbEncodingBits > solver->nbMinEncodingBits_)
+    {
+        fineGrainCost += 442u + 1.35 * (nbEncodingBits * (1 << solver->nbMinEncodingBits_));
     }
 
     // Store result
