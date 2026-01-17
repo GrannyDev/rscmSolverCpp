@@ -59,6 +59,7 @@ public:
      * @brief Step 2: DFS Branch & Prune to find the best RSCM.
      */
     void Solve();
+    void SolveHybrid(CostModel fastModel, CostModel slowModel);
 
     /**
      * @brief Prints the solution in a human-readable format.
@@ -133,6 +134,12 @@ public:
     void SetBranchTimeoutSeconds(std::optional<unsigned int> seconds);
 
 private:
+    std::unique_ptr<ICostComputer> CreateCostComputer(CostModel model) const;
+    void SetCostModel(CostModel model);
+    void SolveInternal(bool finalizeNormalization);
+    void ComputeBranchWithFastBound(int depth, int threadNb, unsigned int startIndex,
+        unsigned int currentCost, unsigned int currentFastCost);
+
     /**
      * @brief Runs the solver for a specific target coefficient.
      * @param coef The coefficient to find all SCM for.
@@ -200,6 +207,9 @@ private:
     unsigned int nbAvailableThreads_; ///< Number of available threads.
     unsigned int normShift_; ///< Normalization shift for the SCMs.
     std::vector<std::vector<std::vector<unsigned int>>> threadedIndexes_; ///< Threaded indexes for parallel computation.
+    std::vector<std::vector<RSCM>> threadedFastNodes_;
+    std::optional<unsigned int> fastCostBound_;
+    std::unique_ptr<ICostComputer> fastCostComputer_;
     /// contains the shuffled indexes of the SCMs for each target constant
 };
 

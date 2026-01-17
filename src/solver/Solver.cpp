@@ -54,29 +54,7 @@ Solver::Solver(
 
     this->nbInputsLeftByAdderLut_ = lutWidth_ - 2; // add/sub LUT only has two inputs even if doing both
 
-    // Select cost model implementation
-    switch (costModel_) {
-    case CostModel::AreaCost:
-        fuseCostComputer = std::make_unique<CostComputer::AreaCostComputer>(this);
-        break;
-    case CostModel::MuxCount:
-        fuseCostComputer = std::make_unique<CostComputer::MuxCountComputer>(this);
-        break;
-    case CostModel::MuxBits:
-        fuseCostComputer = std::make_unique<CostComputer::MuxBitsComputer>(this);
-        break;
-    case CostModel::LutsCost:
-        fuseCostComputer = std::make_unique<CostComputer::LutsCostComputer>(this);
-        break;
-    case CostModel::FPGADelay:
-        fuseCostComputer = std::make_unique<CostComputer::FPGADelayComputer>(this);
-        break;
-    case CostModel::ASICDelay:
-        fuseCostComputer = std::make_unique<CostComputer::ASICDelayComputer>(this);
-        break;
-    default:
-        throw std::invalid_argument("Unknown cost model");
-    }
+    fuseCostComputer = CreateCostComputer(costModel_);
 
     // Normalize targets constants
     normShift_ = std::numeric_limits<unsigned int>::max();
@@ -182,6 +160,32 @@ void Solver::SetBranchTimeoutSeconds(const std::optional<unsigned int> seconds)
     bbTimeoutSeconds_ = seconds.has_value() && seconds.value() > 0 ? seconds : std::optional<unsigned int>{};
 }
 
+std::unique_ptr<ICostComputer> Solver::CreateCostComputer(const CostModel model) const
+{
+    switch (model) {
+    case CostModel::AreaCost:
+        return std::make_unique<CostComputer::AreaCostComputer>(const_cast<Solver*>(this));
+    case CostModel::MuxCount:
+        return std::make_unique<CostComputer::MuxCountComputer>(const_cast<Solver*>(this));
+    case CostModel::MuxBits:
+        return std::make_unique<CostComputer::MuxBitsComputer>(const_cast<Solver*>(this));
+    case CostModel::LutsCost:
+        return std::make_unique<CostComputer::LutsCostComputer>(const_cast<Solver*>(this));
+    case CostModel::FPGADelay:
+        return std::make_unique<CostComputer::FPGADelayComputer>(const_cast<Solver*>(this));
+    case CostModel::ASICDelay:
+        return std::make_unique<CostComputer::ASICDelayComputer>(const_cast<Solver*>(this));
+    default:
+        throw std::invalid_argument("Unknown cost model");
+    }
+}
+
+void Solver::SetCostModel(const CostModel model)
+{
+    costModel_ = model;
+    fuseCostComputer = CreateCostComputer(model);
+}
+
 // Internal call to CP solver for a single target coefficient
 void Solver::RunSolver(const int coef, std::atomic<int>& completedJobs,
     std::mutex& progressMutex, std::mutex& pushBackMutex, const std::optional<unsigned int> heuristic)
@@ -204,10 +208,36 @@ void Solver::RunSolver(const int coef, std::atomic<int>& completedJobs,
               << "] " << completedJobs << '/' << targets.size() << std::flush;
 }
 
+void Solver::SolveHybrid(const CostModel fastModel, const CostModel slowModel)
+{
+    SetCostModel(fastModel);
+    fastCostBound_.reset();
+    fastCostComputer_.reset();
+    SolveInternal(false);
+    const unsigned int fastBound = bestCost_.load(std::memory_order_relaxed);
+    std::cout << "Hybrid fast bound: " << fastBound << std::endl;
+
+    fastCostBound_ = fastBound;
+    fastCostComputer_ = CreateCostComputer(fastModel);
+    SetCostModel(slowModel);
+    SolveInternal(true);
+    fastCostBound_.reset();
+    fastCostComputer_.reset();
+}
+
 // Final stage of solving: compute best combination of SCMs across all targets
 void Solver::Solve()
 {
+    SolveInternal(true);
+}
+
+void Solver::SolveInternal(const bool finalizeNormalization)
+{
     timeoutTriggered_.store(false, std::memory_order_relaxed);
+    bestCost_ = std::numeric_limits<unsigned int>::max();
+    threadedIndexes_.clear();
+    threadedNodes_.clear();
+    threadedFastNodes_.clear();
 
     // 1. Select the target with the number of SCMs closest in size to number of available threads
     // (this is usefull to balance the load across threads)
@@ -249,6 +279,8 @@ void Solver::Solve()
         }
     }
 
+    const bool useFastBound = fastCostBound_.has_value() && fastCostComputer_ != nullptr;
+
     // Allocate memory for each thread’s solution path
     const unsigned int nbAvailableThreads = std::thread::hardware_concurrency();
     for (int i = 0; i < nbAvailableThreads; i++) {
@@ -258,13 +290,22 @@ void Solver::Solve()
                 nbAdders * layers[0].adders[0].variables.size(), nbPossibleVariables);
         }
     }
+    if (useFastBound) {
+        for (int i = 0; i < nbAvailableThreads; i++) {
+            threadedFastNodes_.emplace_back();
+            for (int j = 0; j < targets.size() + 1; j++) {
+                threadedFastNodes_[i].emplace_back(nbBitsPerSCM, targets.size(), nbAdders,
+                    nbAdders * layers[0].adders[0].variables.size(), nbPossibleVariables);
+            }
+        }
+    }
 
     // Launch branch and prune threads
     // The first target SCMs are split across threads
     std::atomic<size_t> index{0};
     boost::asio::thread_pool pool(nbAvailableThreads);
     for (int thread = 0; thread < nbAvailableThreads; thread++) {
-        post(pool, [this, thread, &index] {
+        post(pool, [this, thread, &index, useFastBound] {
             while (true) {
                 if (timeoutTriggered_.load(std::memory_order_relaxed)) break;
                 constexpr int depth = 1;
@@ -275,11 +316,26 @@ void Solver::Solve()
                 threadedNodes_[thread][0].rscm = scmDesigns[0].second[i];
                 threadedNodes_[thread][0].scmIndexes[0] = i;
                 threadedNodes_[thread][0].InitializeMinShiftSavings(layers);
-                ComputeBranch(depth, thread, i, 42);
+                if (useFastBound) {
+                    threadedFastNodes_[thread][0].rscm = scmDesigns[0].second[i];
+                    threadedFastNodes_[thread][0].scmIndexes[0] = i;
+                    threadedFastNodes_[thread][0].InitializeMinShiftSavings(layers);
+                    ComputeBranchWithFastBound(depth, thread, i, 42, 0);
+                } else {
+                    ComputeBranch(depth, thread, i, 42);
+                }
             }
         });
     }
     pool.join(); // Wait for all branches to finish
+
+    if (timeoutTriggered_.load(std::memory_order_relaxed)) {
+        std::cout << "Branch-and-bound terminated due to timeout; best-so-far solution is not guaranteed optimal." << std::endl;
+    }
+
+    if (!finalizeNormalization) {
+        return;
+    }
 
     // Reshift solution SCMs to original scale
     if (normShift_ > 0) {
@@ -290,10 +346,6 @@ void Solver::Solve()
             fst = fst << normShift_;
         }
         ApplyNormalizationShift(solution);
-    }
-
-    if (timeoutTriggered_.load(std::memory_order_relaxed)) {
-        std::cout << "Branch-and-bound terminated due to timeout; best-so-far solution is not guaranteed optimal." << std::endl;
     }
 
     // Compute all cost models once for the final solution
@@ -351,6 +403,52 @@ void Solver::ComputeBranch(const int depth, const int threadNb, const unsigned i
         }
         threadedNodes_[threadNb][depth].scmIndexes[depth] = index;
         ComputeBranch(depth + 1, threadNb, startIndex, currentCost);
+    }
+}
+
+void Solver::ComputeBranchWithFastBound(const int depth, const int threadNb, const unsigned int startIndex,
+    unsigned int currentCost, unsigned int currentFastCost)
+{
+    if (depth == targets.size()) {
+        if (fastCostBound_.has_value() && currentFastCost != *fastCostBound_) {
+            return;
+        }
+        if (currentCost < bestCost_.load(std::memory_order_relaxed)) {
+            std::lock_guard lock(solutionMutex_);
+            if (currentCost < bestCost_) { // update only if still the best
+                bestCost_ = currentCost;
+                solution = threadedNodes_[threadNb][depth - 1];
+                PrintSolution(currentCost);
+            }
+        }
+        return;
+    }
+
+    if (timeoutTriggered_.load(std::memory_order_relaxed) ||
+        (bbDeadline_.has_value() && std::chrono::steady_clock::now() >= *bbDeadline_)) {
+        timeoutTriggered_.store(true, std::memory_order_relaxed);
+        return;
+    }
+
+    const unsigned int fastBound = fastCostBound_.value_or(std::numeric_limits<unsigned int>::max());
+
+    for (const auto& index : threadedIndexes_[startIndex][depth - 1]) {
+        threadedFastNodes_[threadNb][depth] = threadedFastNodes_[threadNb][depth - 1];
+        currentFastCost = fastCostComputer_->merge(
+            threadedFastNodes_[threadNb][depth], scmDesigns[depth].second[index]);
+        if (currentFastCost > fastBound) {
+            continue;
+        }
+
+        threadedNodes_[threadNb][depth] = threadedNodes_[threadNb][depth - 1];
+        currentCost = fuseCostComputer->merge(
+            threadedNodes_[threadNb][depth], scmDesigns[depth].second[index]);
+        if (currentCost >= bestCost_.load(std::memory_order_relaxed)) {
+            continue;
+        }
+        threadedNodes_[threadNb][depth].scmIndexes[depth] = index;
+        threadedFastNodes_[threadNb][depth].scmIndexes[depth] = index;
+        ComputeBranchWithFastBound(depth + 1, threadNb, startIndex, currentCost, currentFastCost);
     }
 }
 
