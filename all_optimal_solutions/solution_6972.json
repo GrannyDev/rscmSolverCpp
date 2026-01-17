@@ -1,0 +1,112 @@
+{
+	"ADDER_0": {
+		"LEFT_INPUTS": {
+			"inputs": ["X"],
+			"shifts": [0],
+			"theoretical_bitwidth": 4,
+			"computed_bitwidth": 4
+		},
+		"LEFT_SHIFTS": {
+			"shifts": [0, 1],
+			"theoretical_bitwidth": 5,
+			"computed_bitwidth": 5,
+			"mux_nb": 0
+		},
+		"RIGHT_INPUTS": {
+			"inputs": ["X"],
+			"shifts": [0],
+			"theoretical_bitwidth": 4,
+			"computed_bitwidth": 4
+		},
+		"RIGHT_SHIFTS": {
+			"shifts": [0, 2],
+			"theoretical_bitwidth": 6,
+			"computed_bitwidth": 6,
+			"mux_nb": 1
+		},
+		"OUTPUTS_SHIFTS": {
+			"shifts": [0],
+			"theoretical_bitwidth": 7,
+			"computed_bitwidth": 7
+		},
+		"ADD_SUB": {
+			"type": "both",
+			"theoretical_bitwidth": 7,
+			"computed_bitwidth": 7,
+			"mux_nb": 2
+		}
+	},
+	"ADDER_1": {
+		"LEFT_INPUTS": {
+			"inputs": ["ADDER_0"],
+			"shifts": [0],
+			"theoretical_bitwidth": 7,
+			"computed_bitwidth": 7
+		},
+		"LEFT_SHIFTS": {
+			"shifts": [0],
+			"theoretical_bitwidth": 7,
+			"computed_bitwidth": 7
+		},
+		"RIGHT_INPUTS": {
+			"inputs": ["X"],
+			"shifts": [1],
+			"theoretical_bitwidth": 5,
+			"computed_bitwidth": 5
+		},
+		"RIGHT_SHIFTS": {
+			"shifts": [0, 2],
+			"theoretical_bitwidth": 7,
+			"computed_bitwidth": 7,
+			"mux_nb": 3
+		},
+		"OUTPUTS_SHIFTS": {
+			"shifts": [0],
+			"theoretical_bitwidth": 8,
+			"computed_bitwidth": 8
+		},
+		"ADD_SUB": {
+			"type": "both",
+			"theoretical_bitwidth": 8,
+			"computed_bitwidth": 8,
+			"mux_nb": 4
+		}
+	},
+	"meta": {
+		"wIn": 4,
+		"wConf": 4,
+		"wSelec": 5,
+		"needs_table": true,
+		"wOut": 8,
+		"output": "ADDER_1",
+		"is_symmetric": false,
+		"muxes_bw": [1, 1, 1, 1, 1],
+		"costs": {
+			"asic_delay": "not implemented",
+			"fpga_delay": "not implemented",
+			"luts": 28,
+			"mux_bits": 5,
+			"mux_count": 3,
+			"area_cost": 1085
+		},
+		"constants": [-5, 3, -3, -7, 11, 5, -1, -10, 6, 1, -2, -4, 2, 4, 8, 0],
+		"encoding": [
+			[0, 1, 0, 0, 0],
+			[1, 0, 0, 0, 1],
+			[0, 1, 1, 1, 0],
+			[1, 0, 0, 1, 0],
+			[1, 0, 1, 1, 1],
+			[1, 0, 1, 0, 1],
+			[0, 1, 0, 0, 1],
+			[1, 1, 0, 1, 0],
+			[1, 1, 0, 1, 1],
+			[1, 0, 1, 0, 0],
+			[1, 1, 1, 1, 0],
+			[1, 1, 0, 0, 0],
+			[0, 0, 0, 0, 1],
+			[1, 1, 1, 0, 0],
+			[0, 0, 0, 1, 1],
+			[1, 1, 0, 0, 1]
+		]
+	}
+}

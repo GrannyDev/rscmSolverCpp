@@ -8,6 +8,7 @@
 #include <string>
 #include <sstream>
 #include <optional>
+#include <filesystem>
 
 #include "solver/Solver.h"
 #include "writers/SnapshotIO.h"
@@ -34,18 +35,19 @@ int main(int argc, char* argv[]) {
         return std::nullopt;
     };
 
-    size_t beta = 13; // maximum bit-width allowed for the constants (and intermediate values)
-    size_t nbInputBits = 8; // number of bits of the input (to compute the fine-grained cost function)
-    std::vector<int> targets = {2552,112,2300,1920,2096,952,94,288,585,480,247,21,484,242,136,2480}; // target const set of the RSCM
+    size_t beta = 5; // maximum bit-width allowed for the constants (and intermediate values)
+    size_t nbInputBits = 4; // number of bits of the input (to compute the fine-grained cost function)
+    std::vector<int> targets = {-10, -7, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 8, 11}; // target const set of the RSCM
     std::vector<int> layout = {1, 1}; // {1,1} describes the chosen layout, i.e. 1 adder on the first layer and 1 adder on the second layer
     std::optional<unsigned int> heuristic;
     std::optional<unsigned int> timeoutSeconds = 300;
     size_t lutWidth = 6;
     bool doJsonDump = true;
-    std::string jsonPath = "dump.json";
+    std::string jsonPath;
+    std::optional<std::string> allOptimalJsonDir = "all_optimal_solutions/";
     std::optional<std::string> snapshotOut;
     std::optional<std::string> snapshotIn;
-    auto costModel = CostModel::LutsCost;
+    auto costModel = CostModel::MuxCount;
     bool isSymmetric = false;
 
     for (int i = 1; i < argc; ++i) {
@@ -64,6 +66,7 @@ int main(int argc, char* argv[]) {
                 "  --timeout=<uint>         Branch-and-bound timeout in seconds (CP phase not affected)\n"
                 "  --json=<path>            Enable JSON dump to path (default dump.json)\n"
                 "  --no-json                Disable JSON dump\n"
+                "  --all-optimal-json=<dir> Enumerate all solutions with optimal cost under selected model and dump JSON to dir\n"
                 "  --snapshot-out=<path>    Write a snapshot to recompute costs later\n"
                 "  --recompute-snapshot=<path>  Recompute all costs from a snapshot file\n"
                 "  -h, --help               Show this help\n";
@@ -89,6 +92,8 @@ int main(int argc, char* argv[]) {
             } else if (arg.rfind("--json=", 0) == 0) {
                 doJsonDump = true;
                 jsonPath = arg.substr(7);
+            } else if (arg.rfind("--all-optimal-json=", 0) == 0) {
+                allOptimalJsonDir = arg.substr(19);
             } else if (arg.rfind("--cost=", 0) == 0) {
                 auto parsed = parseCostModel(arg.substr(7));
                 if (parsed.has_value()) {
@@ -146,6 +151,7 @@ int main(int argc, char* argv[]) {
         return 0;
     }
     Solver problem(layout, maxCoef, minCoef, targets, nbInputBits, costModel, lutWidth, isSymmetric);
+    problem.SetEnumerateAllOptimalSolutions(allOptimalJsonDir.has_value());
 
     problem.SetBranchTimeoutSeconds(timeoutSeconds);
     problem.CPSolve(heuristic); // step 1: solve the problem with the CPSolver
@@ -165,6 +171,19 @@ int main(int argc, char* argv[]) {
     problem.SolveConfigToMuxMapping();
     if (doJsonDump) {
         problem.DumpJSON(problem.solution, jsonPath, true);
+    }
+    if (allOptimalJsonDir.has_value()) {
+        std::filesystem::create_directories(*allOptimalJsonDir);
+        const auto& optimalSolutions = problem.GetOptimalSolutions();
+        if (!optimalSolutions.empty()) {
+            std::cout << "Dumping " << optimalSolutions.size() << " optimal solutions to "
+                      << *allOptimalJsonDir << std::endl;
+            for (size_t i = 0; i < optimalSolutions.size(); ++i) {
+                const auto outPath = std::filesystem::path(*allOptimalJsonDir)
+                    / ("solution_" + std::to_string(i) + ".json");
+                problem.DumpJSON(optimalSolutions[i], outPath.string(), true);
+            }
+        }
     }
     if (snapshotOut.has_value()) {
         problem.DumpSnapshot(problem.solution, *snapshotOut, true);

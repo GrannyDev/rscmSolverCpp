@@ -103,6 +103,9 @@ public:
      */
     void SolveConfigToMuxMapping() const;
 
+    void SetEnumerateAllOptimalSolutions(bool enabled);
+    const std::vector<RSCM>& GetOptimalSolutions() const;
+
     std::unique_ptr<ICostComputer> fuseCostComputer; ///< Pointer to the cost computation strategy.
     std::vector<int> layout; ///< Layout for the RSCM.
     int maxCoef; ///< Maximum (intermediate) coefficient value.
@@ -192,6 +195,7 @@ private:
      * @return Map of model name to optional cost.
      */
     std::unordered_map<std::string, std::optional<unsigned int>> GetAllCosts(const RSCM& solutionNode) const;
+    RSCM ReplayWithAreaCost(const RSCM& solutionNode) const;
     std::mutex pushBackMutex_; ///< Mutex for thread-safe operations.
     std::mutex progressMutex_; ///< Mutex for progress updates.
     std::mutex solutionMutex_; ///< Mutex for solution updates.
@@ -200,6 +204,8 @@ private:
     unsigned int nbAvailableThreads_; ///< Number of available threads.
     unsigned int normShift_; ///< Normalization shift for the SCMs.
     std::vector<std::vector<std::vector<unsigned int>>> threadedIndexes_; ///< Threaded indexes for parallel computation.
+    bool enumerateAllOptimal_ = false;
+    std::vector<RSCM> optimalSolutions_;
     /// contains the shuffled indexes of the SCMs for each target constant
 };
 

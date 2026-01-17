@@ -94,7 +94,7 @@ Solver::Solver(
     }
 
     // Initial cost bound (infinite)
-    bestCost_ = std::numeric_limits<unsigned int>::max();
+    bestCost_ = 3;
 
     // Map internal variable types to and from indexes
     varDefs.push_back(VariableDefs::LEFT_INPUTS);
@@ -182,6 +182,16 @@ void Solver::SetBranchTimeoutSeconds(const std::optional<unsigned int> seconds)
     bbTimeoutSeconds_ = seconds.has_value() && seconds.value() > 0 ? seconds : std::optional<unsigned int>{};
 }
 
+void Solver::SetEnumerateAllOptimalSolutions(const bool enabled)
+{
+    enumerateAllOptimal_ = enabled;
+}
+
+const std::vector<RSCM>& Solver::GetOptimalSolutions() const
+{
+    return optimalSolutions_;
+}
+
 // Internal call to CP solver for a single target coefficient
 void Solver::RunSolver(const int coef, std::atomic<int>& completedJobs,
     std::mutex& progressMutex, std::mutex& pushBackMutex, const std::optional<unsigned int> heuristic)
@@ -208,6 +218,9 @@ void Solver::RunSolver(const int coef, std::atomic<int>& completedJobs,
 void Solver::Solve()
 {
     timeoutTriggered_.store(false, std::memory_order_relaxed);
+    if (enumerateAllOptimal_) {
+        optimalSolutions_.clear();
+    }
 
     // 1. Select the target with the number of SCMs closest in size to number of available threads
     // (this is usefull to balance the load across threads)
@@ -289,34 +302,39 @@ void Solver::Solve()
         for (auto& fst : this->scmDesigns | std::views::keys) {
             fst = fst << normShift_;
         }
-        ApplyNormalizationShift(solution);
     }
 
     if (timeoutTriggered_.load(std::memory_order_relaxed)) {
         std::cout << "Branch-and-bound terminated due to timeout; best-so-far solution is not guaranteed optimal." << std::endl;
     }
 
+    auto finalizeSolution = [this](const RSCM& node) {
+        if (costModel_ != CostModel::AreaCost) {
+            return ReplayWithAreaCost(node);
+        }
+        RSCM normalized = node;
+        ApplyNormalizationShift(normalized);
+        return normalized;
+    };
+
+    if (enumerateAllOptimal_) {
+        std::vector<RSCM> finalizedSolutions;
+        finalizedSolutions.reserve(optimalSolutions_.size());
+        for (const auto& node : optimalSolutions_) {
+            finalizedSolutions.push_back(finalizeSolution(node));
+        }
+        optimalSolutions_ = std::move(finalizedSolutions);
+        if (!optimalSolutions_.empty()) {
+            solution = optimalSolutions_.front();
+        } else {
+            solution = finalizeSolution(solution);
+        }
+    } else {
+        solution = finalizeSolution(solution);
+    }
+
     // Compute all cost models once for the final solution
     solutionCosts_ = GetAllCosts(solution);
-
-    if (costModel_ != CostModel::AreaCost)
-    {
-        // more complicated, we have to replay the whole merging process to compute the fine-grained cost
-        RSCM replayNode(nbBitsPerSCM, targets.size(), nbAdders,
-            nbAdders * layers[0].adders[0].variables.size(), nbPossibleVariables);
-        // Start by copying the first SCM directly (not merging), like the native execution does
-        replayNode.rscm = scmDesigns[0].second[solution.scmIndexes[0]];
-        replayNode.scmIndexes = solution.scmIndexes;
-        replayNode.InitializeMinShiftSavings(layers);
-        const CostComputer::AreaCostComputer fineGrainCostComputer(this);
-        // Now merge the remaining SCMs starting from depth 1
-        for (int depth = 1; depth < targets.size(); depth++)
-        {
-            fineGrainCostComputer.merge(replayNode, scmDesigns[depth].second[solution.scmIndexes[depth]]);
-        }
-        ApplyNormalizationShift(replayNode);
-        solution = replayNode;
-    }
 }
 
 // Recursive branch and prune search to find minimum-cost solution
@@ -324,12 +342,28 @@ void Solver::ComputeBranch(const int depth, const int threadNb, const unsigned i
 {
     // If we have reached the last layer, check if the cost is lower than the best found
     if (depth == targets.size()) {
-        if (currentCost < bestCost_.load(std::memory_order_relaxed)) {
-            std::lock_guard lock(solutionMutex_);
-            if (currentCost < bestCost_) { // update only if still the best
-                bestCost_ = currentCost;
-                solution = threadedNodes_[threadNb][depth - 1];
-                PrintSolution(currentCost);
+        if (enumerateAllOptimal_) {
+            const unsigned int bestCost = bestCost_.load(std::memory_order_relaxed);
+            if (currentCost <= bestCost) {
+                std::lock_guard lock(solutionMutex_);
+                if (currentCost < bestCost_) {
+                    bestCost_ = currentCost;
+                    solution = threadedNodes_[threadNb][depth - 1];
+                    optimalSolutions_.clear();
+                    optimalSolutions_.push_back(solution);
+                    PrintSolution(currentCost);
+                } else if (currentCost == bestCost_) {
+                    optimalSolutions_.push_back(threadedNodes_[threadNb][depth - 1]);
+                }
+            }
+        } else {
+            if (currentCost < bestCost_.load(std::memory_order_relaxed)) {
+                std::lock_guard lock(solutionMutex_);
+                if (currentCost < bestCost_) { // update only if still the best
+                    bestCost_ = currentCost;
+                    solution = threadedNodes_[threadNb][depth - 1];
+                    PrintSolution(currentCost);
+                }
             }
         }
         return;
@@ -345,8 +379,9 @@ void Solver::ComputeBranch(const int depth, const int threadNb, const unsigned i
     for (const auto& index : threadedIndexes_[startIndex][depth - 1]) {
         threadedNodes_[threadNb][depth] = threadedNodes_[threadNb][depth - 1];
         currentCost = fuseCostComputer->merge(threadedNodes_[threadNb][depth], scmDesigns[depth].second[index]);
-        if (currentCost >= bestCost_.load(std::memory_order_relaxed))
-        {
+        const unsigned int bestCost = bestCost_.load(std::memory_order_relaxed);
+        if ((enumerateAllOptimal_ && currentCost > bestCost) ||
+            (!enumerateAllOptimal_ && currentCost >= bestCost)) {
             continue;
         }
         threadedNodes_[threadNb][depth].scmIndexes[depth] = index;
@@ -415,6 +450,22 @@ void Solver::ApplyNormalizationShift(RSCM& node) const
             ++adderIdx;
         }
     }
+}
+
+RSCM Solver::ReplayWithAreaCost(const RSCM& solutionNode) const
+{
+    auto* solverPtr = const_cast<Solver*>(this);
+    RSCM replayNode(nbBitsPerSCM, targets.size(), nbAdders,
+        nbAdders * layers[0].adders[0].variables.size(), nbPossibleVariables);
+    replayNode.rscm = scmDesigns[0].second[solutionNode.scmIndexes[0]];
+    replayNode.scmIndexes = solutionNode.scmIndexes;
+    replayNode.InitializeMinShiftSavings(layers);
+    const CostComputer::AreaCostComputer areaCostComputer(solverPtr);
+    for (int depth = 1; depth < targets.size(); depth++) {
+        areaCostComputer.merge(replayNode, scmDesigns[depth].second[solutionNode.scmIndexes[depth]]);
+    }
+    ApplyNormalizationShift(replayNode);
+    return replayNode;
 }
 
 std::optional<unsigned int> Solver::EvaluateCost(const RSCM& solutionNode, const CostModel model) const
@@ -606,7 +657,7 @@ void Solver::Verilog(const RSCM& solutionNode, const std::string& outputUri, con
 void Solver::DumpJSON(const RSCM& solutionNode, const std::string& outputUri, const bool overwrite) const
 {
     const auto costs = GetAllCosts(solutionNode);
-    JSONDumper JSONDumper(solution, outputUri, layers, idxToVarMap, varToIdxMap, nbInputBits, targets, scmDesigns, costs, isSymmetric_, overwrite);
+    JSONDumper JSONDumper(solutionNode, outputUri, layers, idxToVarMap, varToIdxMap, nbInputBits, targets, scmDesigns, costs, isSymmetric_, overwrite);
 }
 
 void Solver::DumpSnapshot(const RSCM& solutionNode, const std::string& outputUri, const bool overwrite) const
