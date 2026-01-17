@@ -39,7 +39,7 @@ int main(int argc, char* argv[]) {
     std::vector<int> targets = {2552,112,2300,1920,2096,952,94,288,585,480,247,21,484,242,136,2480}; // target const set of the RSCM
     std::vector<int> layout = {1, 1}; // {1,1} describes the chosen layout, i.e. 1 adder on the first layer and 1 adder on the second layer
     std::optional<unsigned int> heuristic;
-    std::optional<unsigned int> timeoutSeconds;
+    std::optional<unsigned int> timeoutSeconds = 300;
     size_t lutWidth = 6;
     bool doJsonDump = true;
     std::string jsonPath = "dump.json";
@@ -81,7 +81,7 @@ int main(int argc, char* argv[]) {
             } else if (arg.rfind("--heuristic=", 0) == 0) {
                 heuristic = static_cast<unsigned int>(std::stoul(arg.substr(12)));
             } else if (arg.rfind("--timeout=", 0) == 0) {
-                timeoutSeconds = static_cast<unsigned int>(std::stoul(arg.substr(10)));
+                // timeoutSeconds = static_cast<unsigned int>(std::stoul(arg.substr(10)));
             } else if (arg.rfind("--lut-width=", 0) == 0) {
                 lutWidth = std::stoul(arg.substr(12));
             } else if (arg == "--no-json") {

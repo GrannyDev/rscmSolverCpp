@@ -3,6 +3,15 @@ project(rscmSolver)
 
 set(CMAKE_CXX_STANDARD 26)
 
+# The static OR-Tools package expects this imported target; provide it if missing.
+if(NOT TARGET BZip2::bz2_static)
+    add_library(BZip2::bz2_static STATIC IMPORTED)
+    set_target_properties(BZip2::bz2_static PROPERTIES
+        IMPORTED_LOCATION "/home/smith/Compiled/or-tools/build_static/install/lib/libbz2_static.a"
+        INTERFACE_INCLUDE_DIRECTORIES "/home/smith/Compiled/or-tools/build_static/install/include"
+    )
+endif()
+
 find_package(ortools CONFIG REQUIRED)
 
 add_executable(rscmSolver main.cpp
@@ -33,4 +42,4 @@ add_executable(rscmSolver main.cpp
         solver/ICostComputer.h
 )
 
-target_link_libraries(rscmSolver ortools::ortools)
+target_link_libraries(rscmSolver PRIVATE ortools::ortools)

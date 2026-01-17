@@ -1,0 +1,29 @@
+_____________________RECOMPUTED COSTS_____________________
+Costs:
+ - asic_delay: not implemented
+ - fpga_delay: not implemented
+ - luts: 99
+ - mux_bits: 11
+ - mux_count: 9
+ - area_cost: 3029
+
+
+Parameters: 
+Layer 0:
+	Adder 0:
+		LEFT_INPUTS : { X }
+		LEFT_SHIFTS : { 0 4 }
+		RIGHT_INPUTS : { X }
+		RIGHT_SHIFTS : { 0 1 5 }
+		OUTPUTS_SHIFTS : { 0 }
+		ADD_SUB : { - + }
+Layer 1:
+	Adder 1:
+		LEFT_INPUTS : { X Adder0 }
+		LEFT_SHIFTS : { 6 8 11 }
+		RIGHT_INPUTS : { Adder0 1X }
+		RIGHT_SHIFTS : { 0 3 }
+		OUTPUTS_SHIFTS : { 0 1 }
+		ADD_SUB : { - + }
+
+

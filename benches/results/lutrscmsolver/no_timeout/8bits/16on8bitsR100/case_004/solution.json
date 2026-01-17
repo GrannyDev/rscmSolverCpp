@@ -1,0 +1,114 @@
+{
+	"ADDER_0": {
+		"LEFT_INPUTS": {
+			"inputs": ["X"],
+			"shifts": [0],
+			"theoretical_bitwidth": 8,
+			"computed_bitwidth": 8
+		},
+		"LEFT_SHIFTS": {
+			"shifts": [1, 2, 4],
+			"theoretical_bitwidth": 12,
+			"computed_bitwidth": 12,
+			"mux_nb": 0
+		},
+		"RIGHT_INPUTS": {
+			"inputs": ["X"],
+			"shifts": [0],
+			"theoretical_bitwidth": 8,
+			"computed_bitwidth": 8
+		},
+		"RIGHT_SHIFTS": {
+			"shifts": [0, 1],
+			"theoretical_bitwidth": 9,
+			"computed_bitwidth": 9,
+			"mux_nb": 1
+		},
+		"OUTPUTS_SHIFTS": {
+			"shifts": [0],
+			"theoretical_bitwidth": 12,
+			"computed_bitwidth": 12
+		},
+		"ADD_SUB": {
+			"type": "both",
+			"theoretical_bitwidth": 13,
+			"computed_bitwidth": 12,
+			"mux_nb": 2
+		}
+	},
+	"ADDER_1": {
+		"LEFT_INPUTS": {
+			"inputs": ["ADDER_0"],
+			"shifts": [0],
+			"theoretical_bitwidth": 12,
+			"computed_bitwidth": 12
+		},
+		"LEFT_SHIFTS": {
+			"shifts": [3, 4, 5],
+			"theoretical_bitwidth": 17,
+			"computed_bitwidth": 16,
+			"mux_nb": 3
+		},
+		"RIGHT_INPUTS": {
+			"inputs": ["X", "ADDER_0", "X"],
+			"shifts": [0, 0, 3],
+			"theoretical_bitwidth": 12,
+			"computed_bitwidth": 12,
+			"mux_nb": 4
+		},
+		"RIGHT_SHIFTS": {
+			"shifts": [0, 1, 2],
+			"theoretical_bitwidth": 14,
+			"computed_bitwidth": 13,
+			"mux_nb": 5
+		},
+		"OUTPUTS_SHIFTS": {
+			"shifts": [0],
+			"theoretical_bitwidth": 16,
+			"computed_bitwidth": 16
+		},
+		"ADD_SUB": {
+			"type": "both",
+			"theoretical_bitwidth": 17,
+			"computed_bitwidth": 16,
+			"mux_nb": 6
+		}
+	},
+	"meta": {
+		"wIn": 8,
+		"wConf": 4,
+		"wSelec": 11,
+		"needs_table": true,
+		"wOut": 16,
+		"output": "ADDER_1",
+		"is_symmetric": false,
+		"muxes_bw": [2, 1, 1, 2, 2, 2, 1],
+		"costs": {
+			"asic_delay": "not implemented",
+			"fpga_delay": "not implemented",
+			"luts": 69,
+			"mux_bits": 11,
+			"mux_count": 9,
+			"area_cost": 2636
+		},
+		"constants": [170, 93, 241, 35, 118, 110, 180, 33, 10, 50, 156, 252, 188, 28, 200, 192],
+		"encoding": [
+			[1, 0, 1, 2, 1, 1, 1],
+			[1, 0, 0, 2, 1, 0, 0],
+			[2, 0, 0, 1, 0, 0, 1],
+			[1, 0, 1, 0, 1, 0, 0],
+			[2, 0, 0, 0, 0, 1, 0],
+			[2, 1, 0, 0, 0, 1, 0],
+			[1, 0, 1, 2, 1, 2, 1],
+			[0, 0, 0, 2, 0, 0, 1],
+			[0, 0, 0, 0, 1, 1, 1],
+			[1, 1, 1, 0, 0, 1, 1],
+			[1, 0, 1, 2, 0, 2, 0],
+			[2, 1, 0, 1, 1, 1, 1],
+			[1, 1, 1, 2, 0, 2, 0],
+			[0, 0, 0, 2, 1, 2, 0],
+			[1, 1, 1, 2, 2, 0, 1],
+			[2, 1, 0, 1, 2, 2, 0]
+		]
+	}
+}

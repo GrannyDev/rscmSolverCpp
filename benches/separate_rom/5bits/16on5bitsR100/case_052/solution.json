@@ -1,0 +1,265 @@
+{
+  "ADDER_0": {
+    "LEFT_INPUTS": {
+      "inputs": [
+        "X"
+      ],
+      "shifts": [
+        0
+      ],
+      "theoretical_bitwidth": 8,
+      "computed_bitwidth": 8
+    },
+    "LEFT_SHIFTS": {
+      "shifts": [
+        0,
+        3,
+        4
+      ],
+      "theoretical_bitwidth": 12,
+      "computed_bitwidth": 12,
+      "mux_nb": 0
+    },
+    "RIGHT_INPUTS": {
+      "inputs": [
+        "X"
+      ],
+      "shifts": [
+        0
+      ],
+      "theoretical_bitwidth": 8,
+      "computed_bitwidth": 8
+    },
+    "RIGHT_SHIFTS": {
+      "shifts": [
+        0,
+        1
+      ],
+      "theoretical_bitwidth": 9,
+      "computed_bitwidth": 9,
+      "mux_nb": 1
+    },
+    "OUTPUTS_SHIFTS": {
+      "shifts": [
+        0
+      ],
+      "theoretical_bitwidth": 12,
+      "computed_bitwidth": 12
+    },
+    "ADD_SUB": {
+      "type": "both",
+      "theoretical_bitwidth": 13,
+      "computed_bitwidth": 12,
+      "mux_nb": 2
+    }
+  },
+  "ADDER_1": {
+    "LEFT_INPUTS": {
+      "inputs": [
+        "ADDER_0"
+      ],
+      "shifts": [
+        0
+      ],
+      "theoretical_bitwidth": 12,
+      "computed_bitwidth": 12
+    },
+    "LEFT_SHIFTS": {
+      "shifts": [
+        1
+      ],
+      "theoretical_bitwidth": 13,
+      "computed_bitwidth": 13
+    },
+    "RIGHT_INPUTS": {
+      "inputs": [
+        "X",
+        "X"
+      ],
+      "shifts": [
+        0,
+        1
+      ],
+      "theoretical_bitwidth": 9,
+      "computed_bitwidth": 9,
+      "mux_nb": 3
+    },
+    "RIGHT_SHIFTS": {
+      "shifts": [
+        0
+      ],
+      "theoretical_bitwidth": 9,
+      "computed_bitwidth": 9
+    },
+    "OUTPUTS_SHIFTS": {
+      "shifts": [
+        0
+      ],
+      "theoretical_bitwidth": 13,
+      "computed_bitwidth": 13
+    },
+    "ADD_SUB": {
+      "type": "both",
+      "theoretical_bitwidth": 14,
+      "computed_bitwidth": 13,
+      "mux_nb": 4
+    }
+  },
+  "meta": {
+    "wIn": 8,
+    "wConf": 4,
+    "wSelec": 6,
+    "needs_table": true,
+    "wOut": 13,
+    "output": "ADDER_1",
+    "is_symmetric": false,
+    "muxes_bw": [
+      2,
+      1,
+      1,
+      1,
+      1
+    ],
+    "costs": {
+      "asic_delay": "not implemented",
+      "fpga_delay": "not implemented",
+      "luts": 45,
+      "mux_bits": 6,
+      "mux_count": 4,
+      "area_cost": 1178.4,
+      "rom_cost": 571.6
+    },
+    "constants": [
+      1,
+      12,
+      8,
+      0,
+      13,
+      3,
+      28,
+      26,
+      21,
+      5,
+      17,
+      27,
+      6,
+      2,
+      30,
+      15
+    ],
+    "encoding": [
+      [
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      [
+        2,
+        1,
+        0,
+        0,
+        0
+      ],
+      [
+        1,
+        1,
+        1,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        1,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        1,
+        0,
+        1,
+        0,
+        0
+      ],
+      [
+        2,
+        1,
+        0,
+        1,
+        1
+      ],
+      [
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      [
+        2,
+        1,
+        0,
+        1,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        0,
+        1,
+        0
+      ],
+      [
+        2,
+        0,
+        0,
+        1,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        1,
+        1
+      ],
+      [
+        0,
+        1,
+        1,
+        1,
+        1
+      ],
+      [
+        0,
+        1,
+        0,
+        1,
+        1
+      ]
+    ]
+  }
+}

@@ -1,0 +1,225 @@
+{
+  "ADDER_0": {
+    "LEFT_INPUTS": {
+      "inputs": [
+        "X"
+      ],
+      "shifts": [
+        0
+      ],
+      "theoretical_bitwidth": 8,
+      "computed_bitwidth": 8
+    },
+    "LEFT_SHIFTS": {
+      "shifts": [
+        0,
+        1
+      ],
+      "theoretical_bitwidth": 9,
+      "computed_bitwidth": 9,
+      "mux_nb": 0
+    },
+    "RIGHT_INPUTS": {
+      "inputs": [
+        "X"
+      ],
+      "shifts": [
+        0
+      ],
+      "theoretical_bitwidth": 8,
+      "computed_bitwidth": 8
+    },
+    "RIGHT_SHIFTS": {
+      "shifts": [
+        2,
+        4
+      ],
+      "theoretical_bitwidth": 12,
+      "computed_bitwidth": 12,
+      "mux_nb": 1
+    },
+    "OUTPUTS_SHIFTS": {
+      "shifts": [
+        0
+      ],
+      "theoretical_bitwidth": 13,
+      "computed_bitwidth": 13
+    },
+    "ADD_SUB": {
+      "type": "both",
+      "theoretical_bitwidth": 13,
+      "computed_bitwidth": 13,
+      "mux_nb": 2
+    }
+  },
+  "ADDER_1": {
+    "LEFT_INPUTS": {
+      "inputs": [
+        "X",
+        "ADDER_0",
+        "X"
+      ],
+      "shifts": [
+        0,
+        0,
+        1
+      ],
+      "theoretical_bitwidth": 12,
+      "computed_bitwidth": 12,
+      "mux_nb": 3
+    },
+    "LEFT_SHIFTS": {
+      "shifts": [
+        0,
+        3,
+        7
+      ],
+      "theoretical_bitwidth": 19,
+      "computed_bitwidth": 18,
+      "mux_nb": 4
+    },
+    "RIGHT_INPUTS": {
+      "inputs": [
+        "ADDER_0"
+      ],
+      "shifts": [
+        0
+      ],
+      "theoretical_bitwidth": 13,
+      "computed_bitwidth": 13
+    },
+    "RIGHT_SHIFTS": {
+      "shifts": [
+        0,
+        5
+      ],
+      "theoretical_bitwidth": 18,
+      "computed_bitwidth": 18,
+      "mux_nb": 5
+    },
+    "OUTPUTS_SHIFTS": {
+      "shifts": [
+        0
+      ],
+      "theoretical_bitwidth": 18,
+      "computed_bitwidth": 18
+    },
+    "ADD_SUB": {
+      "type": "both",
+      "theoretical_bitwidth": 19,
+      "computed_bitwidth": 18,
+      "mux_nb": 6
+    }
+  },
+  "meta": {
+    "wIn": 8,
+    "wConf": 3,
+    "wSelec": 9,
+    "needs_table": true,
+    "wOut": 18,
+    "output": "ADDER_1",
+    "is_symmetric": false,
+    "muxes_bw": [
+      1,
+      1,
+      1,
+      2,
+      2,
+      1,
+      1
+    ],
+    "costs": {
+      "asic_delay": "not implemented",
+      "fpga_delay": "not implemented",
+      "luts": 69,
+      "mux_bits": 9,
+      "mux_count": 7,
+      "area_cost": 1878.8,
+      "rom_cost": 539.2
+    },
+    "constants": [
+      450,
+      3,
+      465,
+      488,
+      635,
+      251,
+      449,
+      578
+    ],
+    "encoding": [
+      [
+        0,
+        0,
+        1,
+        0,
+        1,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        1,
+        1,
+        2,
+        0,
+        0
+      ],
+      [
+        0,
+        1,
+        0,
+        1,
+        0,
+        1,
+        0
+      ],
+      [
+        0,
+        0,
+        1,
+        2,
+        2,
+        0,
+        0
+      ],
+      [
+        1,
+        1,
+        0,
+        0,
+        0,
+        1,
+        0
+      ],
+      [
+        1,
+        1,
+        0,
+        2,
+        0,
+        1,
+        0
+      ],
+      [
+        1,
+        1,
+        1,
+        2,
+        0,
+        1,
+        1
+      ],
+      [
+        0,
+        1,
+        0,
+        0,
+        1,
+        1,
+        0
+      ]
+    ]
+  }
+}
