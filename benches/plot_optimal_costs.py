@@ -4,6 +4,9 @@ import json
 import sys
 from pathlib import Path
 
+import matplotlib
+
+matplotlib.use("pgf")
 import matplotlib.pyplot as plt
 
 
@@ -45,8 +48,18 @@ def main():
     )
     parser.add_argument(
         "--out",
-        default="optimal_cost_histograms.png",
-        help="Output image path (default: optimal_cost_histograms.png)",
+        default=None,
+        help="Base output image path (if set, writes <stem>_luts and <stem>_area images)",
+    )
+    parser.add_argument(
+        "--out-luts",
+        default="optimal_cost_histogram_luts.png",
+        help="Output path for LUTs histogram (default: optimal_cost_histogram_luts.png)",
+    )
+    parser.add_argument(
+        "--out-area",
+        default="optimal_cost_histogram_area.png",
+        help="Output path for area histogram (default: optimal_cost_histogram_area.png)",
     )
     parser.add_argument(
         "--show",
@@ -59,7 +72,33 @@ def main():
         default=20,
         help="Number of histogram bins (default: 20)",
     )
+    parser.add_argument(
+        "--font-size",
+        type=float,
+        default=10.0,
+        help="Base font size in points (default: 10)",
+    )
+    parser.add_argument(
+        "--legend-font-size",
+        type=float,
+        default=None,
+        help="Legend font size in points (defaults to --font-size)",
+    )
     args = parser.parse_args()
+
+    legend_font_size = args.legend_font_size if args.legend_font_size is not None else args.font_size
+    matplotlib.rcParams.update(
+        {
+            "text.usetex": True,
+            "pgf.rcfonts": False,
+            "font.family": "serif",
+            "font.size": args.font_size,
+            "legend.fontsize": legend_font_size,
+        }
+    )
+
+    fig_width = 3.2
+    fig_height = 1.8
 
     folder = Path(args.dir)
     if not folder.exists():
@@ -71,31 +110,53 @@ def main():
         print("No cost data found in JSON files.", file=sys.stderr)
         return 1
 
-    fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+    out_luts = Path(args.out_luts).with_suffix(".pgf")
+    out_area = Path(args.out_area).with_suffix(".pgf")
+    if args.out:
+        base = Path(args.out)
+        stem = base.stem
+        suffix = base.suffix or ".png"
+        out_luts = base.with_name(f"{stem}_luts{suffix}").with_suffix(".pgf")
+        out_area = base.with_name(f"{stem}_area{suffix}").with_suffix(".pgf")
+
+    figs = []
     if luts:
-        axes[0].hist(luts, bins=args.bins, color="#2E86AB", edgecolor="black")
-    axes[0].set_title("LUT Cost Histogram")
-    axes[0].set_xlabel("Estimated LUTs")
-    axes[0].set_ylabel("Count")
-    axes[0].set_yscale("log")
+        fig_luts, ax_luts = plt.subplots(1, 1, figsize=(fig_width, fig_height))
+        ax_luts.hist(luts, bins=args.bins, color="#2E86AB", edgecolor="black")
+        ax_luts.set_xlabel("LUTs estimate")
+        ax_luts.set_ylabel("Count (log scale)")
+        ax_luts.set_yscale("log")
+        fig_luts.tight_layout()
+        fig_luts.savefig(out_luts)
+        print(f"Saved LUTs plot to {out_luts}")
+        figs.append(fig_luts)
+    else:
+        print("No LUT cost data found; LUTs plot not created.", file=sys.stderr)
 
     if area:
-        axes[1].hist(area, bins=args.bins, color="#E27D60", edgecolor="black")
-    axes[1].set_title("Area Cost Histogram")
-    axes[1].set_xlabel("Estimated Area Cost")
-    axes[1].set_ylabel("Count")
-    axes[1].set_yscale("log")
-
-    fig.tight_layout()
-    fig.savefig(args.out, dpi=150)
-    print(f"Saved plot to {args.out}")
+        fig_area, ax_area = plt.subplots(1, 1, figsize=(fig_width, fig_height))
+        ax_area.hist(area, bins=args.bins, color="#E27D60", edgecolor="black")
+        ax_area.set_xlabel("ASIC area estimate")
+        ax_area.set_ylabel("Count (log scale)")
+        ax_area.set_yscale("log")
+        fig_area.tight_layout()
+        fig_area.savefig(out_area)
+        print(f"Saved area plot to {out_area}")
+        figs.append(fig_area)
+    else:
+        print("No area cost data found; area plot not created.", file=sys.stderr)
     if missing:
         print(f"Warning: {missing} files missing luts or area_cost values.", file=sys.stderr)
     if lowest_luts_path is not None:
         print(f"Lowest LUTs: {lowest_luts} in {lowest_luts_path.name}")
+    if luts:
+        print(f"LUTs min/max: {min(luts)} / {max(luts)}")
+    if area:
+        print(f"Area min/max: {min(area)} / {max(area)}")
 
     if args.show:
-        plt.show()
+        if figs:
+            plt.show()
     return 0
 
 
