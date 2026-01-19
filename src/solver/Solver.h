@@ -11,6 +11,8 @@
 #include <vector>
 #include <chrono>
 #include <atomic>
+#include <mutex>
+#include <string>
 #include <boost/dynamic_bitset.hpp>
 #include <boost/asio/thread_pool.hpp>
 #include <boost/asio/post.hpp>
@@ -130,6 +132,8 @@ public:
     std::unordered_map<VariableDefs, unsigned int> varToIdxMap; ///< Map from variables to indices.
     std::unordered_map<unsigned int, VariableDefs> idxToVarMap; ///< Map from indices to variables.
     boost::dynamic_bitset<> signAgnosticMask_;
+    std::vector<std::unordered_map<std::string, unsigned int>> muxMemoByDepth_;
+    std::vector<std::mutex> muxMemoMutexes_;
 
     void SetBranchTimeoutSeconds(std::optional<unsigned int> seconds);
 

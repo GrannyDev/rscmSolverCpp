@@ -20,6 +20,15 @@
 #include "../writers/Verilog.h"
 #include "CostComputer.h"
 
+namespace {
+std::string BitsetKey(const boost::dynamic_bitset<>& bits)
+{
+    std::string key;
+    boost::to_string(bits, key);
+    return key;
+}
+}
+
 // Constructor initializes solver parameters, layout configuration, and variable definitions
 Solver::Solver(
     std::vector<int> const& layout,       // Defines number of adders per layer
@@ -232,8 +241,7 @@ void Solver::RunSolver(const int coef, std::atomic<int>& completedJobs,
             dedup.reserve(scms.size());
             for (const auto& scm : scms) {
                 boost::dynamic_bitset<> signature = scm.set & signAgnosticMask_;
-                std::string key;
-                boost::to_string(signature, key);
+                const std::string key = BitsetKey(signature);
                 if (seen.insert(key).second) {
                     dedup.push_back(scm);
                 }
@@ -256,6 +264,56 @@ void Solver::Solve()
 {
     timeoutTriggered_.store(false, std::memory_order_relaxed);
 
+    const bool useMuxHeuristic = costModel_ == CostModel::MuxCount || costModel_ == CostModel::MuxBits;
+    std::unordered_map<int, unsigned int> minCostByTarget;
+    if (useMuxHeuristic) {
+        auto computeScmCost = [&](const DAG& scm) {
+            size_t bitPos = 0;
+            unsigned int cost = 0;
+            for (const auto& layer : layers) {
+                for (const auto& adder : layer.adders) {
+                    unsigned paramInAdderIdx = 0;
+                    for (const auto& param : adder.variables) {
+                        unsigned int bitsSet = 0;
+                        for (size_t j = 0; j < param.possibleValuesFusion.size(); ++j) {
+                            if (scm.set.test(bitPos + j)) {
+                                ++bitsSet;
+                            }
+                        }
+                        bitPos += param.possibleValuesFusion.size();
+
+                        const auto varType = idxToVarMap.at(paramInAdderIdx);
+                        if (bitsSet > 1 &&
+                            (costModel_ == CostModel::MuxBits ||
+                             (varType != VariableDefs::RIGHT_MULTIPLIER &&
+                              varType != VariableDefs::LEFT_MULTIPLIER)))
+                        {
+                            if (costModel_ == CostModel::MuxBits) {
+                                cost += static_cast<unsigned int>(std::ceil(std::log2(bitsSet)));
+                            } else {
+                                cost += bitsSet - 1;
+                            }
+                        }
+
+                        ++paramInAdderIdx;
+                    }
+                }
+            }
+            return cost;
+        };
+
+        for (const auto& [target, scms] : scmDesigns) {
+            unsigned int minCost = std::numeric_limits<unsigned int>::max();
+            for (const auto& scm : scms) {
+                minCost = std::min(minCost, computeScmCost(scm));
+            }
+            if (minCost == std::numeric_limits<unsigned int>::max()) {
+                minCost = 0;
+            }
+            minCostByTarget[target] = minCost;
+        }
+    }
+
     // 1. Select the target with the number of SCMs closest in size to number of available threads
     // (this is usefull to balance the load across threads)
     unsigned int closestIndex = 0;
@@ -275,10 +333,22 @@ void Solver::Solve()
 
     // 3. Sort remaining SCMs by size (ascending) (a heuristic that appears to accelerate convergence)
     if (scmDesigns.size() > 1) {
-        std::ranges::sort(scmDesigns.begin() + 1, scmDesigns.end(),
-            [](const auto& lhs, const auto& rhs) {
-                return lhs.second.size() < rhs.second.size();
-            });
+        if (useMuxHeuristic) {
+            std::ranges::sort(scmDesigns.begin() + 1, scmDesigns.end(),
+                [&](const auto& lhs, const auto& rhs) {
+                    const auto lhsCost = minCostByTarget.at(lhs.first);
+                    const auto rhsCost = minCostByTarget.at(rhs.first);
+                    if (lhsCost != rhsCost) {
+                        return lhsCost > rhsCost;
+                    }
+                    return lhs.second.size() < rhs.second.size();
+                });
+        } else {
+            std::ranges::sort(scmDesigns.begin() + 1, scmDesigns.end(),
+                [](const auto& lhs, const auto& rhs) {
+                    return lhs.second.size() < rhs.second.size();
+                });
+        }
     }
 
     // Shuffle SCMs for each target constants to accelerate convergence
@@ -304,6 +374,11 @@ void Solver::Solve()
             threadedNodes_[i].emplace_back(nbBitsPerSCM, targets.size(), nbAdders,
                 nbAdders * layers[0].adders[0].variables.size(), nbPossibleVariables);
         }
+    }
+    if (useMuxHeuristic) {
+        muxMemoByDepth_.clear();
+        muxMemoByDepth_.resize(targets.size());
+        muxMemoMutexes_ = std::vector<std::mutex>(targets.size());
     }
 
     // Launch branch and prune threads
@@ -395,6 +470,20 @@ void Solver::ComputeBranch(const int depth, const int threadNb, const unsigned i
         if (currentCost >= bestCost_.load(std::memory_order_relaxed))
         {
             continue;
+        }
+        if (costModel_ == CostModel::MuxCount || costModel_ == CostModel::MuxBits) {
+            boost::dynamic_bitset<> signature = threadedNodes_[threadNb][depth].rscm.set & signAgnosticMask_;
+            const std::string key = BitsetKey(signature);
+            auto& memo = muxMemoByDepth_[depth];
+            auto& memoMutex = muxMemoMutexes_[depth];
+            {
+                std::lock_guard lock(memoMutex);
+                auto it = memo.find(key);
+                if (it != memo.end() && it->second <= currentCost) {
+                    continue;
+                }
+                memo[key] = currentCost;
+            }
         }
         threadedNodes_[threadNb][depth].scmIndexes[depth] = index;
         ComputeBranch(depth + 1, threadNb, startIndex, currentCost);
