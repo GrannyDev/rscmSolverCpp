@@ -27,6 +27,44 @@ std::string BitsetKey(const boost::dynamic_bitset<>& bits)
     boost::to_string(bits, key);
     return key;
 }
+
+void AppendIntVec(std::string& key, const std::vector<int>& values)
+{
+    for (const int v : values) {
+        key.append(std::to_string(v));
+        key.push_back(',');
+    }
+}
+
+void AppendUIntVec(std::string& key, const std::vector<unsigned int>& values)
+{
+    for (const unsigned int v : values) {
+        key.append(std::to_string(v));
+        key.push_back(',');
+    }
+}
+
+void AppendBoolVec(std::string& key, const std::vector<bool>& values)
+{
+    for (const bool v : values) {
+        key.push_back(v ? '1' : '0');
+        key.push_back(',');
+    }
+}
+
+std::string BuildStateKey(const RSCM& node)
+{
+    std::string key = BitsetKey(node.rscm.set);
+    key.push_back('|');
+    AppendIntVec(key, node.rscm.maxOutputValue);
+    key.push_back('|');
+    AppendIntVec(key, node.rscm.minOutputValue);
+    key.push_back('|');
+    AppendUIntVec(key, node.minShiftSavings);
+    key.push_back('|');
+    AppendBoolVec(key, node.isPlusMinus);
+    return key;
+}
 }
 
 // Constructor initializes solver parameters, layout configuration, and variable definitions
@@ -265,6 +303,9 @@ void Solver::Solve()
     timeoutTriggered_.store(false, std::memory_order_relaxed);
 
     const bool useMuxHeuristic = costModel_ == CostModel::MuxCount || costModel_ == CostModel::MuxBits;
+    const bool useMemo = useMuxHeuristic ||
+        costModel_ == CostModel::AreaCost ||
+        costModel_ == CostModel::LutsCost;
     std::unordered_map<int, unsigned int> minCostByTarget;
     if (useMuxHeuristic) {
         auto computeScmCost = [&](const DAG& scm) {
@@ -375,10 +416,10 @@ void Solver::Solve()
                 nbAdders * layers[0].adders[0].variables.size(), nbPossibleVariables);
         }
     }
-    if (useMuxHeuristic) {
-        muxMemoByDepth_.clear();
-        muxMemoByDepth_.resize(targets.size());
-        muxMemoMutexes_ = std::vector<std::mutex>(targets.size());
+    if (useMemo) {
+        memoByDepth_.clear();
+        memoByDepth_.resize(targets.size());
+        memoMutexes_ = std::vector<std::mutex>(targets.size());
     }
 
     // Launch branch and prune threads
@@ -471,11 +512,16 @@ void Solver::ComputeBranch(const int depth, const int threadNb, const unsigned i
         {
             continue;
         }
-        if (costModel_ == CostModel::MuxCount || costModel_ == CostModel::MuxBits) {
-            boost::dynamic_bitset<> signature = threadedNodes_[threadNb][depth].rscm.set & signAgnosticMask_;
-            const std::string key = BitsetKey(signature);
-            auto& memo = muxMemoByDepth_[depth];
-            auto& memoMutex = muxMemoMutexes_[depth];
+        if (!memoByDepth_.empty()) {
+            std::string key;
+            if (costModel_ == CostModel::MuxCount || costModel_ == CostModel::MuxBits) {
+                boost::dynamic_bitset<> signature = threadedNodes_[threadNb][depth].rscm.set & signAgnosticMask_;
+                key = BitsetKey(signature);
+            } else {
+                key = BuildStateKey(threadedNodes_[threadNb][depth]);
+            }
+            auto& memo = memoByDepth_[depth];
+            auto& memoMutex = memoMutexes_[depth];
             {
                 std::lock_guard lock(memoMutex);
                 auto it = memo.find(key);

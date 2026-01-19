@@ -132,8 +132,8 @@ public:
     std::unordered_map<VariableDefs, unsigned int> varToIdxMap; ///< Map from variables to indices.
     std::unordered_map<unsigned int, VariableDefs> idxToVarMap; ///< Map from indices to variables.
     boost::dynamic_bitset<> signAgnosticMask_;
-    std::vector<std::unordered_map<std::string, unsigned int>> muxMemoByDepth_;
-    std::vector<std::mutex> muxMemoMutexes_;
+    std::vector<std::unordered_map<std::string, unsigned int>> memoByDepth_;
+    std::vector<std::mutex> memoMutexes_;
 
     void SetBranchTimeoutSeconds(std::optional<unsigned int> seconds);
 
