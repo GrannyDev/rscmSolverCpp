@@ -129,6 +129,7 @@ public:
     std::atomic<bool> timeoutTriggered_{false}; ///< Indicates whether the branch-and-bound timed out.
     std::unordered_map<VariableDefs, unsigned int> varToIdxMap; ///< Map from variables to indices.
     std::unordered_map<unsigned int, VariableDefs> idxToVarMap; ///< Map from indices to variables.
+    boost::dynamic_bitset<> signAgnosticMask_;
 
     void SetBranchTimeoutSeconds(std::optional<unsigned int> seconds);
 

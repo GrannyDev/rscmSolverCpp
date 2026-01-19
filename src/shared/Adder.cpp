@@ -15,13 +15,13 @@ Adder::Adder(const int layerIdx, const int adderIdx, const int alpha, std::vecto
         std::vector<int64_t> possibleValuesCP; // Possible values for the CP (uses a different representation for the shift).
         std::vector<int> possibleValuesFusion; // Possible values for the Fusion Path.
 
-        // Handle the RIGHT_MULTIPLIER parameter definition.
-        if (paramDef == VariableDefs::RIGHT_MULTIPLIER) {
-            possibleValuesCP.push_back(-1); // subtraction
-            possibleValuesCP.push_back(1); // addition
+        // Handle multiplier parameters (sign control).
+        if (paramDef == VariableDefs::RIGHT_MULTIPLIER || paramDef == VariableDefs::LEFT_MULTIPLIER) {
+            possibleValuesCP.push_back(-1); // subtraction (negate input)
+            possibleValuesCP.push_back(1); // addition (keep input)
             possibleValuesFusion.push_back(-1); // subtraction
-            possibleValuesFusion.push_back(0); // addition
-            possibleValuesFusion.push_back(1); // both (TODO: might not be needed ...)
+            possibleValuesFusion.push_back(0); // unused placeholder for contiguous indexing
+            possibleValuesFusion.push_back(1); // addition
             variables.emplace_back(possibleValuesCP, possibleValuesFusion, 1);
         }
         // Handle the RIGHT_SHIFTS, LEFT_SHIFTS, and OUTPUTS_SHIFTS parameter definitions.

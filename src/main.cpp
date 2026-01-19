@@ -34,9 +34,9 @@ int main(int argc, char* argv[]) {
         return std::nullopt;
     };
 
-    size_t beta = 13; // maximum bit-width allowed for the constants (and intermediate values)
+    size_t beta = 11; // maximum bit-width allowed for the constants (and intermediate values)
     size_t nbInputBits = 8; // number of bits of the input (to compute the fine-grained cost function)
-    std::vector<int> targets = {2552,112,2300,1920,2096,952,94,288,585,480,247,21,484,242,136,2480}; // target const set of the RSCM
+    std::vector<int> targets = {35,572,225,7,176,392,247,246,102,444,67,383,532,315,290,1016,-35,-572,-225,-7,-176,-392,-247,-246,-102,-444,-67,-383,-532,-315,-290,-1016}; // target const set of the RSCM
     std::vector<int> layout = {1, 1}; // {1,1} describes the chosen layout, i.e. 1 adder on the first layer and 1 adder on the second layer
     std::optional<unsigned int> heuristic;
     std::optional<unsigned int> timeoutSeconds = 300;
@@ -45,7 +45,7 @@ int main(int argc, char* argv[]) {
     std::string jsonPath = "dump.json";
     std::optional<std::string> snapshotOut;
     std::optional<std::string> snapshotIn;
-    auto costModel = CostModel::LutsCost;
+    auto costModel = CostModel::MuxCount;
     bool isSymmetric = false;
 
     for (int i = 1; i < argc; ++i) {
@@ -132,7 +132,8 @@ int main(int argc, char* argv[]) {
         problem.solution.rscm.maxOutputValue = s.rscmMaxOutput;
         problem.solution.rscm.minOutputValue = s.rscmMinOutput;
         problem.solution.rscm.coefficientTrailingZeros = s.rscmCoeffTZ;
-        problem.solution.rscm.isMinus = s.rscmIsMinus;
+        problem.solution.rscm.isLeftMinus = s.rscmIsLeftMinus;
+        problem.solution.rscm.isRightMinus = s.rscmIsRightMinus;
         problem.solution.minShiftSavings = s.minShiftSavings;
         problem.solution.variableBitWidths = s.variableBitWidths;
         problem.solution.isPlusMinus = s.isPlusMinus;

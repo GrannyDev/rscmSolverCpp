@@ -113,8 +113,9 @@ void JSONDumper::Dump() {
                     muxNbToMuxBw.push_back(std::ceil(std::log2(selectedShifts.size())));
                     totalNbMuxes++;
                 }
-                if (currentParamType == VariableDefs::RIGHT_MULTIPLIER) {
-                    // For ADD_SUB, it's a mux if it can do both add and subtract
+                if (currentParamType == VariableDefs::RIGHT_MULTIPLIER ||
+                    currentParamType == VariableDefs::LEFT_MULTIPLIER) {
+                    // For sign controls, it's a mux if it can do both add and subtract
                     int addCount = 0, subCount = 0;
                     for (const int v : selectedShifts) {
                         if (v == -1) subCount++;
@@ -140,6 +141,8 @@ void JSONDumper::Dump() {
                     unsigned int leftShiftBW = GetParamBitWidth(VariableDefs::LEFT_SHIFTS, adderNb);
                     unsigned int rightShiftBW = GetParamBitWidth(VariableDefs::RIGHT_SHIFTS, adderNb);
                     theoreticalBW = std::max(leftShiftBW, rightShiftBW) + 1;
+                } else if (currentParamType == VariableDefs::LEFT_MULTIPLIER) {
+                    theoreticalBW = computedBW; // sign control output bitwidth is computed
                 } else
                 {
                     theoreticalBW = computedBW; // For inputs, theoretical equals computed
@@ -161,8 +164,9 @@ void JSONDumper::Dump() {
                     }
                     outputFile_ << "],\n";
                 }
-                if (currentParamType == VariableDefs::RIGHT_MULTIPLIER) {
-                    // Handle ADD_SUB specially
+                if (currentParamType == VariableDefs::RIGHT_MULTIPLIER ||
+                    currentParamType == VariableDefs::LEFT_MULTIPLIER) {
+                    // Handle sign controls specially
                     outputFile_ << std::string(nbTabs, '\t') << R"("type": ")";
                     
                     // Determine if it's add, subtract, or both
@@ -175,9 +179,17 @@ void JSONDumper::Dump() {
                     if (addCount > 0 && subCount > 0) {
                         outputFile_ << "both";
                     } else if (subCount > 0) {
-                        outputFile_ << "subtractor";
+                        if (currentParamType == VariableDefs::RIGHT_MULTIPLIER) {
+                            outputFile_ << "subtractor";
+                        } else {
+                            outputFile_ << "negative";
+                        }
                     } else {
-                        outputFile_ << "adder";
+                        if (currentParamType == VariableDefs::RIGHT_MULTIPLIER) {
+                            outputFile_ << "adder";
+                        } else {
+                            outputFile_ << "positive";
+                        }
                     }
                     outputFile_ << "\",\n";
                 } else {

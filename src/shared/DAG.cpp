@@ -7,5 +7,6 @@
 DAG::DAG(const unsigned int nbBitPerNode, const unsigned int nbAdders, const unsigned int nbVariables) {
     set = boost::dynamic_bitset<>(nbBitPerNode);
     maxOutputValue.reserve(nbVariables);
-    isMinus.reserve(nbAdders);
+    isLeftMinus.reserve(nbAdders);
+    isRightMinus.reserve(nbAdders);
 }

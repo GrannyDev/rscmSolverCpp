@@ -33,7 +33,9 @@ unsigned int CostComputer::MuxCountComputer::merge(RSCM& node, DAG const& scm) c
                 bitPos += param.possibleValuesFusion.size();
 
                 // If more than one bit, we need (bitsSet - 1) multiplexers
-                if (bitsSet > 1 && solver->idxToVarMap.at(paramInAdderIdx) != VariableDefs::RIGHT_MULTIPLIER)
+                if (bitsSet > 1 &&
+                    solver->idxToVarMap.at(paramInAdderIdx) != VariableDefs::RIGHT_MULTIPLIER &&
+                    solver->idxToVarMap.at(paramInAdderIdx) != VariableDefs::LEFT_MULTIPLIER)
                 {
                     // compute the number of number of multiplexers needed
                     muxCount += bitsSet - 1;
@@ -142,8 +144,9 @@ unsigned int CostComputer::LutsCostComputer::merge(RSCM& node, DAG const& scm) c
     unsigned int adderIdx = 0;
     unsigned int paramGlobalIdx = 0;
     unsigned int nbEncodingBits = 0;
-    std::array<std::pair<unsigned int, unsigned int>, 6> muxTracker; // indexed by static_cast<size_t>(VariableDefs)
-    std::array<std::vector<int>, 6> selectedValues; // selected possibleValuesFusion per VariableDefs
+    const size_t varCount = static_cast<size_t>(VariableDefs::LEFT_MULTIPLIER) + 1;
+    std::vector<std::pair<unsigned int, unsigned int>> muxTracker(varCount, {0u, 0u}); // indexed by static_cast<size_t>(VariableDefs)
+    std::vector<std::vector<int>> selectedValues(varCount); // selected possibleValuesFusion per VariableDefs
 
     // Iterate layers → adders → variables
     for (const auto& layer : solver->layers) {
@@ -152,7 +155,9 @@ unsigned int CostComputer::LutsCostComputer::merge(RSCM& node, DAG const& scm) c
             for (auto& entry : muxTracker) entry = {0u, 0u};
             for (auto& entry : selectedValues) entry.clear();
             // Track plus-minus flag
-            node.isPlusMinus[adderIdx] = node.isPlusMinus[adderIdx] || node.rscm.isMinus[adderIdx] != scm.isMinus[adderIdx];
+            const bool leftDiff = node.rscm.isLeftMinus[adderIdx] != scm.isLeftMinus[adderIdx];
+            const bool rightDiff = node.rscm.isRightMinus[adderIdx] != scm.isRightMinus[adderIdx];
+            node.isPlusMinus[adderIdx] = node.isPlusMinus[adderIdx] || leftDiff || rightDiff;
 
             unsigned paramInAdderIdx = 0;
             for (const auto& param : adder.variables) {
@@ -181,7 +186,7 @@ unsigned int CostComputer::LutsCostComputer::merge(RSCM& node, DAG const& scm) c
                     const auto rightIdx = solver->varToIdxMap.at(VariableDefs::RIGHT_SHIFTS) + adderIdx * mapSize;
                     lutCost += node.variableBitWidths[rightMultIdx];
                     if (node.variableBitWidths[rightMultIdx] != node.variableBitWidths[leftIdx] && node.variableBitWidths[rightMultIdx] != node.variableBitWidths[rightIdx]) lutCost--; // no need for a carry lut
-                } else {
+                } else if (varType != VariableDefs::LEFT_MULTIPLIER) {
                     muxTracker[static_cast<size_t>(varType)] = {bitCount > 1 ? bitCount : 0, node.variableBitWidths[paramGlobalIdx]};
                     selectedValues[static_cast<size_t>(varType)] = std::move(selected);
                 }
@@ -260,9 +265,9 @@ unsigned int CostComputer::LutsCostComputer::merge(RSCM& node, DAG const& scm) c
                     };
 
                     bool hasCommonShift = false;
-                    if (!node.isPlusMinus[adderIdx]) {
-                        const auto leftShifts = extractShifts(leftMergeCandiate);
-                        const auto rightShifts = extractShifts(rightMergeCandiate);
+                if (!node.isPlusMinus[adderIdx]) {
+                    const auto leftShifts = extractShifts(leftMergeCandiate);
+                    const auto rightShifts = extractShifts(rightMergeCandiate);
                         for (const int l : leftShifts) {
                             for (const int r : rightShifts) {
                                 if (l == r) {
@@ -362,8 +367,10 @@ unsigned int CostComputer::AreaCostComputer::merge(RSCM& node, DAG const& scm) c
     for (const auto& layer : solver->layers) {
         for (const auto& adder : layer.adders) {
             // Track plus-minus flag
+            const bool leftDiff = node.rscm.isLeftMinus[adderIdx] != scm.isLeftMinus[adderIdx];
+            const bool rightDiff = node.rscm.isRightMinus[adderIdx] != scm.isRightMinus[adderIdx];
             node.isPlusMinus[adderIdx] =
-                node.isPlusMinus[adderIdx] || node.rscm.isMinus[adderIdx] != scm.isMinus[adderIdx];
+                node.isPlusMinus[adderIdx] || leftDiff || rightDiff;
 
             unsigned paramInAdderIdx = 0;
             for (const auto& param : adder.variables) {
@@ -381,7 +388,8 @@ unsigned int CostComputer::AreaCostComputer::merge(RSCM& node, DAG const& scm) c
                 {
                     nbEncodingBits += std::ceil(std::log2(bitCount));
                     // 4) If more than one bit and not an adder -> we have a multiplexer
-                    if (solver->idxToVarMap.at(paramInAdderIdx) != VariableDefs::RIGHT_MULTIPLIER) {
+                    if (solver->idxToVarMap.at(paramInAdderIdx) != VariableDefs::RIGHT_MULTIPLIER &&
+                        solver->idxToVarMap.at(paramInAdderIdx) != VariableDefs::LEFT_MULTIPLIER) {
                         fineGrainCost += computeMuxCost(bitCount, paramGlobalIdx);
                     }
                 }
@@ -394,7 +402,7 @@ unsigned int CostComputer::AreaCostComputer::merge(RSCM& node, DAG const& scm) c
                     if (node.isPlusMinus[adderIdx]) {
                         coefFA = 29u;
                         coefHA = 21u;
-                    } else if (node.rscm.isMinus[adderIdx]) {
+                    } else if (node.rscm.isLeftMinus[adderIdx] || node.rscm.isRightMinus[adderIdx]) {
                         coefFA = 24u;
                         coefHA = 16u;
                     }
@@ -417,7 +425,9 @@ unsigned int CostComputer::AreaCostComputer::merge(RSCM& node, DAG const& scm) c
                         const unsigned int diff = snd - fst;
 
                         unsigned fa = 0, ha = 0;
-                        if (!node.isPlusMinus[adderIdx] && !node.rscm.isMinus[adderIdx]) {
+                        if (!node.isPlusMinus[adderIdx] &&
+                            !node.rscm.isLeftMinus[adderIdx] &&
+                            !node.rscm.isRightMinus[adderIdx]) {
                             if (node.rscm.minOutputValue[leftIdx] != 0 && node.rscm.maxOutputValue[leftIdx] != 0) {
                                 fa = std::max(wa, wb) - diff - 1;
                                 ha = 1;

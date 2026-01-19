@@ -12,6 +12,7 @@
 #include <thread>
 #include <optional>
 #include <unordered_map>
+#include <string>
 #include <chrono>
 
 #include "../cp/CPModel.h"
@@ -117,9 +118,13 @@ Solver::Solver(
     idxToVarMap[4] = VariableDefs::OUTPUTS_SHIFTS;
     varToIdxMap[VariableDefs::OUTPUTS_SHIFTS] = 4;
 
+    varDefs.push_back(VariableDefs::LEFT_MULTIPLIER);
+    idxToVarMap[5] = VariableDefs::LEFT_MULTIPLIER;
+    varToIdxMap[VariableDefs::LEFT_MULTIPLIER] = 5;
+
     varDefs.push_back(VariableDefs::RIGHT_MULTIPLIER);
-    idxToVarMap[5] = VariableDefs::RIGHT_MULTIPLIER;
-    varToIdxMap[VariableDefs::RIGHT_MULTIPLIER] = 5;
+    idxToVarMap[6] = VariableDefs::RIGHT_MULTIPLIER;
+    varToIdxMap[VariableDefs::RIGHT_MULTIPLIER] = 6;
 
     // Build each layer with specified number of adders
     int precedingLayerLastAdderNb = -1;
@@ -150,6 +155,26 @@ Solver::Solver(
     // Create an empty solution RSCM node with all required size fields
     solution = RSCM(nbBitsPerSCM, targets.size(), nbAdders,
         nbAdders * layers[0].adders[0].variables.size(), nbPossibleVariables);
+
+    if (costModel_ == CostModel::MuxCount || costModel_ == CostModel::MuxBits) {
+        signAgnosticMask_.resize(nbBitsPerSCM);
+        size_t bitPos = 0;
+        for (const auto& layer : layers) {
+            for (const auto& adder : layer.adders) {
+                for (const auto& paramDef : varDefs) {
+                    const auto& param = adder.variables[varToIdxMap.at(paramDef)];
+                    const size_t sz = param.possibleValuesFusion.size();
+                    if (paramDef != VariableDefs::LEFT_MULTIPLIER &&
+                        paramDef != VariableDefs::RIGHT_MULTIPLIER) {
+                        for (size_t i = 0; i < sz; ++i) {
+                            signAgnosticMask_.set(bitPos + i);
+                        }
+                    }
+                    bitPos += sz;
+                }
+            }
+        }
+    }
 }
 
 // Solve each target constant using CP (constraint programming)
@@ -194,6 +219,28 @@ void Solver::RunSolver(const int coef, std::atomic<int>& completedJobs,
     );
     cpModel.SolveFor(coef, scmDesigns, pushBackMutex, layers, nbBitsPerSCM,
                      varToIdxMap, varDefs, heuristic);
+
+    if (costModel_ == CostModel::MuxCount || costModel_ == CostModel::MuxBits) {
+        std::lock_guard lock(pushBackMutex);
+        auto it = std::find_if(scmDesigns.begin(), scmDesigns.end(),
+            [coef](const auto& entry) { return entry.first == coef; });
+        if (it != scmDesigns.end()) {
+            auto& scms = it->second;
+            std::unordered_set<std::string> seen;
+            seen.reserve(scms.size());
+            std::vector<DAG> dedup;
+            dedup.reserve(scms.size());
+            for (const auto& scm : scms) {
+                boost::dynamic_bitset<> signature = scm.set & signAgnosticMask_;
+                std::string key;
+                boost::to_string(signature, key);
+                if (seen.insert(key).second) {
+                    dedup.push_back(scm);
+                }
+            }
+            scms.swap(dedup);
+        }
+    }
     ++completedJobs;
 
     // Progress bar output
@@ -573,7 +620,8 @@ void Solver::PrettyPrinter(const RSCM& solutionNode)
                                 std::cout << "Adder" << v << " ";
                             }
                         }
-                        else if (idxToVarMap[p] == VariableDefs::RIGHT_MULTIPLIER)
+                        else if (idxToVarMap[p] == VariableDefs::RIGHT_MULTIPLIER ||
+                                 idxToVarMap[p] == VariableDefs::LEFT_MULTIPLIER)
                         {
                             if (v == -1)
                             {

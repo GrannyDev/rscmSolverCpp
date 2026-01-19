@@ -18,6 +18,7 @@ enum class VariableDefs
     RIGHT_INPUTS,      ///< Represents right input route.
     OUTPUTS_SHIFTS,    ///< Represents output shift operations.
     RIGHT_MULTIPLIER,  ///< Represents a multiplier parameter (adder/subtractor).
+    LEFT_MULTIPLIER,   ///< Represents a multiplier parameter for the left input.
 };
 
 /**
@@ -48,6 +49,8 @@ public:
         {
         case VariableDefs::RIGHT_MULTIPLIER:
             return "ADD_SUB";
+        case VariableDefs::LEFT_MULTIPLIER:
+            return "LEFT_SIGN";
         case VariableDefs::LEFT_SHIFTS:
             return "LEFT_SHIFTS";
         case VariableDefs::RIGHT_SHIFTS:

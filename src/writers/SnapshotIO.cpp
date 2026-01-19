@@ -74,7 +74,8 @@ void WriteSnapshot(const Solver& solver, const RSCM& solutionNode, const std::st
     ofs << "rscm_max:" << Join(solutionNode.rscm.maxOutputValue) << "\n";
     ofs << "rscm_min:" << Join(solutionNode.rscm.minOutputValue) << "\n";
     ofs << "rscm_coeff_tz:" << Join(solutionNode.rscm.coefficientTrailingZeros) << "\n";
-    ofs << "rscm_is_minus:" << Join(solutionNode.rscm.isMinus, ',') << "\n";
+    ofs << "rscm_is_left_minus:" << Join(solutionNode.rscm.isLeftMinus, ',') << "\n";
+    ofs << "rscm_is_right_minus:" << Join(solutionNode.rscm.isRightMinus, ',') << "\n";
     ofs << "min_shift_savings:" << Join(solutionNode.minShiftSavings) << "\n";
     ofs << "variable_bit_widths:" << Join(solutionNode.variableBitWidths) << "\n";
     ofs << "is_plus_minus:" << Join(solutionNode.isPlusMinus, ',') << "\n";
@@ -89,7 +90,8 @@ void WriteSnapshot(const Solver& solver, const RSCM& solutionNode, const std::st
         ofs << "scm_max:" << Join(dag.maxOutputValue) << "\n";
         ofs << "scm_min:" << Join(dag.minOutputValue) << "\n";
         ofs << "scm_coeff_tz:" << Join(dag.coefficientTrailingZeros) << "\n";
-        ofs << "scm_is_minus:" << Join(dag.isMinus, ',') << "\n";
+        ofs << "scm_is_left_minus:" << Join(dag.isLeftMinus, ',') << "\n";
+        ofs << "scm_is_right_minus:" << Join(dag.isRightMinus, ',') << "\n";
     }
 }
 
@@ -122,9 +124,17 @@ std::optional<SnapshotData> ReadSnapshot(const std::string& path)
         else if (key == "rscm_max") snap.rscmMaxOutput = Split<int>(val);
         else if (key == "rscm_min") snap.rscmMinOutput = Split<int>(val);
         else if (key == "rscm_coeff_tz") snap.rscmCoeffTZ = Split<unsigned int>(val);
+        else if (key == "rscm_is_left_minus") {
+            auto tmp = Split<int>(val);
+            snap.rscmIsLeftMinus.assign(tmp.begin(), tmp.end());
+        }
+        else if (key == "rscm_is_right_minus") {
+            auto tmp = Split<int>(val);
+            snap.rscmIsRightMinus.assign(tmp.begin(), tmp.end());
+        }
         else if (key == "rscm_is_minus") {
             auto tmp = Split<int>(val);
-            snap.rscmIsMinus.assign(tmp.begin(), tmp.end());
+            snap.rscmIsRightMinus.assign(tmp.begin(), tmp.end());
         }
         else if (key == "min_shift_savings") snap.minShiftSavings = Split<unsigned int>(val);
         else if (key == "variable_bit_widths") snap.variableBitWidths = Split<unsigned int>(val);
@@ -142,14 +152,31 @@ std::optional<SnapshotData> ReadSnapshot(const std::string& path)
             dag.maxOutputValue = Split<int>(maxLine.substr(maxLine.find(':') + 1));
             dag.minOutputValue = Split<int>(minLine.substr(minLine.find(':') + 1));
             dag.coefficientTrailingZeros = Split<unsigned int>(coeffLine.substr(coeffLine.find(':') + 1));
-            auto tmpMinus = Split<int>(minusLine.substr(minusLine.find(':') + 1));
-            dag.isMinus.assign(tmpMinus.begin(), tmpMinus.end());
+            const auto minusKey = minusLine.substr(0, minusLine.find(':'));
+            if (minusKey == "scm_is_left_minus") {
+                auto tmpLeft = Split<int>(minusLine.substr(minusLine.find(':') + 1));
+                dag.isLeftMinus.assign(tmpLeft.begin(), tmpLeft.end());
+                std::string rightLine;
+                if (!std::getline(ifs, rightLine)) break;
+                auto tmpRight = Split<int>(rightLine.substr(rightLine.find(':') + 1));
+                dag.isRightMinus.assign(tmpRight.begin(), tmpRight.end());
+            } else {
+                auto tmpRight = Split<int>(minusLine.substr(minusLine.find(':') + 1));
+                dag.isRightMinus.assign(tmpRight.begin(), tmpRight.end());
+                dag.isLeftMinus.assign(tmpRight.size(), false);
+            }
             snap.selectedScms.emplace_back(std::move(dag));
             (void)target; // stored in same order as targets
         }
     }
     if (expectedScms && snap.selectedScms.size() != expectedScms) {
         return std::nullopt;
+    }
+    if (snap.rscmIsLeftMinus.empty() && !snap.rscmIsRightMinus.empty()) {
+        snap.rscmIsLeftMinus.assign(snap.rscmIsRightMinus.size(), false);
+    }
+    if (snap.rscmIsRightMinus.empty() && !snap.rscmIsLeftMinus.empty()) {
+        snap.rscmIsRightMinus.assign(snap.rscmIsLeftMinus.size(), false);
     }
     return snap;
 }

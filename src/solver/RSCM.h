@@ -50,7 +50,7 @@ public:
     std::vector<unsigned int> scmIndexes;
 
     /**
-     * @brief A vector of boolean indicating whether the corresponding adder is an adder/subtractor.
+     * @brief A vector of boolean indicating whether the corresponding adder supports both signs on any input.
      */
     std::vector<bool> isPlusMinus;
 

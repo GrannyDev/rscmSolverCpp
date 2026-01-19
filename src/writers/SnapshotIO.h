@@ -31,7 +31,8 @@ struct SnapshotData {
     std::vector<int> rscmMaxOutput;
     std::vector<int> rscmMinOutput;
     std::vector<unsigned int> rscmCoeffTZ;
-    std::vector<bool> rscmIsMinus;
+    std::vector<bool> rscmIsLeftMinus;
+    std::vector<bool> rscmIsRightMinus;
 
     std::vector<unsigned int> minShiftSavings;
     std::vector<unsigned int> variableBitWidths;

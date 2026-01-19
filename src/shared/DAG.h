@@ -44,9 +44,14 @@ public:
     std::vector<unsigned int> coefficientTrailingZeros;
 
     /**
-     * @brief A vector of boolean flags indicating whether the corresponding adder is negative.
+     * @brief A vector of boolean flags indicating whether the left input is negated.
      */
-    std::vector<bool> isMinus;
+    std::vector<bool> isLeftMinus;
+
+    /**
+     * @brief A vector of boolean flags indicating whether the right input is negated.
+     */
+    std::vector<bool> isRightMinus;
 };
 
 #endif // RCM_H

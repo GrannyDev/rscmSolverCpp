@@ -190,6 +190,9 @@ std::stringstream VerilogGenerator::HandleAdder(const unsigned int layerIndex, c
         } else if (currentParamType == VariableDefs::RIGHT_SHIFTS) {
             previousParamType = VariableDefs::RIGHT_INPUTS;
             previousParamBitWidth = GetParamBitWidth(VariableDefs::RIGHT_INPUTS, nbAdder);
+        } else if (currentParamType == VariableDefs::LEFT_MULTIPLIER) {
+            previousParamType = VariableDefs::LEFT_SHIFTS;
+            previousParamBitWidth = GetParamBitWidth(VariableDefs::LEFT_SHIFTS, nbAdder);
         } else if (currentParamType == VariableDefs::RIGHT_MULTIPLIER) {
             previousParamType = VariableDefs::RIGHT_SHIFTS;
             previousParamBitWidth = GetParamBitWidth(VariableDefs::RIGHT_MULTIPLIER, nbAdder);
@@ -286,13 +289,15 @@ std::vector<std::pair<std::string, unsigned int>> VerilogGenerator::HandleParam(
     // Handle ADD_SUB (RIGHT_MULTIPLIER) specially
     if (paramType == VariableDefs::RIGHT_MULTIPLIER)
     {
-        // Get the bitwidths of LEFT_SHIFTS and RIGHT_SHIFTS for this adder
-        unsigned int leftShiftBW = GetParamBitWidth(VariableDefs::LEFT_SHIFTS, adderIdx);
+        // Get the bitwidths of LEFT_SIGN and RIGHT_SHIFTS for this adder
+        const std::string leftWire = varDefsTostring_(VariableDefs::LEFT_MULTIPLIER) + "_ADDER_" + std::to_string(adderIdx);
+        const std::string rightWire = "RIGHT_SHIFTS_ADDER_" + std::to_string(adderIdx);
+        unsigned int leftShiftBW = GetParamBitWidth(VariableDefs::LEFT_MULTIPLIER, adderIdx);
         unsigned int rightShiftBW = GetParamBitWidth(VariableDefs::RIGHT_SHIFTS, adderIdx);
         unsigned int addSubBW = std::max(leftShiftBW, rightShiftBW);
         unsigned int concatBW = addSubBW + 1; // Concatenation of {cout, ADD_SUB}
         
-        // For adder, we need to add or subtract LEFT_SHIFTS and RIGHT_SHIFTS
+        // For adder, we need to add or subtract LEFT_SIGN and RIGHT_SHIFTS
         if (nbMuxInputs < 2)
         {
             // Single operation (either + or -)
@@ -316,15 +321,15 @@ std::vector<std::pair<std::string, unsigned int>> VerilogGenerator::HandleParam(
                 // Cast operands to max bitwidth to avoid width expansion warnings
                 inStream << "\tassign {cout_ADDER_" << adderIdx << ", ADD_SUB_ADDER_" << adderIdx << "_INTERNAL} = ";
                 if (leftShiftBW < addSubBW) {
-                    inStream << addSubBW << "'(LEFT_SHIFTS_ADDER_" << adderIdx << ")";
+                    inStream << addSubBW << "'(" << leftWire << ")";
                 } else {
-                    inStream << "LEFT_SHIFTS_ADDER_" << adderIdx;
+                    inStream << leftWire;
                 }
                 inStream << " " << op << " ";
                 if (rightShiftBW < addSubBW) {
-                    inStream << addSubBW << "'(RIGHT_SHIFTS_ADDER_" << adderIdx << ")";
+                    inStream << addSubBW << "'(" << rightWire << ")";
                 } else {
-                    inStream << "RIGHT_SHIFTS_ADDER_" << adderIdx;
+                    inStream << rightWire;
                 }
                 inStream << ";\n";
                 inStream << "\twire" << PrintWireBitWidth(concatBW) << "ADD_SUB_CONCAT_ADDER_" << adderIdx << ";\n";
@@ -339,15 +344,15 @@ std::vector<std::pair<std::string, unsigned int>> VerilogGenerator::HandleParam(
                 // Cast operands to max bitwidth to avoid width expansion warnings
                 inStream << "\tassign {cout_ADDER_" << adderIdx << ", ADD_SUB_ADDER_" << adderIdx << "} = ";
                 if (leftShiftBW < addSubBW) {
-                    inStream << addSubBW << "'(LEFT_SHIFTS_ADDER_" << adderIdx << ")";
+                    inStream << addSubBW << "'(" << leftWire << ")";
                 } else {
-                    inStream << "LEFT_SHIFTS_ADDER_" << adderIdx;
+                    inStream << leftWire;
                 }
                 inStream << " " << op << " ";
                 if (rightShiftBW < addSubBW) {
-                    inStream << addSubBW << "'(RIGHT_SHIFTS_ADDER_" << adderIdx << ")";
+                    inStream << addSubBW << "'(" << rightWire << ")";
                 } else {
-                    inStream << "RIGHT_SHIFTS_ADDER_" << adderIdx;
+                    inStream << rightWire;
                 }
                 inStream << ";\n";
                 inStream << "\twire" << PrintWireBitWidth(bw) << varDefsTostring_(paramType) << "_ADDER_" << adderIdx << ";\n";
@@ -371,15 +376,43 @@ std::vector<std::pair<std::string, unsigned int>> VerilogGenerator::HandleParam(
                 inStream << "\tassign ADD_SUB_CONCAT_ADDER_" << adderIdx << " = {cout_ADDER_" << adderIdx << ", ADD_SUB_ADDER_" << adderIdx << "_INTERNAL};\n";
                 inStream << "\twire" << PrintWireBitWidth(bw) << varDefsTostring_(paramType) << "_ADDER_" << adderIdx << ";\n";
                 inStream << "\tassign " << varDefsTostring_(paramType) << "_ADDER_" << adderIdx << " = ADD_SUB_CONCAT_ADDER_" << adderIdx << "[" << (bw - 1) << ":0];\n";
-                HandleMultiplexer(inStream, paramType, param, "LEFT_SHIFTS_ADDER_" + std::to_string(adderIdx), "ADD_SUB_ADDER_" + std::to_string(adderIdx) + "_INTERNAL", bitPos, nbMuxInputs, adderIdx, addSubBW);
+                HandleMultiplexer(inStream, paramType, param, leftWire, "ADD_SUB_ADDER_" + std::to_string(adderIdx) + "_INTERNAL", bitPos, nbMuxInputs, adderIdx, addSubBW);
             } else
             {
                 // No slicing needed - concatenation matches expected bitwidth
                 // The mux will assign to the internal wire, then we concatenate to get the final result
                 inStream << "\twire" << PrintWireBitWidth(bw) << varDefsTostring_(paramType) << "_ADDER_" << adderIdx << ";\n";
                 inStream << "\tassign " << varDefsTostring_(paramType) << "_ADDER_" << adderIdx << " = {cout_ADDER_" << adderIdx << ", ADD_SUB_ADDER_" << adderIdx << "_INTERNAL};\n";
-                HandleMultiplexer(inStream, paramType, param, "LEFT_SHIFTS_ADDER_" + std::to_string(adderIdx), "ADD_SUB_ADDER_" + std::to_string(adderIdx) + "_INTERNAL", bitPos, nbMuxInputs, adderIdx, addSubBW);
+                HandleMultiplexer(inStream, paramType, param, leftWire, "ADD_SUB_ADDER_" + std::to_string(adderIdx) + "_INTERNAL", bitPos, nbMuxInputs, adderIdx, addSubBW);
             }
+        }
+    }
+    else if (paramType == VariableDefs::LEFT_MULTIPLIER)
+    {
+        const std::string inputWire = varDefsTostring_(previousParamType) + "_ADDER_" + std::to_string(adderIdx);
+        const std::string outputWire = varDefsTostring_(paramType) + "_ADDER_" + std::to_string(adderIdx);
+
+        if (nbMuxInputs < 2)
+        {
+            bool isNegative = false;
+            for (const int v : param.possibleValuesFusion) {
+                if (solutionNode_.rscm.set.test(bitPos + v + param.zeroPoint)) {
+                    isNegative = (v == -1);
+                    break;
+                }
+            }
+            inStream << "\twire" << PrintWireBitWidth(bw) << outputWire << ";\n";
+            if (isNegative) {
+                inStream << "\tassign " << outputWire << " = -" << inputWire << ";\n";
+            } else {
+                inStream << "\tassign " << outputWire << " = " << inputWire << ";\n";
+            }
+        } else
+        {
+            std::string muxName = "MUX_" + std::to_string(muxCounter_);
+            muxRanges.emplace_back(muxName, ComputeBitWidth(static_cast<int>(nbMuxInputs - 1)));
+            inStream << "\treg" << PrintWireBitWidth(bw) << outputWire << ";\n";
+            HandleMultiplexer(inStream, paramType, param, inputWire, outputWire, bitPos, nbMuxInputs, adderIdx, bw);
         }
     }
     // 8 cases needsShift * needsSlicing * nbMuxInputs > 1 ...
@@ -434,6 +467,7 @@ std::stringstream& VerilogGenerator::HandleMultiplexer(
     )
 {
     const bool isAdder = paramName == VariableDefs::RIGHT_MULTIPLIER;
+    const bool isLeftSign = paramName == VariableDefs::LEFT_MULTIPLIER;
     const bool isInput = paramName == VariableDefs::LEFT_INPUTS || paramName == VariableDefs::RIGHT_INPUTS;
     const bool isOutput = paramName == VariableDefs::OUTPUTS_SHIFTS;
 
@@ -441,11 +475,11 @@ std::stringstream& VerilogGenerator::HandleMultiplexer(
     auto generateAssignment = [&](const int v) {
         if (isAdder) {
             const char op = v == -1 ? '-' : '+';
-            const std::string leftWire = "LEFT_SHIFTS_ADDER_" + std::to_string(adderIdx);
+            const std::string leftWire = varDefsTostring_(VariableDefs::LEFT_MULTIPLIER) + "_ADDER_" + std::to_string(adderIdx);
             const std::string rightWire = "RIGHT_SHIFTS_ADDER_" + std::to_string(adderIdx);
             const std::string coutWire = "cout_ADDER_" + std::to_string(adderIdx);
             // Get bitwidths of left and right for proper extension
-            unsigned int leftBW = GetParamBitWidth(VariableDefs::LEFT_SHIFTS, adderIdx);
+            unsigned int leftBW = GetParamBitWidth(VariableDefs::LEFT_MULTIPLIER, adderIdx);
             unsigned int rightBW = GetParamBitWidth(VariableDefs::RIGHT_SHIFTS, adderIdx);
             unsigned int maxBW = std::max(leftBW, rightBW);
             // Cast operands to match max bitwidth
@@ -462,6 +496,12 @@ std::stringstream& VerilogGenerator::HandleMultiplexer(
                 muxStream << rightWire;
             }
             muxStream << ";\n";
+        } else if (isLeftSign) {
+            if (v == -1) {
+                muxStream << outputWire << " = -" << inputWire << ";\n";
+            } else {
+                muxStream << outputWire << " = " << inputWire << ";\n";
+            }
         } else if (isOutput) {
             // Output shift multiplexer - shift and cast to output bitwidth
             if (v == 0) {
