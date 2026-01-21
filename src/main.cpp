@@ -35,7 +35,7 @@ int main(int argc, char* argv[]) {
     };
 
     size_t beta = 5; // maximum bit-width allowed for the constants (and intermediate values)
-    size_t nbInputBits = 4; // number of bits of the input (to compute the fine-grained cost function)
+    size_t nbInputBits = 8; // number of bits of the input (to compute the fine-grained cost function)
     std::vector<int> targets = {-10, -7, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 8, 11}; // target const set of the RSCM
     std::vector<int> layout = {1, 1}; // {1,1} describes the chosen layout, i.e. 1 adder on the first layer and 1 adder on the second layer
     std::optional<unsigned int> heuristic;
@@ -47,7 +47,7 @@ int main(int argc, char* argv[]) {
     std::optional<std::string> snapshotIn;
     auto costModel = CostModel::LutsCost;
     std::optional<CostModel> hybridFastModel = CostModel::MuxCount;
-    std::optional<CostModel> hybridSlowModel = CostModel::AreaCost;
+    std::optional<CostModel> hybridSlowModel = CostModel::LutsCost;
     bool isSymmetric = false;
 
     for (int i = 1; i < argc; ++i) {

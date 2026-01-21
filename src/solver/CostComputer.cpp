@@ -122,16 +122,62 @@ unsigned int CostComputer::LutsCostComputer::merge(RSCM& node, DAG const& scm) c
         node.minShiftSavings[idx] = std::min(node.minShiftSavings[idx], scm.coefficientTrailingZeros[idx]);
     };
 
-    auto muxTreeLuts = [&](const unsigned inputs, const unsigned bw) {
+    auto muxTreeLuts = [&](const unsigned inputs, const unsigned bw) -> unsigned int {
+        auto baseCost = [](const unsigned k) -> double {
+            switch (k) {
+            case 0:
+            case 1:
+                return 0.0;
+            case 2:
+                return 0.5;
+            case 3:
+            case 4:
+                return 1.0;
+            case 5:
+                return 1.5;
+            case 6:
+            case 7:
+            case 8:
+                return 2.0;
+            case 16:
+                return 4.0;
+            default:
+                return 0.0;
+            }
+        };
+
+        double perBitCost = 0.0;
+        unsigned int remaining = inputs;
+
+        while (remaining > 16) {
+            perBitCost += baseCost(16);
+            remaining = remaining - 16 + 1;
+        }
+
+        if (remaining == 16) {
+            perBitCost += baseCost(16);
+        } else if (remaining > 8) {
+            perBitCost += baseCost(8);
+            remaining = remaining - 8 + 1;
+            perBitCost += baseCost(remaining);
+        } else {
+            perBitCost += baseCost(remaining);
+        }
+
+        const double total = std::ceil(perBitCost * static_cast<double>(bw));
+        return static_cast<unsigned int>(total);
+    };
+
+    auto muxTreeLutsOverhead = [&](const unsigned inputs, const unsigned bw) {
         if (inputs <= 1 || bw == 0) return 0u;
-        unsigned tokens = inputs + static_cast<unsigned>(std::ceil(std::log2(static_cast<double>(inputs))));
+        unsigned tokens = inputs;
         unsigned luts6 = 0;
         unsigned total = 0;
         while (tokens > solver->lutWidth_) {
             ++luts6;
             tokens = tokens - (solver->lutWidth_ - 1);
         }
-        if (tokens == 6) ++luts6; // one last LUT
+        if (tokens >= 3) ++luts6; // one last LUT
         else total += (bw + 2 - 1) / 2; // decompose in luts5
         total += luts6 * bw;
         return total; // final LUT handles the rest
@@ -142,15 +188,16 @@ unsigned int CostComputer::LutsCostComputer::merge(RSCM& node, DAG const& scm) c
     unsigned int paramGlobalIdx = 0;
     unsigned int nbEncodingBits = 0;
     std::array<std::pair<unsigned int, unsigned int>, 6> muxTracker; // indexed by static_cast<size_t>(VariableDefs)
+    std::array<std::vector<int>, 6> selectedValues; // selected possibleValuesFusion per VariableDefs
 
     // Iterate layers → adders → variables
     for (const auto& layer : solver->layers) {
         for (const auto& adder : layer.adders) {
             // zero the tracker cheaply
             for (auto& entry : muxTracker) entry = {0u, 0u};
+            for (auto& entry : selectedValues) entry.clear();
             // Track plus-minus flag
-            node.isPlusMinus[adderIdx] =
-                node.isPlusMinus[adderIdx] || node.rscm.isMinus[adderIdx] != scm.isMinus[adderIdx];
+            node.isPlusMinus[adderIdx] = node.isPlusMinus[adderIdx] || node.rscm.isMinus[adderIdx] != scm.isMinus[adderIdx];
 
             unsigned paramInAdderIdx = 0;
             for (const auto& param : adder.variables) {
@@ -159,73 +206,131 @@ unsigned int CostComputer::LutsCostComputer::merge(RSCM& node, DAG const& scm) c
 
                 // 3) Count the number of bits at one for this variable
                 unsigned bitCount = 0;
+                std::vector<int> selected;
                 for (size_t j = 0; j < param.possibleValuesFusion.size(); ++j) {
-                    if (node.rscm.set.test(bitPos + j)) ++bitCount;
+                    if (node.rscm.set.test(bitPos + j)) {
+                        ++bitCount;
+                        selected.push_back(param.possibleValuesFusion[j]);
+                    }
                 }
                 bitPos += param.possibleValuesFusion.size();
 
                 if (bitCount > 1) nbEncodingBits += std::ceil(std::log2(bitCount));
 
                 // 5) Handle RIGHT_MULTIPLIER adder cost (an adder)
-                if (solver->idxToVarMap.at(paramInAdderIdx) == VariableDefs::RIGHT_MULTIPLIER) {
+                const auto varType = solver->idxToVarMap.at(paramInAdderIdx);
+                if (varType == VariableDefs::RIGHT_MULTIPLIER) {
                     const size_t mapSize = solver->varToIdxMap.size();
                     const auto rightMultIdx =  solver->varToIdxMap.at(VariableDefs::RIGHT_MULTIPLIER) + adderIdx * mapSize;
+                    const auto leftIdx  = solver->varToIdxMap.at(VariableDefs::LEFT_SHIFTS) + adderIdx * mapSize;
+                    const auto rightIdx = solver->varToIdxMap.at(VariableDefs::RIGHT_SHIFTS) + adderIdx * mapSize;
                     lutCost += node.variableBitWidths[rightMultIdx];
-                    if (node.minShiftSavings[rightMultIdx] == 0) lutCost--; // no need for a carry lut
+                    if (node.variableBitWidths[rightMultIdx] != node.variableBitWidths[leftIdx] && node.variableBitWidths[rightMultIdx] != node.variableBitWidths[rightIdx]) lutCost--; // no need for a carry lut
                 } else {
-                    const auto varType = solver->idxToVarMap.at(paramInAdderIdx);
-                    muxTracker[static_cast<size_t>(varType)] = {bitCount > 1 ? bitCount : 0, node.variableBitWidths[paramGlobalIdx]};
+                    const unsigned normalizedBw = node.variableBitWidths[paramGlobalIdx] - node.minShiftSavings[paramGlobalIdx];
+                    muxTracker[static_cast<size_t>(varType)] = {bitCount > 1 ? bitCount : 0, normalizedBw};
+                    selectedValues[static_cast<size_t>(varType)] = std::move(selected);
                 }
 
                 ++paramGlobalIdx;
                 ++paramInAdderIdx;
             }
 
-            // handle mux merge logic
-            // 1) find the biggest one that can be merged into the add or sub
-            if (!node.isPlusMinus[adderIdx]) // can't merge if it's both
-            {
-                unsigned int maxLUTs = 0;
-                auto maxIdx = static_cast<size_t>(VariableDefs::OUTPUTS_SHIFTS); // default to output (won't be used)
-                for (size_t i = 0; i < muxTracker.size(); ++i) {
-                    if (i == static_cast<size_t>(VariableDefs::OUTPUTS_SHIFTS)) continue; // never merge output mux into adder
-                    const auto [nbInputs, bw] = muxTracker[i];
-                    if (nbInputs <= 1 || bw == 0) continue;
-                    const auto selBits = static_cast<unsigned>(std::ceil(std::log2(static_cast<double>(nbInputs))));
-                    if (nbInputs + selBits <= solver->nbInputsLeftByAdderLut_ && bw * (nbInputs + selBits) > maxLUTs) {
-                        maxLUTs = muxTreeLuts(nbInputs + selBits, bw);
-                        maxIdx = i;
-                    }
-                }
-                // 2) remove the merged mux if there's one
-                if (maxLUTs > 0)
-                {
-                    muxTracker[maxIdx].first = 0;
-                }
-            }
-
-            // 3) compute the number of LUTs per right/left path
-            auto fuseCost = [&](const unsigned aCnt, const unsigned aBw, const unsigned bCnt, const unsigned bBw) {
-                const unsigned separate = muxTreeLuts(aCnt, aBw) + muxTreeLuts(bCnt, bBw);
-                const unsigned combined = muxTreeLuts(aCnt + bCnt, bBw);
-                return std::min(separate, combined);
-            };
-
-            const unsigned leftCost = fuseCost(
-                muxTracker[static_cast<size_t>(VariableDefs::LEFT_INPUTS)].first,  muxTracker[static_cast<size_t>(VariableDefs::LEFT_INPUTS)].second,
-                muxTracker[static_cast<size_t>(VariableDefs::LEFT_SHIFTS)].first,  muxTracker[static_cast<size_t>(VariableDefs::LEFT_SHIFTS)].second
-            );
-            const unsigned rightCost = fuseCost(
-                muxTracker[static_cast<size_t>(VariableDefs::RIGHT_INPUTS)].first, muxTracker[static_cast<size_t>(VariableDefs::RIGHT_INPUTS)].second,
-                muxTracker[static_cast<size_t>(VariableDefs::RIGHT_SHIFTS)].first, muxTracker[static_cast<size_t>(VariableDefs::RIGHT_SHIFTS)].second
-            );
-
+            // output never merged
             const auto outputPathInputs = muxTracker[static_cast<size_t>(VariableDefs::OUTPUTS_SHIFTS)].first;
             const auto outputPathBw = muxTracker[static_cast<size_t>(VariableDefs::OUTPUTS_SHIFTS)].second;
-
-            lutCost += leftCost;
-            lutCost += rightCost;
             lutCost += muxTreeLuts(outputPathInputs, outputPathBw);
+
+            // prepare for merge logic
+            size_t leftMergeCandiate = static_cast<size_t>(VariableDefs::LEFT_SHIFTS);
+            size_t rightMergeCandiate = static_cast<size_t>(VariableDefs::RIGHT_SHIFTS);
+            if (muxTracker[leftMergeCandiate].first == 0) {
+                leftMergeCandiate = static_cast<size_t>(VariableDefs::LEFT_INPUTS);
+            } else {
+                lutCost += muxTreeLuts(
+                    muxTracker[static_cast<size_t>(VariableDefs::LEFT_INPUTS)].first,
+                    muxTracker[static_cast<size_t>(VariableDefs::LEFT_INPUTS)].second
+                );
+            }
+            if (muxTracker[rightMergeCandiate].first == 0) {
+                rightMergeCandiate = static_cast<size_t>(VariableDefs::RIGHT_INPUTS);
+            } else {
+                lutCost += muxTreeLuts(
+                    muxTracker[static_cast<size_t>(VariableDefs::RIGHT_INPUTS)].first,
+                    muxTracker[static_cast<size_t>(VariableDefs::RIGHT_INPUTS)].second
+                );
+            }
+            // look for mux2
+            bool bothMux2 = true;
+            if (muxTracker[leftMergeCandiate].first > 2) {
+                lutCost += muxTreeLuts(
+                    muxTracker[leftMergeCandiate].first,
+                    muxTracker[leftMergeCandiate].second
+                );
+                bothMux2 = false;
+            }
+            if (muxTracker[rightMergeCandiate].first > 2) {
+                lutCost += muxTreeLuts(
+                    muxTracker[rightMergeCandiate].first,
+                    muxTracker[rightMergeCandiate].second
+                );
+                bothMux2 = false;
+            }
+            // if both are mux2, determine if both can be merged or which one
+            if (bothMux2) {
+                const auto leftInputs = muxTracker[leftMergeCandiate].first;
+                const auto rightInputs = muxTracker[rightMergeCandiate].first;
+                if (leftInputs <= 1 || rightInputs <= 1) {
+                    // nothing to add
+                } else {
+                    auto extractShifts = [&](const size_t varIdx) {
+                        std::vector<int> shifts;
+                        const auto varType = static_cast<VariableDefs>(varIdx);
+                        for (const int v : selectedValues[varIdx]) {
+                            if (varType == VariableDefs::LEFT_SHIFTS ||
+                                varType == VariableDefs::RIGHT_SHIFTS ||
+                                varType == VariableDefs::OUTPUTS_SHIFTS) {
+                                shifts.push_back(v);
+                            } else if (varType == VariableDefs::LEFT_INPUTS ||
+                                       varType == VariableDefs::RIGHT_INPUTS) {
+                                if (v < 0) {
+                                    const int shift = (v == -1) ? 0 : std::abs(v + 1);
+                                    shifts.push_back(shift);
+                                } else {
+                                    // Encode adder inputs as negative values to avoid clashing with shifts.
+                                    shifts.push_back(-static_cast<int>(v) - 1);
+                                }
+                            }
+                        }
+                        return shifts;
+                    };
+
+                    bool hasCommonShift = false;
+                    if (!node.isPlusMinus[adderIdx]) {
+                        const auto leftShifts = extractShifts(leftMergeCandiate);
+                        const auto rightShifts = extractShifts(rightMergeCandiate);
+                        for (const int l : leftShifts) {
+                            for (const int r : rightShifts) {
+                                if (l == r) {
+                                    hasCommonShift = true;
+                                    break;
+                                }
+                            }
+                            if (hasCommonShift) break;
+                        }
+                    }
+
+                    if (!hasCommonShift) {
+                        const auto leftBw = muxTracker[leftMergeCandiate].second;
+                        const auto rightBw = muxTracker[rightMergeCandiate].second;
+                        if (leftBw <= rightBw) {
+                            lutCost += muxTreeLuts(leftInputs, leftBw);
+                        } else {
+                            lutCost += muxTreeLuts(rightInputs, rightBw);
+                        }
+                    }
+                }
+            }
 
             ++adderIdx;
         }
@@ -234,7 +339,7 @@ unsigned int CostComputer::LutsCostComputer::merge(RSCM& node, DAG const& scm) c
     // add decoding overhead if nbEncodingBits > nbMinEncodingBits_
     if (nbEncodingBits > solver->nbMinEncodingBits_)
     {
-        lutCost +=  muxTreeLuts(solver->nbMinEncodingBits_, nbEncodingBits);
+        lutCost +=  muxTreeLutsOverhead(solver->nbMinEncodingBits_, nbEncodingBits);
     }
 
     // Store result
