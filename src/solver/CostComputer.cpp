@@ -122,17 +122,62 @@ unsigned int CostComputer::LutsCostComputer::merge(RSCM& node, DAG const& scm) c
         node.minShiftSavings[idx] = std::min(node.minShiftSavings[idx], scm.coefficientTrailingZeros[idx]);
     };
 
-    auto muxTreeLuts = [&](const unsigned inputs, const unsigned bw, const bool accountForSelector = true) {
+    auto muxTreeLuts = [&](const unsigned inputs, const unsigned bw) -> unsigned int {
+        auto baseCost = [](const unsigned k) -> double {
+            switch (k) {
+            case 0:
+            case 1:
+                return 0.0;
+            case 2:
+                return 0.5;
+            case 3:
+            case 4:
+                return 1.0;
+            case 5:
+                return 1.5;
+            case 6:
+            case 7:
+            case 8:
+                return 2.0;
+            case 16:
+                return 4.0;
+            default:
+                return 0.0;
+            }
+        };
+
+        double perBitCost = 0.0;
+        unsigned int remaining = inputs;
+
+        while (remaining > 16) {
+            perBitCost += baseCost(16);
+            remaining = remaining - 16 + 1;
+        }
+
+        if (remaining == 16) {
+            perBitCost += baseCost(16);
+        } else if (remaining > 8) {
+            perBitCost += baseCost(8);
+            remaining = remaining - 8 + 1;
+            perBitCost += baseCost(remaining);
+        } else {
+            perBitCost += baseCost(remaining);
+        }
+
+        const double total = std::ceil(perBitCost * static_cast<double>(bw));
+        return static_cast<unsigned int>(total);
+    };
+
+    auto muxTreeLutsOverhead = [&](const unsigned inputs, const unsigned bw) {
         if (inputs <= 1 || bw == 0) return 0u;
         unsigned tokens = inputs;
-        if (accountForSelector) tokens += std::ceil(std::log2(static_cast<double>(inputs)));
         unsigned luts6 = 0;
         unsigned total = 0;
         while (tokens > solver->lutWidth_) {
             ++luts6;
             tokens = tokens - (solver->lutWidth_ - 1);
         }
-        if (tokens > 4) ++luts6; // one last LUT
+        if (tokens >= 3) ++luts6; // one last LUT
         else total += (bw + 2 - 1) / 2; // decompose in luts5
         total += luts6 * bw;
         return total; // final LUT handles the rest
@@ -182,7 +227,8 @@ unsigned int CostComputer::LutsCostComputer::merge(RSCM& node, DAG const& scm) c
                     lutCost += node.variableBitWidths[rightMultIdx];
                     if (node.variableBitWidths[rightMultIdx] != node.variableBitWidths[leftIdx] && node.variableBitWidths[rightMultIdx] != node.variableBitWidths[rightIdx]) lutCost--; // no need for a carry lut
                 } else {
-                    muxTracker[static_cast<size_t>(varType)] = {bitCount > 1 ? bitCount : 0, node.variableBitWidths[paramGlobalIdx]};
+                    const unsigned normalizedBw = node.variableBitWidths[paramGlobalIdx] - node.minShiftSavings[paramGlobalIdx];
+                    muxTracker[static_cast<size_t>(varType)] = {bitCount > 1 ? bitCount : 0, normalizedBw};
                     selectedValues[static_cast<size_t>(varType)] = std::move(selected);
                 }
 
@@ -293,7 +339,7 @@ unsigned int CostComputer::LutsCostComputer::merge(RSCM& node, DAG const& scm) c
     // add decoding overhead if nbEncodingBits > nbMinEncodingBits_
     if (nbEncodingBits > solver->nbMinEncodingBits_)
     {
-        lutCost +=  muxTreeLuts(solver->nbMinEncodingBits_, nbEncodingBits, false);
+        lutCost +=  muxTreeLutsOverhead(solver->nbMinEncodingBits_, nbEncodingBits);
     }
 
     // Store result

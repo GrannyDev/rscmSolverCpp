@@ -34,9 +34,9 @@ int main(int argc, char* argv[]) {
         return std::nullopt;
     };
 
-    size_t beta = 13; // maximum bit-width allowed for the constants (and intermediate values)
-    size_t nbInputBits = 8; // number of bits of the input (to compute the fine-grained cost function)
-    std::vector<int> targets = {2552,112,2300,1920,2096,952,94,288,585,480,247,21,484,242,136,2480}; // target const set of the RSCM
+    size_t beta = 8; // maximum bit-width allowed for the constants (and intermediate values)
+    size_t nbInputBits = 5; // number of bits of the input (to compute the fine-grained cost function)
+    std::vector<int> targets = {-23, -22, -16, -15, -14, -13, -9, -8, -7, -6, -5, -4, -2, -1, 0, 1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 16, 17, 18, 19, 25, 26}; // target const set of the RSCM
     std::vector<int> layout = {1, 1}; // {1,1} describes the chosen layout, i.e. 1 adder on the first layer and 1 adder on the second layer
     std::optional<unsigned int> heuristic;
     std::optional<unsigned int> timeoutSeconds = 300;
