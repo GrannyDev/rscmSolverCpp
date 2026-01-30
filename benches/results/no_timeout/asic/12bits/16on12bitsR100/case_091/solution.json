@@ -1,0 +1,116 @@
+{
+	"ADDER_0": {
+		"LEFT_INPUTS": {
+			"inputs": ["X"],
+			"shifts": [0],
+			"theoretical_bitwidth": 8,
+			"computed_bitwidth": 8
+		},
+		"LEFT_SHIFTS": {
+			"shifts": [2, 3, 5],
+			"theoretical_bitwidth": 13,
+			"computed_bitwidth": 13,
+			"mux_nb": 0
+		},
+		"RIGHT_INPUTS": {
+			"inputs": ["X"],
+			"shifts": [0],
+			"theoretical_bitwidth": 8,
+			"computed_bitwidth": 8
+		},
+		"RIGHT_SHIFTS": {
+			"shifts": [0, 1],
+			"theoretical_bitwidth": 9,
+			"computed_bitwidth": 9,
+			"mux_nb": 1
+		},
+		"OUTPUTS_SHIFTS": {
+			"shifts": [0],
+			"theoretical_bitwidth": 14,
+			"computed_bitwidth": 14
+		},
+		"ADD_SUB": {
+			"type": "both",
+			"theoretical_bitwidth": 14,
+			"computed_bitwidth": 14,
+			"mux_nb": 2
+		}
+	},
+	"ADDER_1": {
+		"LEFT_INPUTS": {
+			"inputs": ["ADDER_0", "X"],
+			"shifts": [0, 3],
+			"theoretical_bitwidth": 13,
+			"computed_bitwidth": 13,
+			"mux_nb": 3
+		},
+		"LEFT_SHIFTS": {
+			"shifts": [2, 6, 7],
+			"theoretical_bitwidth": 20,
+			"computed_bitwidth": 18,
+			"mux_nb": 4
+		},
+		"RIGHT_INPUTS": {
+			"inputs": ["ADDER_0", "X"],
+			"shifts": [0, 4],
+			"theoretical_bitwidth": 14,
+			"computed_bitwidth": 14,
+			"mux_nb": 5
+		},
+		"RIGHT_SHIFTS": {
+			"shifts": [0, 2],
+			"theoretical_bitwidth": 16,
+			"computed_bitwidth": 15,
+			"mux_nb": 6
+		},
+		"OUTPUTS_SHIFTS": {
+			"shifts": [0, 1],
+			"theoretical_bitwidth": 21,
+			"computed_bitwidth": 19,
+			"mux_nb": 7
+		},
+		"ADD_SUB": {
+			"type": "both",
+			"theoretical_bitwidth": 19,
+			"computed_bitwidth": 19,
+			"mux_nb": 8
+		}
+	},
+	"meta": {
+		"wIn": 8,
+		"wConf": 4,
+		"wSelec": 11,
+		"needs_table": true,
+		"wOut": 19,
+		"output": "ADDER_1",
+		"is_symmetric": false,
+		"muxes_bw": [2, 1, 1, 1, 2, 1, 1, 1, 1],
+		"costs": {
+			"asic_delay": "not implemented",
+			"fpga_delay": "not implemented",
+			"luts": 95,
+			"mux_bits": 11,
+			"mux_count": 9,
+			"area_cost": 2880
+		},
+		"constants": [1170, 381, 479, 37, 521, 396, 478, 1042, 2008, 636, 1148, 184, 776, 416, 1568, 544],
+		"encoding": [
+			[1, 0, 1, 0, 1, 0, 0, 1, 1],
+			[0, 0, 0, 0, 2, 0, 0, 0, 0],
+			[2, 0, 1, 1, 1, 0, 0, 0, 0],
+			[0, 0, 1, 1, 0, 0, 0, 0, 1],
+			[1, 0, 1, 1, 1, 0, 0, 0, 1],
+			[0, 0, 0, 0, 2, 0, 1, 0, 1],
+			[2, 1, 1, 1, 1, 0, 0, 0, 0],
+			[1, 0, 1, 1, 1, 0, 0, 1, 1],
+			[0, 0, 1, 1, 2, 0, 1, 1, 0],
+			[2, 0, 0, 1, 1, 0, 1, 0, 1],
+			[2, 0, 0, 1, 2, 0, 1, 0, 1],
+			[2, 1, 0, 0, 0, 1, 1, 0, 1],
+			[2, 0, 0, 1, 1, 0, 1, 1, 0],
+			[0, 0, 0, 0, 1, 1, 0, 1, 1],
+			[0, 1, 1, 0, 2, 1, 0, 1, 1],
+			[0, 1, 0, 0, 2, 1, 0, 1, 1]
+		]
+	}
+}

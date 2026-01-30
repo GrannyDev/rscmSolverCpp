@@ -1,0 +1,101 @@
+{
+	"ADDER_0": {
+		"LEFT_INPUTS": {
+			"inputs": ["X"],
+			"shifts": [0],
+			"theoretical_bitwidth": 8,
+			"computed_bitwidth": 8
+		},
+		"LEFT_SHIFTS": {
+			"shifts": [6, 8],
+			"theoretical_bitwidth": 16,
+			"computed_bitwidth": 16,
+			"mux_nb": 0
+		},
+		"RIGHT_INPUTS": {
+			"inputs": ["X"],
+			"shifts": [0],
+			"theoretical_bitwidth": 8,
+			"computed_bitwidth": 8
+		},
+		"RIGHT_SHIFTS": {
+			"shifts": [0],
+			"theoretical_bitwidth": 8,
+			"computed_bitwidth": 8
+		},
+		"OUTPUTS_SHIFTS": {
+			"shifts": [0],
+			"theoretical_bitwidth": 16,
+			"computed_bitwidth": 16
+		},
+		"ADD_SUB": {
+			"type": "both",
+			"theoretical_bitwidth": 17,
+			"computed_bitwidth": 16,
+			"mux_nb": 1
+		}
+	},
+	"ADDER_1": {
+		"LEFT_INPUTS": {
+			"inputs": ["ADDER_0"],
+			"shifts": [0],
+			"theoretical_bitwidth": 16,
+			"computed_bitwidth": 16
+		},
+		"LEFT_SHIFTS": {
+			"shifts": [3],
+			"theoretical_bitwidth": 19,
+			"computed_bitwidth": 19
+		},
+		"RIGHT_INPUTS": {
+			"inputs": ["ADDER_0", "X"],
+			"shifts": [0, 2],
+			"theoretical_bitwidth": 15,
+			"computed_bitwidth": 15,
+			"mux_nb": 2
+		},
+		"RIGHT_SHIFTS": {
+			"shifts": [0, 5],
+			"theoretical_bitwidth": 20,
+			"computed_bitwidth": 15,
+			"mux_nb": 3
+		},
+		"OUTPUTS_SHIFTS": {
+			"shifts": [0, 3],
+			"theoretical_bitwidth": 28,
+			"computed_bitwidth": 20,
+			"mux_nb": 4
+		},
+		"ADD_SUB": {
+			"type": "both",
+			"theoretical_bitwidth": 20,
+			"computed_bitwidth": 20,
+			"mux_nb": 5
+		}
+	},
+	"meta": {
+		"wIn": 8,
+		"wConf": 2,
+		"wSelec": 6,
+		"needs_table": true,
+		"wOut": 20,
+		"output": "ADDER_1",
+		"is_symmetric": false,
+		"muxes_bw": [1, 1, 1, 1, 1, 1],
+		"costs": {
+			"asic_delay": "not implemented",
+			"fpga_delay": "not implemented",
+			"luts": 70,
+			"mux_bits": 6,
+			"mux_count": 4,
+			"area_cost": 2077
+		},
+		"constants": [2168, 3528, 500, 585],
+		"encoding": [
+			[0, 0, 0, 0, 1, 0],
+			[0, 1, 0, 0, 0, 1],
+			[0, 0, 1, 0, 0, 0],
+			[1, 0, 1, 1, 0, 1]
+		]
+	}
+}

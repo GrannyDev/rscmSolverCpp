@@ -1,0 +1,547 @@
+USER INPUTS:
+Reconfigurable SCM with coefficient(s)
+-> Configuration #0:
+   < 125 >
+-> Configuration #1:
+   < 896 >
+-> Configuration #2:
+   < 191 >
+-> Configuration #3:
+   < 510 >
+
+Timeout: 300 seconds
+Solver: executable
+Threads: 1
+Attention! Reconfigurability not fully supported yet!
+Coefficients before preprocessing:
+Reconfigurable SCM with coefficient(s)
+-> Configuration #0:
+   < 125 >
+-> Configuration #1:
+   < 7 >
+-> Configuration #2:
+   < 191 >
+-> Configuration #3:
+   < 255 >
+
+Coefficients after preprocessing:
+Reconfigurable SCM with coefficient(s)
+-> Configuration #0:
+   < 125 >
+-> Configuration #1:
+   < 7 >
+-> Configuration #2:
+   < 191 >
+-> Configuration #3:
+   < 255 >
+
+Internal word size: 20
+Max shift: 17
+Shift word size: 5
+Min #adders: 2
+  Found solution for #adders = 2 with min 0 (of 15) shared reconfiguration MUX ports after 0.034 seconds 8-)
+Solution is verified :-)
+Current solution shares 4 MUX ports
+The solver reported 3 shared MUX ports
+Found solution!
+#adders = 2, word size = 20
+-> CONFIGURATION #0:
+  node #0 = [1]
+  node #1 = [3]
+    left input: node 0
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 1
+    subtract: 0
+  node #2 = [125]
+    left input: node 0
+    right input: node 1
+    left input shift value: 7
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #1:
+  node #0 = [1]
+  node #1 = [12]
+    left input: node 0
+    right input: node 0
+    left input shift value: 2
+    right input shift value: 3
+    subtract: 0
+  node #2 = [28]
+    left input: node 0
+    right input: node 1
+    left input shift value: 4
+    right input shift value: 0
+    subtract: 0
+-> CONFIGURATION #2:
+  node #0 = [1]
+  node #1 = [127]
+    left input: node 0
+    right input: node 0
+    left input shift value: 7
+    right input shift value: 0
+    subtract: 1
+  node #2 = [191]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 6
+    subtract: 0
+-> CONFIGURATION #3:
+  node #0 = [1]
+  node #1 = [255]
+    left input: node 0
+    right input: node 0
+    left input shift value: 8
+    right input shift value: 0
+    subtract: 1
+  node #2 = [8]
+    left input: node 0
+    right input: node 0
+    left input shift value: 4
+    right input shift value: 3
+    subtract: 1
+  Found solution for #adders = 2 with min 5 (of 15) shared reconfiguration MUX ports after 0.036 seconds 8-)
+Solution is verified :-)
+Current solution shares 7 MUX ports
+The solver reported 6 shared MUX ports
+Found solution!
+#adders = 2, word size = 20
+-> CONFIGURATION #0:
+  node #0 = [1]
+  node #1 = [-3]
+    left input: node 0
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 2
+    subtract: 1
+  node #2 = [125]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 7
+    subtract: 0
+-> CONFIGURATION #1:
+  node #0 = [1]
+  node #1 = [3]
+    left input: node 0
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 1
+    subtract: 0
+  node #2 = [112]
+    left input: node 1
+    right input: node 0
+    left input shift value: 4
+    right input shift value: 6
+    subtract: 0
+-> CONFIGURATION #2:
+  node #0 = [1]
+  node #1 = [3]
+    left input: node 0
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 1
+    subtract: 0
+  node #2 = [191]
+    left input: node 1
+    right input: node 0
+    left input shift value: 6
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #3:
+  node #0 = [1]
+  node #1 = [508]
+    left input: node 0
+    right input: node 0
+    left input shift value: 9
+    right input shift value: 2
+    subtract: 1
+  node #2 = [510]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 1
+    subtract: 0
+  Found solution for #adders = 2 with min 8 (of 15) shared reconfiguration MUX ports after 0.042 seconds 8-)
+Solution is verified :-)
+Current solution shares 8 MUX ports
+The solver reported 8 shared MUX ports
+Found solution!
+#adders = 2, word size = 20
+-> CONFIGURATION #0:
+  node #0 = [1]
+  node #1 = [62]
+    left input: node 0
+    right input: node 0
+    left input shift value: 6
+    right input shift value: 1
+    subtract: 1
+  node #2 = [125]
+    left input: node 1
+    right input: node 0
+    left input shift value: 1
+    right input shift value: 0
+    subtract: 0
+-> CONFIGURATION #1:
+  node #0 = [1]
+  node #1 = [896]
+    left input: node 0
+    right input: node 0
+    left input shift value: 10
+    right input shift value: 7
+    subtract: 1
+  node #2 = [1791]
+    left input: node 1
+    right input: node 0
+    left input shift value: 1
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #2:
+  node #0 = [1]
+  node #1 = [96]
+    left input: node 0
+    right input: node 0
+    left input shift value: 7
+    right input shift value: 5
+    subtract: 1
+  node #2 = [191]
+    left input: node 1
+    right input: node 0
+    left input shift value: 1
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #3:
+  node #0 = [1]
+  node #1 = [127]
+    left input: node 0
+    right input: node 0
+    left input shift value: 7
+    right input shift value: 0
+    subtract: 1
+  node #2 = [255]
+    left input: node 1
+    right input: node 0
+    left input shift value: 1
+    right input shift value: 0
+    subtract: 0
+  Found solution for #adders = 2 with min 9 (of 15) shared reconfiguration MUX ports after 0.056 seconds 8-)
+Solution is verified :-)
+Current solution shares 9 MUX ports
+The solver reported 9 shared MUX ports
+Found solution!
+#adders = 2, word size = 20
+-> CONFIGURATION #0:
+  node #0 = [1]
+  node #1 = [3]
+    left input: node 0
+    right input: node 0
+    left input shift value: 2
+    right input shift value: 0
+    subtract: 1
+  node #2 = [125]
+    left input: node 0
+    right input: node 1
+    left input shift value: 7
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #1:
+  node #0 = [1]
+  node #1 = [56]
+    left input: node 0
+    right input: node 0
+    left input shift value: 6
+    right input shift value: 3
+    subtract: 1
+  node #2 = [112]
+    left input: node 1
+    right input: node 1
+    left input shift value: 0
+    right input shift value: 0
+    subtract: 0
+-> CONFIGURATION #2:
+  node #0 = [1]
+  node #1 = [255]
+    left input: node 0
+    right input: node 0
+    left input shift value: 8
+    right input shift value: 0
+    subtract: 1
+  node #2 = [191]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 6
+    subtract: 1
+-> CONFIGURATION #3:
+  node #0 = [1]
+  node #1 = [255]
+    left input: node 0
+    right input: node 0
+    left input shift value: 8
+    right input shift value: 0
+    subtract: 1
+  node #2 = [510]
+    left input: node 1
+    right input: node 1
+    left input shift value: 0
+    right input shift value: 0
+    subtract: 0
+  Found solution for #adders = 2 with min 10 (of 15) shared reconfiguration MUX ports after 0.05 seconds 8-)
+Solution is verified :-)
+Current solution shares 10 MUX ports
+The solver reported 10 shared MUX ports
+Found solution!
+#adders = 2, word size = 20
+-> CONFIGURATION #0:
+  node #0 = [1]
+  node #1 = [126]
+    left input: node 0
+    right input: node 0
+    left input shift value: 7
+    right input shift value: 1
+    subtract: 1
+  node #2 = [125]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #1:
+  node #0 = [1]
+  node #1 = [896]
+    left input: node 0
+    right input: node 0
+    left input shift value: 10
+    right input shift value: 7
+    subtract: 1
+  node #2 = [895]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #2:
+  node #0 = [1]
+  node #1 = [192]
+    left input: node 0
+    right input: node 0
+    left input shift value: 7
+    right input shift value: 6
+    subtract: 0
+  node #2 = [191]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #3:
+  node #0 = [1]
+  node #1 = [510]
+    left input: node 0
+    right input: node 0
+    left input shift value: 9
+    right input shift value: 1
+    subtract: 1
+  node #2 = [509]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 0
+    subtract: 1
+  Found solution for #adders = 2 with min 11 (of 15) shared reconfiguration MUX ports after 0.212 seconds 8-)
+Solution is verified :-)
+Current solution shares 11 MUX ports
+The solver reported 11 shared MUX ports
+Found solution!
+#adders = 2, word size = 20
+-> CONFIGURATION #0:
+  node #0 = [1]
+  node #1 = [3]
+    left input: node 0
+    right input: node 0
+    left input shift value: 1
+    right input shift value: 0
+    subtract: 0
+  node #2 = [125]
+    left input: node 0
+    right input: node 1
+    left input shift value: 7
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #1:
+  node #0 = [1]
+  node #1 = [320]
+    left input: node 0
+    right input: node 0
+    left input shift value: 6
+    right input shift value: 8
+    subtract: 0
+  node #2 = [448]
+    left input: node 0
+    right input: node 1
+    left input shift value: 7
+    right input shift value: 0
+    subtract: 0
+-> CONFIGURATION #2:
+  node #0 = [1]
+  node #1 = [63]
+    left input: node 0
+    right input: node 0
+    left input shift value: 6
+    right input shift value: 0
+    subtract: 1
+  node #2 = [191]
+    left input: node 0
+    right input: node 1
+    left input shift value: 7
+    right input shift value: 0
+    subtract: 0
+-> CONFIGURATION #3:
+  node #0 = [1]
+  node #1 = [-254]
+    left input: node 0
+    right input: node 0
+    left input shift value: 1
+    right input shift value: 8
+    subtract: 1
+  node #2 = [255]
+    left input: node 0
+    right input: node 1
+    left input shift value: 0
+    right input shift value: 0
+    subtract: 1
+  Found solution for #adders = 2 with min 12 (of 15) shared reconfiguration MUX ports after 0.263 seconds 8-)
+Solution is verified :-)
+Current solution shares 12 MUX ports
+The solver reported 12 shared MUX ports
+Found solution!
+#adders = 2, word size = 20
+-> CONFIGURATION #0:
+  node #0 = [1]
+  node #1 = [127]
+    left input: node 0
+    right input: node 0
+    left input shift value: 7
+    right input shift value: 0
+    subtract: 1
+  node #2 = [125]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 1
+    subtract: 1
+-> CONFIGURATION #1:
+  node #0 = [1]
+  node #1 = [127]
+    left input: node 0
+    right input: node 0
+    left input shift value: 7
+    right input shift value: 0
+    subtract: 1
+  node #2 = [448]
+    left input: node 0
+    right input: node 0
+    left input shift value: 9
+    right input shift value: 6
+    subtract: 1
+-> CONFIGURATION #2:
+  node #0 = [1]
+  node #1 = [127]
+    left input: node 0
+    right input: node 0
+    left input shift value: 7
+    right input shift value: 0
+    subtract: 1
+  node #2 = [191]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 6
+    subtract: 0
+-> CONFIGURATION #3:
+  node #0 = [1]
+  node #1 = [129]
+    left input: node 0
+    right input: node 0
+    left input shift value: 7
+    right input shift value: 0
+    subtract: 0
+  node #2 = [510]
+    left input: node 0
+    right input: node 0
+    left input shift value: 9
+    right input shift value: 1
+    subtract: 1
+  Problem for #adders = 2 with min 13 (of 15) shared reconfiguration MUX ports is proven to be infeasible after 0.166 seconds... 
+Found solution!
+#adders = 2, word size = 20
+-> CONFIGURATION #0:
+  node #0 = [1]
+  node #1 = [127]
+    left input: node 0
+    right input: node 0
+    left input shift value: 7
+    right input shift value: 0
+    subtract: 1
+  node #2 = [125]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 1
+    subtract: 1
+-> CONFIGURATION #1:
+  node #0 = [1]
+  node #1 = [127]
+    left input: node 0
+    right input: node 0
+    left input shift value: 7
+    right input shift value: 0
+    subtract: 1
+  node #2 = [448]
+    left input: node 0
+    right input: node 0
+    left input shift value: 9
+    right input shift value: 6
+    subtract: 1
+-> CONFIGURATION #2:
+  node #0 = [1]
+  node #1 = [127]
+    left input: node 0
+    right input: node 0
+    left input shift value: 7
+    right input shift value: 0
+    subtract: 1
+  node #2 = [191]
+    left input: node 1
+    right input: node 0
+    left input shift value: 0
+    right input shift value: 6
+    subtract: 0
+-> CONFIGURATION #3:
+  node #0 = [1]
+  node #1 = [129]
+    left input: node 0
+    right input: node 0
+    left input shift value: 7
+    right input shift value: 0
+    subtract: 0
+  node #2 = [510]
+    left input: node 0
+    right input: node 0
+    left input shift value: 9
+    right input shift value: 1
+    subtract: 1
+
+Adder graph: {{'M',[1;4;128;256],1,[1;1;1;1],0,[0;2;7;8]},{'M',[2;8;1;1],1,[1;1;1;1],0,[1;3;0;0]},{'A',[3;12;127;255],2,[1;4;128;256],1,0,[2;8;-1;-1],1,0},{'M',[128;16;127;16],3,[1;1;1;1],0,[7;4;NaN;4],[3;12;127;255],2,[NaN;NaN;0;NaN]},{'M',[3;12;64;8],3,[1;1;1;1],0,[NaN;NaN;6;3],[3;12;127;255],2,[0;0;NaN;NaN]},{'A',[125;28;191;8],4,[128;16;127;16],3,0,[-3;12;64;-8],3,0},{'M',[125;896;191;510],5,[3;12;127;255],2,[NaN;NaN;NaN;1],[125;28;191;8],4,[0;5;0;NaN]},{'O',[125;896;191;510],5,[125;896;191;510],5,0}}
+Adder graph: {{'M',[1;1;1;512],1,[1;1;1;1],0,[0;0;0;9]},{'M',[2;1;1;2],1,[1;1;1;1],0,[1;0;0;1]},{'A',[-3;3;3;508],2,[1;1;1;512],1,0,[-2;1;1;-2],1,1},{'M',[-3;48;192;508],3,[-3;3;3;508],2,[0;4;6;0]},{'M',[128;64;1;2],1,[1;1;1;1],0,[7;6;0;1]},{'A',[125;112;191;510],4,[-3;48;192;508],3,0,[128;64;-1;2],1,0},{'M',[125;896;191;510],5,[125;112;191;510],4,[0;3;0;0]},{'O',[125;896;191;510],5,[125;896;191;510],5,0}}
+Adder graph: {{'M',[1;16;2;2],1,[1;1;1;1],0,[0;4;1;1]},{'M',[2;128;32;1],1,[1;1;1;1],0,[1;7;5;0]},{'A',[62;896;96;127],2,[1;16;2;2],1,6,[-2;-128;-32;-1],1,0},{'A',[125;1791;191;255],3,[62;896;96;127],2,1,[1;-1;-1;1],0,0},{'M',[125;896;191;510],4,[62;896;96;127],2,[NaN;0;NaN;NaN],[125;1791;191;255],3,[0;NaN;0;1]},{'O',[125;896;191;510],4,[125;896;191;510],4,0}}
+Adder graph: {{'M',[1;16;64;64],1,[1;1;1;1],0,[0;4;6;6]},{'M',[1;8;1;1],1,[1;1;1;1],0,[0;3;0;0]},{'A',[3;56;255;255],2,[1;16;64;64],1,2,[-1;-8;-1;-1],1,0},{'M',[128;56;255;255],3,[1;1;1;1],0,[7;NaN;NaN;NaN],[3;56;255;255],2,[NaN;0;0;0]},{'M',[3;56;64;255],3,[1;1;1;1],0,[NaN;NaN;6;NaN],[3;56;255;255],2,[0;0;NaN;0]},{'A',[125;112;191;510],4,[128;56;255;255],3,0,[-3;56;-64;255],3,0},{'M',[125;896;191;510],5,[125;112;191;510],4,[0;3;0;0]},{'O',[125;896;191;510],5,[125;896;191;510],5,0}}
+Adder graph: {{'M',[1;8;1;4],1,[1;1;1;1],0,[0;3;0;2]},{'M',[1;64;32;1],1,[1;1;1;1],0,[0;6;5;0]},{'A',[126;896;192;510],2,[1;8;1;4],1,7,[-1;-64;32;-1],1,1},{'A',[125;895;191;509],3,[126;896;192;510],2,0,[-1;-1;-1;-1],0,0},{'M',[125;896;191;510],4,[126;896;192;510],2,[NaN;0;NaN;0],[125;895;191;509],3,[0;NaN;0;NaN]},{'O',[125;896;191;510],4,[125;896;191;510],4,0}}
+Adder graph: {{'M',[1;32;32;1],1,[1;1;1;1],0,[0;5;5;0]},{'M',[1;256;1;256],1,[1;1;1;1],0,[0;8;0;8]},{'A',[3;320;63;-254],2,[1;32;32;1],1,1,[1;256;-1;-256],1,0},{'M',[128;128;128;1],1,[1;1;1;1],0,[7;7;7;0]},{'A',[125;448;191;255],3,[128;128;128;1],1,0,[-3;320;63;254],2,0},{'M',[125;896;191;510],4,[125;448;191;255],3,[0;1;0;1]},{'O',[125;896;191;510],4,[125;896;191;510],4,0}}
+Adder graph: {{'A',[127;127;127;129],1,[1;1;1;1],0,7,[-1;-1;-1;1],0,0},{'M',[127;512;127;512],2,[1;1;1;1],0,[NaN;9;NaN;9],[127;127;127;129],1,[0;NaN;0;NaN]},{'M',[1;32;32;1],1,[1;1;1;1],0,[0;5;5;0]},{'A',[125;448;191;510],3,[127;512;127;512],2,0,[-1;-32;32;-1],1,1},{'M',[125;896;191;510],4,[125;448;191;510],3,[0;1;0;0]},{'O',[125;896;191;510],4,[125;896;191;510],4,0}}
+Finished solving after 0.865 seconds
+Adder graph: {{'A',[127;127;127;129],1,[1;1;1;1],0,7,[-1;-1;-1;1],0,0},{'M',[127;512;127;512],2,[1;1;1;1],0,[NaN;9;NaN;9],[127;127;127;129],1,[0;NaN;0;NaN]},{'M',[1;32;32;1],1,[1;1;1;1],0,[0;5;5;0]},{'A',[125;448;191;510],3,[127;512;127;512],2,0,[-1;-32;32;-1],1,1},{'M',[125;896;191;510],4,[125;448;191;510],3,[0;1;0;0]},{'O',[125;896;191;510],4,[125;896;191;510],4,0}}
+# Add optimal = 1
+# Mux optimal = 1
+# FAs optimal = 0

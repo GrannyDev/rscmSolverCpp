@@ -1,0 +1,169 @@
+USER INPUTS:
+Reconfigurable SCM with coefficient(s)
+-> Configuration #0:
+   < 35 >
+-> Configuration #1:
+   < 28 >
+-> Configuration #2:
+   < 36 >
+-> Configuration #3:
+   < 29 >
+
+Timeout: 300 seconds
+Solver: executable
+Threads: 1
+Attention! Reconfigurability not fully supported yet!
+Coefficients before preprocessing:
+Reconfigurable SCM with coefficient(s)
+-> Configuration #0:
+   < 35 >
+-> Configuration #1:
+   < 7 >
+-> Configuration #2:
+   < 9 >
+-> Configuration #3:
+   < 29 >
+
+Coefficients after preprocessing:
+Reconfigurable SCM with coefficient(s)
+-> Configuration #0:
+   < 35 >
+-> Configuration #1:
+   < 7 >
+-> Configuration #2:
+   < 9 >
+-> Configuration #3:
+   < 29 >
+
+Internal word size: 11
+Max shift: 8
+Shift word size: 4
+Min #adders: 2
+  Found solution for #adders = 2 with min 0 (of 15) shared reconfiguration MUX ports after 0.028 seconds 8-)
+Solution is verified :-)
+Current solution shares 14 MUX ports
+The solver reported 13 shared MUX ports
+Found solution!
+#adders = 2, word size = 11
+-> CONFIGURATION #0:
+  node #0 = [1]
+  node #1 = [18]
+    left input: node 0
+    right input: node 0
+    left input shift value: 4
+    right input shift value: 1
+    subtract: 0
+  node #2 = [35]
+    left input: node 1
+    right input: node 0
+    left input shift value: 1
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #1:
+  node #0 = [1]
+  node #1 = [14]
+    left input: node 0
+    right input: node 0
+    left input shift value: 4
+    right input shift value: 1
+    subtract: 1
+  node #2 = [29]
+    left input: node 1
+    right input: node 0
+    left input shift value: 1
+    right input shift value: 0
+    subtract: 0
+-> CONFIGURATION #2:
+  node #0 = [1]
+  node #1 = [18]
+    left input: node 0
+    right input: node 0
+    left input shift value: 4
+    right input shift value: 1
+    subtract: 0
+  node #2 = [37]
+    left input: node 1
+    right input: node 0
+    left input shift value: 1
+    right input shift value: 0
+    subtract: 0
+-> CONFIGURATION #3:
+  node #0 = [1]
+  node #1 = [14]
+    left input: node 0
+    right input: node 0
+    left input shift value: 4
+    right input shift value: 1
+    subtract: 1
+  node #2 = [29]
+    left input: node 1
+    right input: node 0
+    left input shift value: 1
+    right input shift value: 0
+    subtract: 0
+  Problem for #adders = 2 with min 15 (of 15) shared reconfiguration MUX ports is proven to be infeasible after 0.03 seconds... 
+Found solution!
+#adders = 2, word size = 11
+-> CONFIGURATION #0:
+  node #0 = [1]
+  node #1 = [18]
+    left input: node 0
+    right input: node 0
+    left input shift value: 4
+    right input shift value: 1
+    subtract: 0
+  node #2 = [35]
+    left input: node 1
+    right input: node 0
+    left input shift value: 1
+    right input shift value: 0
+    subtract: 1
+-> CONFIGURATION #1:
+  node #0 = [1]
+  node #1 = [14]
+    left input: node 0
+    right input: node 0
+    left input shift value: 4
+    right input shift value: 1
+    subtract: 1
+  node #2 = [29]
+    left input: node 1
+    right input: node 0
+    left input shift value: 1
+    right input shift value: 0
+    subtract: 0
+-> CONFIGURATION #2:
+  node #0 = [1]
+  node #1 = [18]
+    left input: node 0
+    right input: node 0
+    left input shift value: 4
+    right input shift value: 1
+    subtract: 0
+  node #2 = [37]
+    left input: node 1
+    right input: node 0
+    left input shift value: 1
+    right input shift value: 0
+    subtract: 0
+-> CONFIGURATION #3:
+  node #0 = [1]
+  node #1 = [14]
+    left input: node 0
+    right input: node 0
+    left input shift value: 4
+    right input shift value: 1
+    subtract: 1
+  node #2 = [29]
+    left input: node 1
+    right input: node 0
+    left input shift value: 1
+    right input shift value: 0
+    subtract: 0
+
+Adder graph: {{'A',[18;14;18;14],1,[1;1;1;1],0,4,[1;-1;1;-1],0,1},{'A',[35;29;37;29],2,[18;14;18;14],1,1,[-1;1;1;1],0,0},{'M',[35;28;36;29],3,[18;14;18;14],1,[NaN;1;1;NaN],[35;29;37;29],2,[0;NaN;NaN;0]},{'O',[35;28;36;29],3,[35;28;36;29],3,0}}
+Finished solving after 0.058 seconds
+Adder graph: {{'A',[18;14;18;14],1,[1;1;1;1],0,4,[1;-1;1;-1],0,1},{'A',[35;29;37;29],2,[18;14;18;14],1,1,[-1;1;1;1],0,0},{'M',[35;28;36;29],3,[18;14;18;14],1,[NaN;1;1;NaN],[35;29;37;29],2,[0;NaN;NaN;0]},{'O',[35;28;36;29],3,[35;28;36;29],3,0}}
+# Add optimal = 1
+# Mux optimal = 1
+# FAs optimal = 0

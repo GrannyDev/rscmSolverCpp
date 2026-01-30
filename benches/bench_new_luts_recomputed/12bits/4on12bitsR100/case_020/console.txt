@@ -1,0 +1,30 @@
+Normalizing targets by right-shifting 2 bits.
+_____________________RECOMPUTED COSTS_____________________
+Costs:
+ - asic_delay: not implemented
+ - fpga_delay: not implemented
+ - luts: 65
+ - mux_bits: 6
+ - mux_count: 4
+ - area_cost: 1871
+
+
+Parameters: 
+Layer 0:
+	Adder 0:
+		LEFT_INPUTS : { X }
+		LEFT_SHIFTS : { 4 5 }
+		RIGHT_INPUTS : { X }
+		RIGHT_SHIFTS : { 0 }
+		OUTPUTS_SHIFTS : { 0 }
+		ADD_SUB : { - + }
+Layer 1:
+	Adder 1:
+		LEFT_INPUTS : { Adder0 }
+		LEFT_SHIFTS : { 3 4 }
+		RIGHT_INPUTS : { Adder0 2X }
+		RIGHT_SHIFTS : { 0 7 }
+		OUTPUTS_SHIFTS : { 2 }
+		ADD_SUB : { - + }
+
+

@@ -1,0 +1,50 @@
+
+Progress:  25% [============                                      ] 1/4
+Progress:  50% [=========================                         ] 2/4
+Progress:  75% [=====================================             ] 3/4
+Progress: 100% [==================================================] 4/4
+Target: 3583 solutions: 10 | Target: 816 solutions: 10 | Target: 108 solutions: 10 | Target: 156 solutions: 10 | 
+Solution cost: 3571 : Layer 0 : Adder 0 : LEFT_INPUTS : -1 LEFT_SHIFTS : 0 1 4 RIGHT_INPUTS : -1 RIGHT_SHIFTS : 1 3 4 6 OUTPUTS_SHIFTS : 0 1 4 ADD_SUB : -1 1 Layer 1 : Adder 1 : LEFT_INPUTS : 0 -2 LEFT_SHIFTS : 0 3 4 8 RIGHT_INPUTS : -1 0 RIGHT_SHIFTS : 0 1 OUTPUTS_SHIFTS : 0 ADD_SUB : -1 1 
+Solution cost: 3535 : Layer 0 : Adder 0 : LEFT_INPUTS : -1 LEFT_SHIFTS : 0 1 3 7 RIGHT_INPUTS : -1 RIGHT_SHIFTS : 0 3 4 OUTPUTS_SHIFTS : 0 1 ADD_SUB : -1 1 Layer 1 : Adder 1 : LEFT_INPUTS : 0 -4 LEFT_SHIFTS : 0 3 4 9 RIGHT_INPUTS : -1 0 RIGHT_SHIFTS : 0 1 OUTPUTS_SHIFTS : 0 ADD_SUB : -1 1 
+Solution cost: 3371 : Layer 0 : Adder 0 : LEFT_INPUTS : -1 LEFT_SHIFTS : 0 4 RIGHT_INPUTS : -1 RIGHT_SHIFTS : 1 3 4 5 OUTPUTS_SHIFTS : 0 1 4 ADD_SUB : -1 1 Layer 1 : Adder 1 : LEFT_INPUTS : 0 -2 LEFT_SHIFTS : 0 3 4 8 RIGHT_INPUTS : -1 0 RIGHT_SHIFTS : 0 1 OUTPUTS_SHIFTS : 0 ADD_SUB : -1 1 
+Solution cost: 3188 : Layer 0 : Adder 0 : LEFT_INPUTS : -1 LEFT_SHIFTS : 0 4 RIGHT_INPUTS : -1 RIGHT_SHIFTS : 1 3 4 OUTPUTS_SHIFTS : 0 1 4 ADD_SUB : -1 1 Layer 1 : Adder 1 : LEFT_INPUTS : 0 -4 LEFT_SHIFTS : 0 3 4 8 RIGHT_INPUTS : -1 0 RIGHT_SHIFTS : 0 1 OUTPUTS_SHIFTS : 0 ADD_SUB : -1 1 
+Solution cost: 3079 : Layer 0 : Adder 0 : LEFT_INPUTS : -1 LEFT_SHIFTS : 1 3 RIGHT_INPUTS : -1 RIGHT_SHIFTS : 0 4 5 OUTPUTS_SHIFTS : 1 3 ADD_SUB : -1 1 Layer 1 : Adder 1 : LEFT_INPUTS : 0 -4 LEFT_SHIFTS : 0 3 4 6 RIGHT_INPUTS : -1 0 RIGHT_SHIFTS : 0 1 OUTPUTS_SHIFTS : 0 ADD_SUB : -1 1 
+Solution cost: 3019 : Layer 0 : Adder 0 : LEFT_INPUTS : -1 LEFT_SHIFTS : 1 4 RIGHT_INPUTS : -1 RIGHT_SHIFTS : 1 6 8 OUTPUTS_SHIFTS : 0 ADD_SUB : -1 1 Layer 1 : Adder 1 : LEFT_INPUTS : 0 -2 LEFT_SHIFTS : 0 3 4 8 RIGHT_INPUTS : -1 0 RIGHT_SHIFTS : 0 1 OUTPUTS_SHIFTS : 0 ADD_SUB : -1 1 
+Solution cost: 3005 : Layer 0 : Adder 0 : LEFT_INPUTS : -1 LEFT_SHIFTS : 1 3 RIGHT_INPUTS : -1 RIGHT_SHIFTS : 0 6 7 OUTPUTS_SHIFTS : 1 5 ADD_SUB : -1 1 Layer 1 : Adder 1 : LEFT_INPUTS : 0 -2 LEFT_SHIFTS : 0 3 4 RIGHT_INPUTS : -1 0 RIGHT_SHIFTS : 0 1 OUTPUTS_SHIFTS : 0 ADD_SUB : -1 1 
+Solution cost: 2997 : Layer 0 : Adder 0 : LEFT_INPUTS : -1 LEFT_SHIFTS : 2 3 RIGHT_INPUTS : -1 RIGHT_SHIFTS : 0 7 OUTPUTS_SHIFTS : 0 1 5 ADD_SUB : -1 1 Layer 1 : Adder 1 : LEFT_INPUTS : 0 -2 LEFT_SHIFTS : 0 3 4 RIGHT_INPUTS : -1 0 RIGHT_SHIFTS : 0 1 OUTPUTS_SHIFTS : 0 ADD_SUB : -1 1 
+Solution cost: 2992 : Layer 0 : Adder 0 : LEFT_INPUTS : -1 LEFT_SHIFTS : 2 3 RIGHT_INPUTS : -1 RIGHT_SHIFTS : 0 7 OUTPUTS_SHIFTS : 0 1 ADD_SUB : -1 1 Layer 1 : Adder 1 : LEFT_INPUTS : 0 -2 LEFT_SHIFTS : 0 3 4 8 RIGHT_INPUTS : -1 0 RIGHT_SHIFTS : 0 1 OUTPUTS_SHIFTS : 0 ADD_SUB : -1 1 
+_____________________BEST SOLUTION_____________________
+Costs:
+ - asic_delay: not implemented
+ - fpga_delay: not implemented
+ - luts: 109
+ - mux_bits: 10
+ - mux_count: 9
+ - area_cost: 2992
+
+
+Parameters: 
+Layer 0:
+	Adder 0:
+		LEFT_INPUTS : { X }
+		LEFT_SHIFTS : { 2 3 }
+		RIGHT_INPUTS : { X }
+		RIGHT_SHIFTS : { 0 7 }
+		OUTPUTS_SHIFTS : { 0 1 }
+		ADD_SUB : { - + }
+Layer 1:
+	Adder 1:
+		LEFT_INPUTS : { Adder0 1X }
+		LEFT_SHIFTS : { 0 3 4 8 }
+		RIGHT_INPUTS : { X Adder0 }
+		RIGHT_SHIFTS : { 0 1 }
+		OUTPUTS_SHIFTS : { 0 }
+		ADD_SUB : { - + }
+
+------------------
+Muxes : LEFT_SHIFTS of adder 0 | RIGHT_SHIFTS of adder 0 | OUTPUTS_SHIFTS of adder 0 | ADD_SUB of adder 0 | LEFT_INPUTS of adder 1 | LEFT_SHIFTS of adder 1 | RIGHT_INPUTS of adder 1 | RIGHT_SHIFTS of adder 1 | ADD_SUB of adder 1 | 
+Target 3583	 : 	1 0 1 0 0 3 0 0 0 
+Target 816	 : 	1 1 1 1 0 0 1 1 1 
+Target 108	 : 	1 0 1 1 0 1 1 1 0 
+Target 156	 : 	0 1 0 0 1 2 1 0 0 
+

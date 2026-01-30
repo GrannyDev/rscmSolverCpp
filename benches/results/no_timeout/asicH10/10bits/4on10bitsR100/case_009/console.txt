@@ -1,0 +1,51 @@
+
+Progress:  25% [============                                      ] 1/4
+Progress:  50% [=========================                         ] 2/4
+Progress:  75% [=====================================             ] 3/4
+Progress: 100% [==================================================] 4/4
+Target: 520 solutions: 10 | Target: 268 solutions: 10 | Target: 771 solutions: 10 | Target: 864 solutions: 10 | 
+Solution cost: 3939 : Layer 0 : Adder 0 : LEFT_INPUTS : -1 LEFT_SHIFTS : 0 1 4 RIGHT_INPUTS : -1 RIGHT_SHIFTS : 0 1 2 5 OUTPUTS_SHIFTS : 0 2 9 ADD_SUB : -1 1 Layer 1 : Adder 1 : LEFT_INPUTS : -1 0 -2 LEFT_SHIFTS : 0 2 7 RIGHT_INPUTS : 0 -2 RIGHT_SHIFTS : 0 8 OUTPUTS_SHIFTS : 0 1 3 ADD_SUB : -1 1 
+Solution cost: 3752 : Layer 0 : Adder 0 : LEFT_INPUTS : -1 LEFT_SHIFTS : 0 1 2 RIGHT_INPUTS : -1 RIGHT_SHIFTS : 0 1 5 OUTPUTS_SHIFTS : 0 2 9 ADD_SUB : -1 1 Layer 1 : Adder 1 : LEFT_INPUTS : -1 0 -2 LEFT_SHIFTS : 0 2 7 RIGHT_INPUTS : 0 -2 RIGHT_SHIFTS : 0 8 OUTPUTS_SHIFTS : 0 1 3 ADD_SUB : -1 1 
+Solution cost: 3683 : Layer 0 : Adder 0 : LEFT_INPUTS : -1 LEFT_SHIFTS : 0 1 4 RIGHT_INPUTS : -1 RIGHT_SHIFTS : 1 3 5 OUTPUTS_SHIFTS : 0 1 6 ADD_SUB : -1 1 Layer 1 : Adder 1 : LEFT_INPUTS : -1 0 -2 LEFT_SHIFTS : 0 2 7 RIGHT_INPUTS : 0 -2 RIGHT_SHIFTS : 0 1 8 OUTPUTS_SHIFTS : 0 3 ADD_SUB : -1 1 
+Solution cost: 3628 : Layer 0 : Adder 0 : LEFT_INPUTS : -1 LEFT_SHIFTS : 0 2 3 RIGHT_INPUTS : -1 RIGHT_SHIFTS : 1 2 4 OUTPUTS_SHIFTS : 0 1 7 ADD_SUB : -1 1 Layer 1 : Adder 1 : LEFT_INPUTS : -1 0 -2 LEFT_SHIFTS : 0 2 7 RIGHT_INPUTS : 0 -2 RIGHT_SHIFTS : 0 8 OUTPUTS_SHIFTS : 0 1 3 ADD_SUB : -1 1 
+Solution cost: 3425 : Layer 0 : Adder 0 : LEFT_INPUTS : -1 LEFT_SHIFTS : 1 2 RIGHT_INPUTS : -1 RIGHT_SHIFTS : 0 5 OUTPUTS_SHIFTS : 0 2 9 ADD_SUB : -1 1 Layer 1 : Adder 1 : LEFT_INPUTS : -1 0 -2 LEFT_SHIFTS : 0 2 7 8 RIGHT_INPUTS : 0 -2 RIGHT_SHIFTS : 0 OUTPUTS_SHIFTS : 0 1 3 ADD_SUB : -1 1 
+Solution cost: 3419 : Layer 0 : Adder 0 : LEFT_INPUTS : -1 LEFT_SHIFTS : 0 2 3 RIGHT_INPUTS : -1 RIGHT_SHIFTS : 1 2 4 OUTPUTS_SHIFTS : 0 1 7 ADD_SUB : -1 1 Layer 1 : Adder 1 : LEFT_INPUTS : -1 0 -2 LEFT_SHIFTS : 2 7 8 RIGHT_INPUTS : 0 -2 RIGHT_SHIFTS : 0 OUTPUTS_SHIFTS : 0 1 3 ADD_SUB : -1 1 
+Solution cost: 3397 : Layer 0 : Adder 0 : LEFT_INPUTS : -1 LEFT_SHIFTS : 1 4 RIGHT_INPUTS : -1 RIGHT_SHIFTS : 0 3 5 OUTPUTS_SHIFTS : 0 1 6 ADD_SUB : -1 1 Layer 1 : Adder 1 : LEFT_INPUTS : -1 0 -2 LEFT_SHIFTS : 2 7 8 RIGHT_INPUTS : 0 -2 RIGHT_SHIFTS : 0 1 OUTPUTS_SHIFTS : 0 3 ADD_SUB : -1 1 
+Solution cost: 3292 : Layer 0 : Adder 0 : LEFT_INPUTS : -1 LEFT_SHIFTS : 0 3 RIGHT_INPUTS : -1 RIGHT_SHIFTS : 1 2 4 OUTPUTS_SHIFTS : 0 1 7 ADD_SUB : -1 1 Layer 1 : Adder 1 : LEFT_INPUTS : -1 0 -2 LEFT_SHIFTS : 2 7 8 RIGHT_INPUTS : 0 -2 RIGHT_SHIFTS : 0 OUTPUTS_SHIFTS : 0 1 3 ADD_SUB : -1 1 
+Solution cost: 3271 : Layer 0 : Adder 0 : LEFT_INPUTS : -1 LEFT_SHIFTS : 1 RIGHT_INPUTS : -1 RIGHT_SHIFTS : 0 3 5 OUTPUTS_SHIFTS : 0 1 9 ADD_SUB : -1 1 Layer 1 : Adder 1 : LEFT_INPUTS : -1 0 -2 LEFT_SHIFTS : 2 7 8 RIGHT_INPUTS : -1 0 RIGHT_SHIFTS : 0 2 OUTPUTS_SHIFTS : 0 3 ADD_SUB : -1 1 
+Solution cost: 3155 : Layer 0 : Adder 0 : LEFT_INPUTS : -1 LEFT_SHIFTS : 0 2 RIGHT_INPUTS : -1 RIGHT_SHIFTS : 1 4 OUTPUTS_SHIFTS : 0 1 8 ADD_SUB : -1 1 Layer 1 : Adder 1 : LEFT_INPUTS : -1 0 -2 LEFT_SHIFTS : 2 7 8 RIGHT_INPUTS : 0 -2 RIGHT_SHIFTS : 0 OUTPUTS_SHIFTS : 0 1 3 ADD_SUB : -1 1 
+_____________________BEST SOLUTION_____________________
+Costs:
+ - asic_delay: not implemented
+ - fpga_delay: not implemented
+ - luts: 90
+ - mux_bits: 13
+ - mux_count: 11
+ - area_cost: 3155
+
+
+Parameters: 
+Layer 0:
+	Adder 0:
+		LEFT_INPUTS : { X }
+		LEFT_SHIFTS : { 0 2 }
+		RIGHT_INPUTS : { X }
+		RIGHT_SHIFTS : { 1 4 }
+		OUTPUTS_SHIFTS : { 0 1 8 }
+		ADD_SUB : { - + }
+Layer 1:
+	Adder 1:
+		LEFT_INPUTS : { X Adder0 1X }
+		LEFT_SHIFTS : { 2 7 8 }
+		RIGHT_INPUTS : { Adder0 1X }
+		RIGHT_SHIFTS : { 0 }
+		OUTPUTS_SHIFTS : { 0 1 3 }
+		ADD_SUB : { - + }
+
+------------------
+Muxes : LEFT_SHIFTS of adder 0 | RIGHT_SHIFTS of adder 0 | OUTPUTS_SHIFTS of adder 0 | ADD_SUB of adder 0 | LEFT_INPUTS of adder 1 | LEFT_SHIFTS of adder 1 | RIGHT_INPUTS of adder 1 | OUTPUTS_SHIFTS of adder 1 | ADD_SUB of adder 1 | 
+Target 520	 : 	1 0 2 0 2 0 0 0 1 
+Target 268	 : 	0 1 1 1 1 0 1 1 0 
+Target 771	 : 	0 0 0 1 1 2 0 0 1 
+Target 864	 : 	1 1 0 1 0 1 0 2 0 
+

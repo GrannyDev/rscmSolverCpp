@@ -1,0 +1,101 @@
+{
+	"ADDER_0": {
+		"LEFT_INPUTS": {
+			"inputs": ["X"],
+			"shifts": [0],
+			"theoretical_bitwidth": 8,
+			"computed_bitwidth": 8
+		},
+		"LEFT_SHIFTS": {
+			"shifts": [5, 6],
+			"theoretical_bitwidth": 14,
+			"computed_bitwidth": 14,
+			"mux_nb": 0
+		},
+		"RIGHT_INPUTS": {
+			"inputs": ["X"],
+			"shifts": [0],
+			"theoretical_bitwidth": 8,
+			"computed_bitwidth": 8
+		},
+		"RIGHT_SHIFTS": {
+			"shifts": [0],
+			"theoretical_bitwidth": 8,
+			"computed_bitwidth": 8
+		},
+		"OUTPUTS_SHIFTS": {
+			"shifts": [0],
+			"theoretical_bitwidth": 15,
+			"computed_bitwidth": 15
+		},
+		"ADD_SUB": {
+			"type": "both",
+			"theoretical_bitwidth": 15,
+			"computed_bitwidth": 15,
+			"mux_nb": 1
+		}
+	},
+	"ADDER_1": {
+		"LEFT_INPUTS": {
+			"inputs": ["ADDER_0", "X"],
+			"shifts": [0, 6],
+			"theoretical_bitwidth": 15,
+			"computed_bitwidth": 15,
+			"mux_nb": 2
+		},
+		"LEFT_SHIFTS": {
+			"shifts": [3],
+			"theoretical_bitwidth": 18,
+			"computed_bitwidth": 18
+		},
+		"RIGHT_INPUTS": {
+			"inputs": ["ADDER_0", "X"],
+			"shifts": [0, 7],
+			"theoretical_bitwidth": 15,
+			"computed_bitwidth": 15,
+			"mux_nb": 3
+		},
+		"RIGHT_SHIFTS": {
+			"shifts": [0],
+			"theoretical_bitwidth": 15,
+			"computed_bitwidth": 15
+		},
+		"OUTPUTS_SHIFTS": {
+			"shifts": [0, 1],
+			"theoretical_bitwidth": 19,
+			"computed_bitwidth": 18,
+			"mux_nb": 4
+		},
+		"ADD_SUB": {
+			"type": "both",
+			"theoretical_bitwidth": 19,
+			"computed_bitwidth": 17,
+			"mux_nb": 5
+		}
+	},
+	"meta": {
+		"wIn": 8,
+		"wConf": 2,
+		"wSelec": 6,
+		"needs_table": true,
+		"wOut": 18,
+		"output": "ADDER_1",
+		"is_symmetric": false,
+		"muxes_bw": [1, 1, 1, 1, 1, 1],
+		"costs": {
+			"asic_delay": "not implemented",
+			"fpga_delay": "not implemented",
+			"luts": 65,
+			"mux_bits": 6,
+			"mux_count": 4,
+			"area_cost": 1965
+		},
+		"constants": [962, 441, 297, 784],
+		"encoding": [
+			[0, 0, 1, 0, 1, 0],
+			[1, 0, 0, 0, 0, 0],
+			[0, 1, 0, 0, 0, 1],
+			[1, 1, 0, 1, 1, 0]
+		]
+	}
+}
